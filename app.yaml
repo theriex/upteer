@@ -1,0 +1,52 @@
+application: upteer
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+libraries:
+- name: webapp2
+  version: "2.5.2"
+- name: pycrypto
+  version: "2.3"
+
+handlers:
+######################################################################
+##                  API
+## "authparams" means
+##   am: authentication method: "utid" (other methods may be added later)
+##   at: authentication token (from local or supported external source)
+##   an: authentication name (username if native auth, whatever otherwise)
+##
+## Queries may return a base64 cursor value as the last element.
+## Optional parameters are listed in parentheses
+##
+######################################################################
+
+######################################################################
+##        Site authentication 
+
+## Get build version string
+## GET params: none
+- url: /buildverstr.*
+  script: src.py.login.app
+
+## Get an access token from native credentials
+## POST params: user, pass 
+- url: /login.*
+  script: src.py.login.app
+
+
+######################################################################
+# General endpoints
+
+## Trap anything ending with a slash and send it to index.html since
+## there is no default processing to figure that out otherwise.
+- url: (.*)/
+  static_files: docroot/index.html
+  upload: docroot
+
+## Catchall is to look in docroot.
+- url: /
+  static_dir: docroot
+
