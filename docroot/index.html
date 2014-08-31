@@ -1,0 +1,79 @@
+<!doctype html>
+<html itemscope="itemscope" itemtype="https://schema.org/WebPage"
+      xmlns="https://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="robots" content="noodp" />
+  <meta name="description" content="Connecting volunteers to opportunities. As a volunteer, list what you have to offer in your profile. As a non-profit organization, list volunteer opportunities. Match and connect. Make the world a better place." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta property="og:image" content="img/logotagged.png" />
+  <meta property="twitter:image" content="img/logotagged.png" />
+  <meta itemprop="image" content="img/logotagged.png" />
+  <title>Upteer</title>
+  <link href="css/site.css" rel="stylesheet" type="text/css" />
+  <link rel="image_src" href="img/logotagged.png" />
+</head>
+<body id="bodyid" ondragover="app.layout.bodydragover(event);" 
+      ondrop="app.layout.bodydrop(event);">
+
+<div id="headingdiv">
+</div>
+
+<div id="appspacediv"> 
+  <div id="contentdiv">
+    <noscript>
+      <p><b>Upteer needs Javascript to do anything useful, please enable...
+      </b></p>
+    </noscript>
+    <!-- login has to be an actual form to enable remembered passwords -->
+    <div id="logindiv">
+      <form id="loginform" method="post" 
+            action="https://upteer.appspot.com/redirlogin">
+        <div id="logodiv"><img src="img/logotagged.png"/></div>
+        <div id="loginstatdiv">&nbsp;</div>
+        <div id="loginparaminputs"></div>
+        <div id="loginvisualelementsdiv">
+          <table id="loginformtable">
+            <tr>
+              <td align="right">
+                <label for="userin" class="liflab">Email</label></td>
+              <td align="left">
+                <input type="text" name="userin" id="userin" 
+                       size="20" autofocus/></td>
+            </tr><tr>
+              <td align="right">
+                <label for="passin" class="liflab">Password</label></td>
+              <td align="left">
+                <!-- no onchange submit here, safari pw autofill loops -->
+                <input type="password" name="passin" 
+                       id="passin" size="20"/></td>
+            </tr><tr>
+              <td/>
+              <td>
+                <div id="forgotpassdiv"></div></td>
+            </tr><tr>
+              <td colspan="2" align="right" id="loginbtd">
+                <div class="formbuttonsdiv">
+                  <input value="Sign in" type="submit" class=\"loginbutton\"/>
+                </div></td>
+            </tr>
+          </table>
+        </div> <!-- visualelementsdiv -->
+      </form>
+    </div> <!-- logindiv -->
+  </div> <!-- contentdiv -->
+</div> <!-- appspacediv -->
+
+<div id="dlgdiv" draggable="true" ondragstart="app.layout.dragstart(event);"
+     ondragend="app.layout.dragend(event);"></div>
+
+<script src="js/jtmin.js"></script>
+<script src="js/app.js"></script>
+<!-- <script src="js/compiled.js"></script> -->
+
+<script>
+  app.init();
+</script>
+
+</body>
+</html>

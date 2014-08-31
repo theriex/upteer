@@ -1,0 +1,206 @@
+/*global window: false, document: false, setTimeout: false, app: false, jt: false */
+
+/*jslint unparam: true, white: true, maxerr: 50, indent: 4, regexp: true */
+
+app.layout = (function () {
+    "use strict";
+
+    ////////////////////////////////////////
+    // closure variables
+    ////////////////////////////////////////
+
+    var dndState = null,
+        dlgqueue = [],
+
+
+    ////////////////////////////////////////
+    // helper functions
+    ////////////////////////////////////////
+
+    findDisplayHeightAndWidth = function () {
+        //most browsers (FF, safari, chrome, etc)
+        if(window.innerWidth && window.innerHeight) {
+            app.winw = window.innerWidth;
+            app.winh = window.innerHeight; }
+        //IE8
+        else if(document.body && document.body.offsetWidth) {
+            app.winw = document.body.offsetWidth;
+            app.winh = document.body.offsetHeight; }
+        //last resort
+        else {  //WTF, just guess.
+            app.winw = 800;
+            app.winh = 800; }
+    };
+
+
+    ////////////////////////////////////////
+    // published functions
+    ////////////////////////////////////////
+return {
+
+    init: function () {
+        app.layout.commonUtilExtensions();
+    },
+
+
+    commonUtilExtensions: function () {
+        //Referencing variables starting with an underscore causes jslint
+        //complaints, but it still seems the clearest and safest way to
+        //handle an ID value in the server side Python JSON serialization.
+        //This utility method encapsulates the access, and provides a
+        //single point of adjustment if the server side logic changes.
+        jt.instId = function (obj) {
+            var idfield = "_id";
+            if(obj && obj.hasOwnProperty(idfield)) {
+                return obj[idfield]; }
+        };
+        jt.setInstId = function (obj, idval) {
+            var idfield = "_id";
+            obj[idfield] = idval;
+        };
+        jt.isId = function (idval) {
+            if(idval && typeof idval === 'string' && idval !== "0") {
+                return true; }
+            return false;
+        };
+    },
+
+
+    parseEmbeddedJSON: function (text) {  //for static page support
+        var obj = null, jsonobj = JSON || window.JSON;
+        if(!jsonobj) {
+            jt.err("JSON not supported, please use a modern browser"); }
+        text = text.trim();
+        text = text.replace(/\n/g, "\\n");
+        text = text.replace(/<a[^>]*\>/g, "");
+        text = text.replace(/<\/a>/g, "");
+        try {
+            obj = jsonobj.parse(text);
+        } catch(problem) {
+            jt.err("Error parsing JSON: " + problem +
+                   "\nPlease upgrade your browser");
+        }
+        return obj;
+    },
+
+
+    writeDialogContents: function (html) {
+        jt.out('dlgdiv', jt.tac2html(
+            ["div", {id: "dlgborderdiv"},
+             ["div", {id: "dlginsidediv"}, 
+              html]]));
+    },
+
+
+    queueDialog: function (coords, html, initf, visf) {
+        if(jt.byId('dlgdiv').style.visibility === "visible") {
+            dlgqueue.push({coords: coords, html: html, 
+                           initf: initf, visf: visf}); }
+        else {
+            app.layout.openDialog(coords, html, initf, visf); }
+    },
+
+
+    //clobbers existing dialog if already open
+    openDialog: function (coords, html, initf, visf) {
+        var dlgdiv = jt.byId('dlgdiv');
+        app.layout.cancelOverlay();  //close overlay if it happens to be up
+        //window.scrollTo(0,0);  -- makes phone dialogs jump around. Don't.
+        coords = coords || {};  //default x and y separately
+        coords.x = coords.x || Math.min(Math.round(app.winw * 0.1), 100);
+        coords.y = coords.y || 60;  //default y if not specified
+        if(coords.x > (app.winw / 2)) {
+            coords.x = 20; }  //display too tight, use default left pos
+        coords.y = coords.y + jt.byId('bodyid').scrollTop;  //logical height
+        dlgdiv.style.left = String(coords.x) + "px";
+        dlgdiv.style.top = String(coords.y) + "px";
+        if(!app.escapefuncstack) {
+            app.escapefuncstack = []; }
+        app.escapefuncstack.push(app.onescapefunc);
+        app.onescapefunc = app.layout.closeDialog;
+        app.layout.writeDialogContents(html);
+        if(initf) {
+            initf(); }
+        jt.byId('dlgdiv').style.visibility = "visible";
+        if(visf) {
+            visf(); }
+    },
+
+
+    closeDialog: function () {
+        var state, dlg;
+        jt.out('dlgdiv', "");
+        jt.byId('dlgdiv').style.visibility = "hidden";
+        state = app.history.currState();
+        if(!state || !state.view) {
+            navmode = "activity"; }
+        else {
+            navmode = state.view; }
+        app.layout.updateNavIcons();
+        app.layout.adjust();
+        app.onescapefunc = app.escapefuncstack.pop();
+        if(dlgqueue.length > 0) {
+            dlg = dlgqueue.pop();
+            app.layout.openDialog(dlg.coords, dlg.html, dlg.initf, dlg.visf); }
+    },
+
+
+    dragstart: function (event) {
+        if(event) {
+            dndState = { domobj: event.target,
+                         screenX: event.screenX,
+                         screenY: event.screenY };
+            jt.log("dragstart " + dndState.domobj + " " + 
+                    dndState.screenX + "," + dndState.screenY);
+            if(event.dataTransfer && event.dataTransfer.setData) {
+                event.dataTransfer.setData("text/plain", "general drag"); } }
+    },
+
+
+    dragend: function (event) {
+        if(event && dndState) {
+            jt.log("dragend called");
+            dndState.ended = true; }
+    },
+
+
+    bodydragover: function (event) {
+        if(event && dndState && (!dndState.ended || dndState.dropped)) {
+            //jt.log("dndOver preventing default cancel");
+            event.preventDefault(); }
+    },
+
+
+    bodydrop: function (event) {
+        var diffX, diffY, domobj, currX, currY;
+        jt.log("bodydrop called");
+        if(event && dndState) {
+            dndState.dropped = true;
+            diffX = event.screenX - dndState.screenX;
+            diffY = event.screenY - dndState.screenY;
+            domobj = dndState.domobj;
+            jt.log("dropping " + domobj + " moved " + diffX + "," + diffY);
+            currX = domobj.offsetLeft;
+            currY = domobj.offsetTop;
+            domobj.style.left = String(currX + diffX) + "px";
+            domobj.style.top = String(currY + diffY) + "px";
+            event.preventDefault();
+            event.stopPropagation(); }
+    },
+
+
+    dlgwrapHTML: function (title, html) {
+        html = [["div", {cla: "dlgclosex"},
+                 ["a", {id: "closedlg", href: "#close",
+                        onclick: jt.fs("app.layout.closeDialog()")},
+                  "&lt;close&nbsp;&nbsp;X&gt;"]],
+                ["div", {cla: "floatclear"}],
+                ["div", {cla: "headingtxt"}, title],
+                html];
+        return jt.tac2html(html);
+    }
+
+
+};  //end of returned functions
+}());
+

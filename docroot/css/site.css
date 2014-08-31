@@ -1,0 +1,41 @@
+/*
+ ************************************************************
+ * HTML tag level settings
+ ************************************************************
+ */
+
+/* using the "up" background for the link color */
+A:link {text-decoration:none; color:#007bb6; }
+A:visited {text-decoration:none; color:#007bb6; }
+A:active {text-decoration:none; color:#007bb6; }
+A:hover {text-decoration:underline; color:#7dd6ff; }
+
+html {
+  height: 100%;
+}
+
+body {
+  font-family:"Verdana", "Arial", "Helvetica", sans-serif;
+  font-style:normal;
+  font-weight:normal;
+  font-size:large;
+  word-spacing:normal;
+  margin:0px;
+  color:#111111;  /* off black */
+  height: 100%;
+  margin: 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #feffdd;  /* plumeria */
+  background: linear-gradient(#f8e936, #d9edf8);
+}
+
+img { border:0px; }
+
+/*
+ ************************************************************
+ * general class and id formatting
+ ************************************************************
+ */
+#appspacediv { display:table; margin:10px auto; }
+
