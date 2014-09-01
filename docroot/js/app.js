@@ -67,7 +67,6 @@ var app = {},  //Global container for application level funcs and values
     //post module load initialization
     app.init2 = function () {
         app.amdtimer.load.end = new Date();
-        jt.out('contentdiv', "That's all there is for now. Check back soon.");
         app.layout.init();
         jt.on(document, 'keypress', app.globkey);
         jt.on(window, 'popstate', app.history.pop);
@@ -77,7 +76,8 @@ var app = {},  //Global container for application level funcs and values
 
     app.init = function () {
         var href = window.location.href,
-            modules = [ "js/amd/layout", "js/amd/login" ];
+            modules = [ "js/amd/layout", "js/amd/login", "js/amd/history",
+                        "js/amd/profile" ];
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {

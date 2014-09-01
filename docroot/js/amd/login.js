@@ -20,15 +20,15 @@ app.login = (function () {
     // helper functions
     ////////////////////////////////////////
 
-    secureURL = function (endpoint) {
-        var url = window.location.href;
-        if(url.indexOf(":8080") > 0 ||           //local dev or
-           url.indexOf("https://") === 0) {      //secure server
-            url = endpoint; }  //relative path url ok, data is encrypted
-        else {  //not secured, try via XDR although it may not work
-            url = app.secsvr + "/" + endpoint; }
-        return url;
-    },
+    // secureURL = function (endpoint) {
+    //     var url = window.location.href;
+    //     if(url.indexOf(":8080") > 0 ||           //local dev or
+    //        url.indexOf("https://") === 0) {      //secure server
+    //         url = endpoint; }  //relative path url ok, data is encrypted
+    //     else {  //not secured, try via XDR although it may not work
+    //         url = app.secsvr + "/" + endpoint; }
+    //     return url;
+    // },
 
 
     authparams = function () {
@@ -42,12 +42,28 @@ app.login = (function () {
     },
 
 
-    //Produces less cryptic params to read
-    authparamsfull = function () {
-        var params = "authmethod=" + authmethod + 
-                     "&authtoken=" + authtoken + 
-                     "&authname=" + jt.enc(authname);
-        return params;
+    // //Produces less cryptic params to read
+    // authparamsfull = function () {
+    //     var params = "authmethod=" + authmethod + 
+    //                  "&authtoken=" + authtoken + 
+    //                  "&authname=" + jt.enc(authname);
+    //     return params;
+    // },
+
+
+    decorateLoginForm = function () {
+        var html;
+        html = ["button", {type: "button", id: "createAccountButton",
+                           onclick: jt.fs("app.login.createAccount()")},
+                "Create account"];
+        html = jt.tac2html(html) + jt.byId('loginbuttonsdiv').innerHTML;
+        jt.out('loginbuttonsdiv', html);
+        html = ["span", {cla: "subtext"},
+                ["a", {id: "forgotpwlink", href: "#forgotPassword",
+                       title: "Email my password, I forgot it",
+                       onclick: jt.fs("app.login.forgotPassword()")},
+                 "Forgot my password..."]];
+        jt.out('forgotpassdiv', jt.tac2html(html));
     },
 
 
@@ -64,18 +80,18 @@ app.login = (function () {
     },
 
 
-    clearParams = function () {
-        //this also clears any search parameters to leave a clean url.
-        //that way a return call from someplace like twitter doesn't
-        //keep token info and similar parameter stuff hanging around.
-        var url = window.location.pathname;
-        //note this is using the standard html5 history directly.  That's
-        //a way to to clear the URL noise without a redirect triggering
-        //a page refresh. 
-        if(history && history.pushState && 
-                      typeof history.pushState === 'function') {
-            history.pushState("", document.title, url); }
-    },
+    // clearParams = function () {
+    //     //this also clears any search parameters to leave a clean url.
+    //     //that way a return call from someplace like twitter doesn't
+    //     //keep token info and similar parameter stuff hanging around.
+    //     var url = window.location.pathname;
+    //     //note this is using the standard html5 history directly.  That's
+    //     //a way to to clear the URL noise without a redirect triggering
+    //     //a page refresh. 
+    //     if(history && history.pushState && 
+    //                   typeof history.pushState === 'function') {
+    //         history.pushState("", document.title, url); }
+    // },
 
 
     //Cookie timeout is enforced both by the expiration setting here,
@@ -94,14 +110,24 @@ app.login = (function () {
     },
 
 
-    //safari displays "No%20match%20for%20those%20credentials"
-    //and even "No%2520match%2520for%2520those%2520credentials"
-    fixServerText = function (text) {
-        if(!text) {
-            text = ""; }
-        text = text.replace(/%20/g, " ");
-        text = text.replace(/%2520/g, " ");
-        return text;
+    // //safari displays "No%20match%20for%20those%20credentials"
+    // //and even "No%2520match%2520for%2520those%2520credentials"
+    // fixServerText = function (text) {
+    //     if(!text) {
+    //         text = ""; }
+    //     text = text.replace(/%20/g, " ");
+    //     text = text.replace(/%2520/g, " ");
+    //     return text;
+    // },
+
+
+    displayAccountNameMenu = function () {
+        //The account name they logged in with needs to be displayed
+        //as a link in the upper right.  Clicking brings up a menu
+        //with the option to sign out.  While it might seem nicer to
+        //display the profile name, the email address is better since
+        //it provides another check to make sure it is valid.
+        jt.out('headingdiv', authname);
     },
 
 
@@ -118,9 +144,18 @@ app.login = (function () {
 return {
 
     init: function () {
-        if(!loginhtml) {  //save original html in case needed later
-            loginhtml = jt.byId('logindiv').innerHTML; }
         logLoadTimes();
+        if(!loginhtml) {  //save html form in case needed later
+            loginhtml = jt.byId('logindiv').innerHTML; }
+        if(!app.login.isLoggedIn()) {
+            app.login.readAuthCookie(); }
+        if(app.login.isLoggedIn()) {
+            displayAccountNameMenu();
+            return app.profile.display(); }
+        if(!jt.byId('logindiv')) {
+            jt.out('contentdiv', loginhtml); }
+        if(!jt.byId('createAccountButton')) {  //form not decorated
+            decorateLoginForm(); }
     },
 
 
@@ -144,13 +179,11 @@ return {
             authmethod = mtn[0];
             authtoken = mtn[1];
             authname = mtn[2]; }
-        app.login.updateAuthentDisplay();
         return authtoken;  //true if set earlier
     },
 
 
     logout: function () {
-        var html;
         logoutWithNoDisplayUpdate();
         app.login.init();
     },
@@ -158,8 +191,17 @@ return {
 
     setAuth: function (method, token, name) {
         setAuthentication(method, token, name);
-    }
+    },
 
+
+    createAccount: function () {
+        jt.err("login.createAccount not implemented yet");
+    },
+
+
+    forgotPassword: function () {
+        jt.err("login.forgotPassword not implemented yet");
+    }
 
 };  //end of returned functions
 }());
