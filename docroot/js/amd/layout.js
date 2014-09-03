@@ -40,6 +40,7 @@ return {
 
     init: function () {
         app.layout.commonUtilExtensions();
+        findDisplayHeightAndWidth();
     },
 
 
@@ -104,7 +105,6 @@ return {
     //clobbers existing dialog if already open
     openDialog: function (coords, html, initf, visf) {
         var dlgdiv = jt.byId('dlgdiv');
-        app.layout.cancelOverlay();  //close overlay if it happens to be up
         //window.scrollTo(0,0);  -- makes phone dialogs jump around. Don't.
         coords = coords || {};  //default x and y separately
         coords.x = coords.x || Math.min(Math.round(app.winw * 0.1), 100);
@@ -128,16 +128,9 @@ return {
 
 
     closeDialog: function () {
-        var state, dlg;
+        var dlg;
         jt.out('dlgdiv', "");
         jt.byId('dlgdiv').style.visibility = "hidden";
-        state = app.history.currState();
-        if(!state || !state.view) {
-            navmode = "activity"; }
-        else {
-            navmode = state.view; }
-        app.layout.updateNavIcons();
-        app.layout.adjust();
         app.onescapefunc = app.escapefuncstack.pop();
         if(dlgqueue.length > 0) {
             dlg = dlgqueue.pop();

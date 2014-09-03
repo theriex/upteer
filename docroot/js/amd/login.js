@@ -14,6 +14,7 @@ app.login = (function () {
         authname = "",
         cookdelim = "..upteerauth..",
         loginhtml = "",
+        initparams = {},  //parameters the app was started with
 
 
     ////////////////////////////////////////
@@ -80,18 +81,18 @@ app.login = (function () {
     },
 
 
-    // clearParams = function () {
-    //     //this also clears any search parameters to leave a clean url.
-    //     //that way a return call from someplace like twitter doesn't
-    //     //keep token info and similar parameter stuff hanging around.
-    //     var url = window.location.pathname;
-    //     //note this is using the standard html5 history directly.  That's
-    //     //a way to to clear the URL noise without a redirect triggering
-    //     //a page refresh. 
-    //     if(history && history.pushState && 
-    //                   typeof history.pushState === 'function') {
-    //         history.pushState("", document.title, url); }
-    // },
+    clearParams = function () {
+        //this also clears any search parameters to leave a clean url.
+        //that way a return call from someplace like twitter doesn't
+        //keep token info and similar parameter stuff hanging around.
+        var url = window.location.pathname;
+        //note this is using the standard html5 history directly.  That's
+        //a way to to clear the URL noise without a redirect triggering
+        //a page refresh. 
+        if(history && history.pushState && 
+                      typeof history.pushState === 'function') {
+            history.pushState("", document.title, url); }
+    },
 
 
     //Cookie timeout is enforced both by the expiration setting here,
@@ -106,19 +107,18 @@ app.login = (function () {
         authmethod = method;
         authtoken = token;
         authname = name;
-        app.login.updateAuthentDisplay();
     },
 
 
-    // //safari displays "No%20match%20for%20those%20credentials"
-    // //and even "No%2520match%2520for%2520those%2520credentials"
-    // fixServerText = function (text) {
-    //     if(!text) {
-    //         text = ""; }
-    //     text = text.replace(/%20/g, " ");
-    //     text = text.replace(/%2520/g, " ");
-    //     return text;
-    // },
+    //safari displays "No%20match%20for%20those%20credentials"
+    //and even "No%2520match%2520for%2520those%2520credentials"
+    fixServerText = function (text) {
+        if(!text) {
+            text = ""; }
+        text = text.replace(/%20/g, " ");
+        text = text.replace(/%2520/g, " ");
+        return text;
+    },
 
 
     displayAccountNameMenu = function () {
@@ -127,7 +127,32 @@ app.login = (function () {
         //with the option to sign out.  While it might seem nicer to
         //display the profile name, the email address is better since
         //it provides another check to make sure it is valid.
-        jt.out('headingdiv', authname);
+        jt.out('emailspan', authname);
+        jt.out('logodiv', jt.tac2html(
+            ["img", {src: "img/logo.png", width:"155", height:"48"}]));
+    },
+
+
+    displayEmailSent = function () {
+        var html;
+        html = [["p",
+                 [["Your account information has been emailed to "],
+                  ["code", jt.byId('emailin').value],
+                  [" and should arrive in a few minutes.  If it doesn't" + 
+                   " show up, please"]]],
+                ["ol",
+                 [["li", "Make sure your email address is spelled correctly"],
+                  ["li", "Check your spam folder"],
+                  ["li", "Confirm the email address you entered is the same" +
+                        " one you used when you created your account."]]],
+                ["div", {cla: "dlgbuttonsdiv"},
+                 ["button", {type: "button", id: "okbutton",
+                             onclick: jt.fs("app.layout.closeDialog()")},
+                  "OK"]]];
+        html = app.layout.dlgwrapHTML("Email Account Password", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html), null,
+                              function () {
+                                  jt.byId('okbutton').focus(); });
     },
 
 
@@ -147,6 +172,13 @@ return {
         logLoadTimes();
         if(!loginhtml) {  //save html form in case needed later
             loginhtml = jt.byId('logindiv').innerHTML; }
+        initparams = jt.parseParams();
+        if(initparams.loginerr) {
+            jt.out('loginstatdiv', fixServerText(initparams.loginerr)); }
+        else if(initparams.authtoken && initparams.authname) {
+            setAuthentication("utin", initparams.authtoken, 
+                              initparams.authname); }
+        clearParams();
         if(!app.login.isLoggedIn()) {
             app.login.readAuthCookie(); }
         if(app.login.isLoggedIn()) {
@@ -195,12 +227,45 @@ return {
 
 
     createAccount: function () {
-        jt.err("login.createAccount not implemented yet");
+        var emaddr, password, data, buttonhtml;
+        emaddr = jt.byId('emailin').value;
+        password = jt.byId('passin').value;
+        if(!emaddr || !password || !emaddr.trim() || !password.trim()) {
+            jt.out('loginstatdiv', "Please specify an email and password");
+            return; }
+        jt.out('loginstatdiv', "&nbsp;");
+        buttonhtml = jt.byId('loginbuttonsdiv').innerHTML;
+        jt.out('loginbuttonsdiv', "Creating new account...");
+        data = jt.objdata({ emailin: emaddr, passin: password });
+        jt.call('POST', "newacct", data,
+                function (objs) {
+                    setAuthentication("utid", objs[0].token, emaddr);
+                    displayAccountNameMenu();
+                    jt.out('logindiv', "<p>Welcome to the Upteer volunteer community! Your account has been created. </p><p>Logging you in for the first time now...</p>");
+                    //database eventual consistency... give it a few seconds
+                    setTimeout(app.profile.display, 3000); },
+                app.failf(function (code, errtxt) {
+                    jt.out('loginstatdiv', String(code) + " " + errtxt);
+                    jt.out('loginbuttonsdiv', buttonhtml); }),
+                jt.semaphore("login.createAccount"));
     },
 
 
     forgotPassword: function () {
-        jt.err("login.forgotPassword not implemented yet");
+        var email, data;
+        email = jt.byId('emailin').value;
+        if(!jt.isProbablyEmail(email)) {
+            jt.out('loginstatdiv', "Please fill in your email address.");
+            return; }
+        jt.out('loginstatdiv', "Sending...");
+        data = "email=" + jt.enc(email);
+        jt.call('POST', "mailcred", data,
+                function (objs) {
+                    jt.out('loginstatdiv', "&nbsp;");
+                    displayEmailSent(); },
+                app.failf(function (code, errtxt) {
+                    jt.out('loginstatdiv', errtxt); }),
+                jt.semaphore("emailCredentials"));
     }
 
 };  //end of returned functions

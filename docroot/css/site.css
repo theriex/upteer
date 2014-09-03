@@ -37,6 +37,23 @@ img { border:0px; }
  * general class and id formatting
  ************************************************************
  */
-#appspacediv { display:table; margin:10px auto; }
+#headerdiv { font-size:small; padding:0px 10px; }
+#logodiv { float:left; }
+#acctstatdiv { float:right; }
+#appspacediv { display:table; margin:10px auto; clear:both; }
 .subtext { font-size: small; }
-
+#dlgdiv { position:absolute; left:10%; top:60px;
+  visibility:hidden; 
+  max-width:85%;
+  padding:1px;
+  background-color: #f2fbff;
+  font-size: medium;
+  padding:10px;
+  border-radius:5px;
+  border: 1px solid #666666; 
+  box-shadow:10px 10px 5px #888888; }
+#closeline { text-align:right; font-size:x-small; }
+.dlgclosex { float:right; font-size:x-small; }
+.headingtxt { font-size:large; font-weight:bold; text-align:center; }
+.dlgbuttonsdiv { text-align:center; padding:20px 0px 10px 0px; }
+.floatclear { clear:both; }

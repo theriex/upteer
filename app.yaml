@@ -16,7 +16,7 @@ handlers:
 ## "authparams" means
 ##   am: authentication method: "utid" (other methods may be added later)
 ##   at: authentication token (from local or supported external source)
-##   an: authentication name (username if native auth, whatever otherwise)
+##   an: authentication name (email if native auth, whatever otherwise)
 ##
 ## Queries may return a base64 cursor value as the last element.
 ## Optional parameters are listed in parentheses
@@ -34,6 +34,26 @@ handlers:
 ## Get an access token from native credentials
 ## POST params: user, pass 
 - url: /login.*
+  script: src.py.login.app
+
+## Create a new native account
+## POST params: email, password
+- url: /newacct.*
+  script: src.py.login.app
+
+## Read native credentials and redirect back
+## POST params: emailin, passin (,returnto)
+- url: /redirlogin.*
+  script: src.py.login.app
+
+## Email forgotten native account password
+## POST params: email
+- url: /mailcred.*
+  script: src.py.login.app
+
+## Change native account password
+## POST params: password, authparams
+- url: /chgpwd.*
   script: src.py.login.app
 
 

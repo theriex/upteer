@@ -16,7 +16,11 @@
 <body id="bodyid" ondragover="app.layout.bodydragover(event);" 
       ondrop="app.layout.bodydrop(event);">
 
-<div id="headingdiv">
+<div id="headerdiv">
+  <div id="logodiv"></div>
+  <div id="acctstatdiv">
+    <span id="noticespan"></span><span id="emailspan"></span>
+  </div>
 </div>
 
 <div id="appspacediv"> 
@@ -27,8 +31,7 @@
     </noscript>
     <!-- login has to be an actual form to enable remembered passwords -->
     <div id="logindiv">
-      <form id="loginform" method="post" 
-            action="https://upteer.appspot.com/redirlogin">
+      <form id="loginform" method="post" action="redirlogin">
         <div id="logodiv"><img src="img/logotagged.png"/></div>
         <div id="loginstatdiv">&nbsp;</div>
         <div id="loginparaminputs"></div>
@@ -36,9 +39,9 @@
           <table id="loginformtable">
             <tr>
               <td align="right">
-                <label for="userin" class="liflab">Email</label></td>
+                <label for="emailin" class="liflab">Email</label></td>
               <td align="left">
-                <input type="text" name="userin" id="userin" 
+                <input type="text" name="emailin" id="emailin" 
                        size="20" autofocus/></td>
             </tr><tr>
               <td align="right">
