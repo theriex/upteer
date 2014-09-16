@@ -16,56 +16,58 @@
 <body id="bodyid" ondragover="app.layout.bodydragover(event);" 
       ondrop="app.layout.bodydrop(event);">
 
-<div id="headerdiv">
-  <div id="logodiv"></div>
-  <div id="acctstatdiv">
-    <span id="noticespan"></span><span id="emailspan"></span>
+<div id="pagecontentdiv">
+  <div id="headerdiv">
+    <div id="logodiv"></div>
+    <div id="acctstatdiv">
+      <span id="noticespan"></span><span id="emailspan"></span>
+    </div>
   </div>
-</div>
 
-<div id="appspacediv"> 
-  <div id="contentdiv">
-    <noscript>
-      <p><b>Upteer needs Javascript to do anything useful, please enable...
-      </b></p>
-    </noscript>
-    <!-- login has to be an actual form to enable remembered passwords -->
-    <div id="logindiv">
-      <form id="loginform" method="post" action="redirlogin">
-        <div id="logodiv"><img src="img/logotagged.png"/></div>
-        <div id="loginstatdiv">&nbsp;</div>
-        <div id="loginparaminputs"></div>
-        <div id="loginvisualelementsdiv">
-          <table id="loginformtable">
-            <tr>
-              <td align="right">
-                <label for="emailin" class="liflab">Email</label></td>
-              <td align="left">
-                <input type="text" name="emailin" id="emailin" 
-                       size="20" autofocus/></td>
-            </tr><tr>
-              <td align="right">
-                <label for="passin" class="liflab">Password</label></td>
-              <td align="left">
-                <!-- no onchange submit here, safari pw autofill loops -->
-                <input type="password" name="passin" 
-                       id="passin" size="20"/></td>
-            </tr><tr>
-              <td/>
-              <td>
-                <div id="forgotpassdiv"></div></td>
-            </tr><tr>
-              <td colspan="2" align="right" id="loginbtd">
-                <div id="loginbuttonsdiv" class="formbuttonsdiv">
-                  <input value="Sign in" type="submit" class=\"loginbutton\"/>
+  <div id="appspacediv"> 
+    <div id="contentdiv">
+      <noscript>
+        <p><b>Upteer needs Javascript to do anything useful, please enable...
+        </b></p>
+      </noscript>
+      <!-- login has to be an actual form to enable remembered passwords -->
+      <div id="logindiv">
+        <form id="loginform" method="post" action="redirlogin">
+          <div id="logodiv"><img src="img/logotagged.png"/></div>
+          <div id="loginstatdiv">&nbsp;</div>
+          <div id="loginparaminputs"></div>
+          <div id="loginvisualelementsdiv">
+            <table id="loginformtable">
+              <tr>
+                <td align="right">
+                  <label for="emailin" class="liflab">Email</label></td>
+                <td align="left">
+                  <input type="text" name="emailin" id="emailin" 
+                         size="20" autofocus/></td>
+              </tr><tr>
+                <td align="right">
+                  <label for="passin" class="liflab">Password</label></td>
+                <td align="left">
+                  <!-- no onchange submit here, safari pw autofill loops -->
+                  <input type="password" name="passin" 
+                         id="passin" size="20"/></td>
+              </tr><tr>
+                <td/>
+                <td>
+                  <div id="forgotpassdiv"></div></td>
+              </tr><tr>
+                <td colspan="2" align="right" id="loginbtd">
+                  <div id="loginbuttonsdiv" class="formbuttonsdiv">
+                    <input value="Sign in" type="submit" class=\"loginbutton\"/>
                 </div></td>
-            </tr>
-          </table>
-        </div> <!-- visualelementsdiv -->
-      </form>
-    </div> <!-- logindiv -->
-  </div> <!-- contentdiv -->
-</div> <!-- appspacediv -->
+              </tr>
+            </table>
+          </div> <!-- visualelementsdiv -->
+        </form>
+      </div> <!-- logindiv -->
+    </div> <!-- contentdiv -->
+  </div> <!-- appspacediv -->
+</div> <!-- pagecontentdiv -->
 
 <div id="dlgdiv" draggable="true" ondragstart="app.layout.dragstart(event);"
      ondragend="app.layout.dragend(event);"></div>
