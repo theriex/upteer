@@ -295,7 +295,7 @@ class MailCredentials(webapp2.RequestHandler):
         eaddr = self.request.get('email')
         if eaddr:
             content = "You requested your password be emailed to you..."
-            content += "\n\nUpteer has looked up " + eaddr
+            content += "\n\nUpteer has looked up " + eaddr + " "
             usernames = ""
             eaddr = eaddr.lower()
             where = "WHERE email=:1 LIMIT 9"
