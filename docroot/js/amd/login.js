@@ -171,7 +171,12 @@ app.login = (function () {
 return {
 
     init: function () {
+        var url;
         logLoadTimes();
+        url = window.location.href;
+        if((url.indexOf("http:") === 0) && (url.search(/:\d080/) < 0)) {
+            //not over https and not local development. Redirect.
+            window.location.href = "https" + url.slice(4); }
         if(!loginhtml) {  //save html form in case needed later
             loginhtml = jt.byId('logindiv').innerHTML; }
         initparams = jt.parseParams();
