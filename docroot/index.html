@@ -4,14 +4,14 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="robots" content="noodp" />
-  <meta name="description" content="Connecting volunteers to opportunities. As a volunteer, list what you have to offer in your profile. As a non-profit organization, list volunteer opportunities. Match and connect. Make the world a better place." />
+  <meta name="description" content="Upteer connects volunteers and opportunities through skills and social connections." />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta property="og:image" content="img/logotagged.png" />
-  <meta property="twitter:image" content="img/logotagged.png" />
-  <meta itemprop="image" content="img/logotagged.png" />
+  <meta property="og:image" content="img/logo.png" />
+  <meta property="twitter:image" content="img/logo.png" />
+  <meta itemprop="image" content="img/logo.png" />
   <title>Upteer</title>
   <link href="css/site.css" rel="stylesheet" type="text/css" />
-  <link rel="image_src" href="img/logotagged.png" />
+  <link rel="image_src" href="img/logo.png" />
 </head>
 <body id="bodyid" ondragover="app.layout.bodydragover(event);" 
       ondrop="app.layout.bodydrop(event);">
@@ -24,16 +24,28 @@
     </div>
   </div>
 
+  <div id="footerdiv"> <!-- lower z than content -->
+    <a href="docs/about.html">about</a>
+    <a href="docs/terms.html">terms</a>
+    <a href="docs/privacy.html">privacy</a>
+    <span id="footerextraspan"></span>
+  </div>
+
   <div id="appspacediv"> 
     <div id="contentdiv">
       <noscript>
         <p><b>Upteer needs Javascript to do anything useful, please enable...
         </b></p>
       </noscript>
+      <div id="logodiv"><img src="img/logo.png"/></div>
+      <div id="tagcontainerdiv" class="floatclear">
+        <div id="taglinediv">
+          <a href="docs/about.html"
+             onclick="app.layout.displayDoc('docs/about.html');return false;">
+            Connecting volunteers </a> </div></div>
       <!-- login has to be an actual form to enable remembered passwords -->
       <div id="logindiv">
         <form id="loginform" method="post" action="redirlogin">
-          <div id="logodiv"><img src="img/logotagged.png"/></div>
           <div id="loginstatdiv">&nbsp;</div>
           <div id="loginparaminputs"></div>
           <div id="loginvisualelementsdiv">

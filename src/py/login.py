@@ -273,7 +273,7 @@ class TokenAndRedirect(webapp2.RequestHandler):
         redurl += "#"
         email = self.request.get('emailin')
         if not email or len(email) < 1:
-            redurl += "loginerr=" + "No email address specified"
+            redurl += "loginerr=" + "Please enter an email address"
         else:
             email = email.lower()
             password = self.request.get('passin')

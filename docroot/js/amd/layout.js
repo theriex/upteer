@@ -17,6 +17,61 @@ app.layout = (function () {
     // helper functions
     ////////////////////////////////////////
 
+    displayDocContent = function (url, html) {
+        var idx;
+        if(!html || !html.trim()) {
+            html = url + " contains no text"; }
+        idx = html.indexOf("<body>");
+        if(idx > 0) {
+            html = html.slice(idx + "<body>".length,
+                              html.indexOf("</body")); }
+        html = html.replace(/\.<!-- \$ABOUTCONTACT -->/g,
+            "<a href=\"mailto:support@upteer.com\">email support</a>");
+        //create title from capitalized doc file name
+        idx = url.lastIndexOf("/");
+        if(idx > 0) {
+            url = url.slice(idx + 1); }
+        idx = url.indexOf(".");
+        if(idx > 0) {
+            url = url.slice(0, idx); }
+        switch(url) {
+        case "about": url = "About Upteer"; break;
+        case "terms": url = "Terms of Use"; break;
+        case "privacy": url = "Privacy Statement"; break
+        default: url = url.capitalize(); }
+        //display content
+        html = app.layout.dlgwrapHTML(url, html);
+        app.layout.openDialog({x:20, y:60}, html);
+    },
+
+
+    //relative paths don't work when you are running file://...
+    relativeToAbsolute = function (url) {
+        var loc = window.location.href;
+        loc = loc.slice(0, loc.lastIndexOf("/") + 1);
+        return loc + url;
+    },
+
+
+    attachDocLinkClick = function (node, link) {
+        jt.on(node, "click", function (e) {
+            jt.evtend(e);
+            app.layout.displayDoc(link); });
+    },
+
+
+    localDocLinks = function () {
+        var i, nodes, node, href;
+        nodes = document.getElementsByTagName('a');
+        for(i = 0; nodes && i < nodes.length; i += 1) {
+            node = nodes[i];
+            href = node.href;
+            //href may have been resolved from relative to absolute...
+            if(href && href.indexOf("docs/") >= 0) {
+                attachDocLinkClick(node, href); } }
+    },
+
+
     findDisplayHeightAndWidth = function () {
         //most browsers (FF, safari, chrome, etc)
         if(window.innerWidth && window.innerHeight) {
@@ -41,6 +96,7 @@ return {
     init: function () {
         app.layout.commonUtilExtensions();
         findDisplayHeightAndWidth();
+        localDocLinks();
     },
 
 
@@ -82,6 +138,20 @@ return {
                    "\nPlease upgrade your browser");
         }
         return obj;
+    },
+
+
+    displayDoc: function (url) {
+        var html = "Fetching " + url + " ...";
+        app.layout.openDialog(null, html);
+        if(url.indexOf(":") < 0) {
+            url = relativeToAbsolute(url); }
+        jt.request('GET', url, null,
+                   function (resp) {
+                       displayDocContent(url, resp); },
+                   function (code, errtxt) {
+                       displayDocContent(url, errtxt); },
+                   jt.semaphore("layout.displayDoc"));
     },
 
 

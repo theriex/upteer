@@ -58,3 +58,10 @@ img { border:0px; }
 .headingtxt { font-size:large; font-weight:bold; text-align:center; }
 .dlgbuttonsdiv { text-align:center; padding:20px 0px 10px 0px; }
 .floatclear { clear:both; }
+#tagcontainerdiv { padding:0; }
+#taglinediv { position: relative; top: -20px; margin:0px 0px 0px 120px; 
+  font-size:medium; font-weight:normal; }
+#footerdiv { font-size:x-small; text-align:center; 
+  word-spacing:40px; padding:0px 20px 5px 20px;
+  position:fixed; left:0px; bottom:0px; height:30px; width:100%; }
+#loginstatdiv { font-size:small; font-weight:bold; }
