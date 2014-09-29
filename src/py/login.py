@@ -296,7 +296,6 @@ class MailCredentials(webapp2.RequestHandler):
         if eaddr:
             content = "You requested your password be emailed to you..."
             content += "\n\nUpteer has looked up " + eaddr + " "
-            usernames = ""
             eaddr = eaddr.lower()
             where = "WHERE email=:1 LIMIT 9"
             accounts = UpteerAccount.gql(where, eaddr)
@@ -315,7 +314,7 @@ class MailCredentials(webapp2.RequestHandler):
                     to=eaddr,
                     subject="Upteer account login",
                     body=content)
-            writeJSONResponse("[]", self.response)
+        writeJSONResponse("[]", self.response)
 
 
 class ChangePassword(webapp2.RequestHandler):

@@ -248,7 +248,7 @@ return {
                 function (objs) {
                     setAuthentication("utid", objs[0].token, emaddr);
                     displayAccountNameMenu();
-                    jt.out('logindiv', "<p>Welcome to the Upteer volunteer community! Your account has been created. </p><p>Logging you in for the first time now...</p>");
+                    jt.out('logindiv', "<p>Welcome to the Upteer volunteer community! Your account has been created. </p><p>Signing you in for the first time now...</p>");
                     //database eventual consistency... give it a few seconds
                     setTimeout(app.profile.display, 3000); },
                 app.failf(function (code, errtxt) {
@@ -272,7 +272,7 @@ return {
                     displayEmailSent(); },
                 app.failf(function (code, errtxt) {
                     jt.out('loginstatdiv', errtxt); }),
-                jt.semaphore("emailCredentials"));
+                jt.semaphore("forgotPassword"));
     }
 
 };  //end of returned functions
