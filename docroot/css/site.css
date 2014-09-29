@@ -37,8 +37,7 @@ img { border:0px; }
  * general class and id formatting
  ************************************************************
  */
-#pagecontentdiv { margin:0px; padding:0px;
-  background-image: url('../img/qbwave.png'); background-repeat: no-repeat; }
+#pagecontentdiv { margin:0px; padding:0px; }
 #headerdiv { font-size:small; padding:0px 10px; }
 #logodiv { float:left; }
 #acctstatdiv { float:right; }
