@@ -203,6 +203,11 @@ return {
     },
 
 
+    getAuthName: function () {
+        return authname;
+    },
+
+
     isLoggedIn: function () {
         if(authmethod && authtoken && authname) {
             return true; }

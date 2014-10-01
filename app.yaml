@@ -58,6 +58,20 @@ handlers:
 
 
 ######################################################################
+##        Profile access
+
+## Retrieve profile by email address
+## GET params: authparams
+- url: /myprofile.*
+  script: src.py.profile.app
+
+## Save a new or modified profile
+## POST params: profile data, authparams
+- url: /saveprof.*
+  script: src.py.profile.app
+
+
+######################################################################
 # General endpoints
 
 ## Trap anything ending with a slash and send it to index.html since

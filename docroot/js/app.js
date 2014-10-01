@@ -91,8 +91,8 @@ var app = {},  //Global container for application level funcs and values
 
     app.crash = function (code, errtxt, method, url, data) {
         var html, now, subj, body, emref, support;
-        support = "theriex";
-        support += "@gmail.com";
+        support = "support";
+        support += "@upteer.com";
         now = new Date();
         subj = "Server crash";
         body = "Hey,\n\n" +

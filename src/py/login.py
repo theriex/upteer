@@ -3,6 +3,7 @@ import datetime
 from google.appengine.ext import db
 import logging
 from google.appengine.api import mail
+from google.appengine.api.datastore_types import Blob
 from Crypto.Cipher import AES
 import base64
 import httplib

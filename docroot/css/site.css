@@ -42,6 +42,7 @@ img { border:0px; }
 #logodiv { float:left; }
 #acctstatdiv { float:right; }
 #appspacediv { display:table; margin:0px auto; clear:both; }
+#contentdiv { padding:10px; }
 .subtext { font-size: small; }
 #dlgdiv { position:absolute; left:10%; top:60px;
   visibility:hidden; 
@@ -65,3 +66,11 @@ img { border:0px; }
   word-spacing:40px; padding:0px 20px 5px 20px;
   position:fixed; left:0px; bottom:0px; height:30px; width:100%; }
 #loginstatdiv { font-size:small; font-weight:bold; }
+.formlabel { font-size:medium; font-weight:normal; padding:10px; }
+.formbuttonsdiv { padding:20px; text-align:center; }
+.formbuttonsdiv button { margin:0px 10px; }
+
+/* profile view settings */
+.profpic { max-width:125px; max-height:125px; }
+#profpicdiv { width:130px; height:130px; text-align:center; }
+.valpadtd { padding:0px 0px 0px 20px; }
