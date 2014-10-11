@@ -206,13 +206,19 @@ def verifySecureComms(handler, url):
     return False
 
 
+def normalize_email(emaddr):
+    emaddr = emaddr.lower()
+    emaddr = re.sub('%40', '@', emaddr)
+    return emaddr
+
+
 class CreateAccount(webapp2.RequestHandler):
     def post(self):
         url = self.request.url;
         if not verifySecureComms(self, url):
             return
         emaddr = self.request.get('emailin') or ""
-        emaddr = emaddr.lower()
+        emaddr = normalize_email(lower)
         # something @ something . something
         if not re.match(r"[^@]+@[^@]+\.[^@]+", emaddr):
             self.error(412)
@@ -243,7 +249,7 @@ class GetToken(webapp2.RequestHandler):
         if not verifySecureComms(self, url):
             return
         email = self.request.get('email') or ""
-        email = email.lower()
+        email = normalize_email(email)
         password = self.request.get('pass') or ""
         where = "WHERE email=:1 AND password=:2 LIMIT 1"
         accounts = UpteerAccount.gql(where, email)
@@ -276,7 +282,7 @@ class TokenAndRedirect(webapp2.RequestHandler):
         if not email or len(email) < 1:
             redurl += "loginerr=" + "Please enter an email address"
         else:
-            email = email.lower()
+            email = normalize_email(email)
             password = self.request.get('passin')
             where = "WHERE email=:1 AND password=:2 LIMIT 1"
             accounts = UpteerAccount.gql(where, email, password)
@@ -297,7 +303,7 @@ class MailCredentials(webapp2.RequestHandler):
         if eaddr:
             content = "You requested your password be emailed to you..."
             content += "\n\nUpteer has looked up " + eaddr + " "
-            eaddr = eaddr.lower()
+            eaddr = normalize_email(eaddr)
             where = "WHERE email=:1 LIMIT 9"
             accounts = UpteerAccount.gql(where, eaddr)
             found = accounts.count()

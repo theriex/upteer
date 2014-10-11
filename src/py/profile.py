@@ -4,17 +4,18 @@ from google.appengine.ext import db
 import logging
 from login import *
 
+# Before a profile is activated via email the status is "Pending".
 class Profile(db.Model):
     """ A volunteer profile """
     # the profile is tied to an account via the email address
     email = db.StringProperty(required=True)    # lowercase
     zipcode = db.StringProperty(required=True)  # 5 numbers (+4 not used)
+    modified = db.StringProperty()              # iso date
     name = db.StringProperty()                  # displayed on site
     status = db.StringProperty()                # Available/Busy/Inactive
     profpic = db.BlobProperty()
     skills = db.TextProperty()                  # skill keywords CSV
     lifestat = db.TextProperty()                # life status keywords CSV
-    modified = db.StringProperty()              # iso date
 
 
 def set_profile_fields(req, prof):
