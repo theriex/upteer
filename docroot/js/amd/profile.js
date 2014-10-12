@@ -46,11 +46,11 @@ app.profile = (function () {
             if(txt) {
                 txt = txt.body.innerHTML;
                 if(txt.indexOf("Done: ") === 0) {
+                    myprof.profpic = jt.instId(myprof);
                     myprof.modified = txt.slice("Done: ".length);
                     app.layout.closeDialog();
-                    //update pic src, but do not specify as editable.  Event
-                    //connection already set up.
-                    app.profile.profPicHTML(myprof, false);
+                    //rebuild whole form since image size may change layout
+                    app.profile.edit();
                     return; }
                 if(txt.indexOf("Error: ") === 0) {
                     jt.out('imgupstatdiv', txt); } }
@@ -154,7 +154,7 @@ app.profile = (function () {
         domelem = jt.byId("abouttxt");
         if(domelem) {
             domelem.readOnly = false;
-            domelem.value = prof.about;
+            domelem.value = prof.about || "";
             domelem.placeholder = "Interests? Public linkedin profile?";
             domelem.style.width = domelem.parentNode.offsetWidth + "px"; }
         app.profile.profPicHTML(prof, true);
@@ -207,7 +207,7 @@ app.profile = (function () {
                    ["tr",
                     ["td", {colspan: 2},
                      ["div", {id: "aboutdiv", cla: "bigtxtdiv"},
-                      jt.linkify(prof.about)]]],
+                      jt.linkify(prof.about || "")]]],
                    //prof.lifestat CSV
                    //prof.skills CSV
                    ["tr",
@@ -232,9 +232,11 @@ app.profile = (function () {
             return; }
         data = jt.objdata(prof);
         jt.call('POST', "saveprof?" + app.login.authparams(), data,
-                function (savepens) {
-                    myprof = savepens[0];
-                    if(edit) {
+                function (saveprofs) {
+                    myprof = saveprofs[0];
+                    if(edit === "picupld") {
+                        displayUploadPicForm(myprof); }
+                    else if(edit) {
                         editProfile(); }
                     else {
                         readProfile(myprof); } },
@@ -326,8 +328,7 @@ return {
             jt.on('profpicdiv', 'click', function (e) {
                 jt.evtend(e);
                 if(jt.byId('profsaveb')) {  //save other field edits first
-                    app.profile.save("edit"); }
-                displayUploadPicForm(myprof); }); }
+                    app.profile.save("picupld"); } }); }
     }
 
 
