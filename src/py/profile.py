@@ -1,21 +1,26 @@
 import webapp2
 import datetime
 from google.appengine.ext import db
+from google.appengine.api import images
 import logging
 from login import *
 
-# Before a profile is activated via email the status is "Pending".
+# The email address is verified by confirmation.  Before that the
+# status field may be filled out with a token or other value.  The
+# profile only shows up on the site if Available or Busy.
 class Profile(db.Model):
     """ A volunteer profile """
     # the profile is tied to an account via the email address
     email = db.StringProperty(required=True)    # lowercase
     zipcode = db.StringProperty(required=True)  # 5 numbers (+4 not used)
-    modified = db.StringProperty()              # iso date
+    modified = db.StringProperty()              # ISO date
     name = db.StringProperty()                  # displayed on site
     status = db.StringProperty()                # Available/Busy/Inactive
     profpic = db.BlobProperty()
+    about = db.TextProperty()
     skills = db.TextProperty()                  # skill keywords CSV
     lifestat = db.TextProperty()                # life status keywords CSV
+    mailverify = db.StringProperty()            # ISO date
 
 
 def set_profile_fields(req, prof):
@@ -24,6 +29,11 @@ def set_profile_fields(req, prof):
     prof.zipcode = req.get('zipcode') or ""
     prof.name = req.get('name') or ""
     prof.status = req.get('status') or "Available"
+    if not prof.profpic:
+        prof.status = "No Pic"
+    elif prof.status == "No Pic":
+        prof.status = "Available"
+    prof.about = req.get('about') or ""
     prof.skills = req.get('skills') or ""
     prof.lifestat = req.get('lifestat') or ""
 
@@ -79,7 +89,68 @@ class SaveProfile(webapp2.RequestHandler):
         returnJSON(self.response, [ prof ])
 
 
+class UploadProfPic(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers['Content-Type'] = 'text/html'
+        self.response.write('Ready')
+    def post(self):
+        errmsg = "You are not authorized to update this profile pic"
+        acc = authenticated(self.request)
+        if not acc:
+            self.error(401)
+            self.response.out.write("Authentication failed")
+            return
+        profid = self.request.get('_id')
+        profile = Profile.get_by_id(intz(profid))
+        if not profile:
+            self.error(404)
+            self.response.out.write("Error: Could not find profile " + profid)
+            return
+        if acc.email != profile.email:
+            self.error(403)
+            self.response.out.write("Error: Profile does not match account")
+            return
+        upfile = self.request.get("picfilein")
+        if not upfile:
+            self.error(400)
+            self.response.out.write("Error: No picfilein value")
+            return
+        try:
+            profile.profpic = db.Blob(upfile)
+            # resize to at most 160x160 while preserving relative dims
+            profile.profpic = images.resize(profile.profpic, 160, 160)
+            profile.modified = nowISO()
+            if profile.status == "No Pic":
+                profile.status = "Available"
+            profile.put()
+        except Exception as e:
+            self.error(400)
+            self.response.out.write("Error: " + str(e))
+            return
+        self.response.headers['Content-Type'] = 'text/html'
+        self.response.out.write("Done: " + profile.modified)
+
+
+class GetProfPic(webapp2.RequestHandler):
+    def get(self):
+        profid = self.request.get('profileid')
+        prof = Profile.get_by_id(intz(profid))
+        if not prof and prof.profpic:
+            self.error(404)
+            self.response.out.write("Profile pic for Profile " + str(profid) +
+                                    " not found.")
+            return
+        img = images.Image(prof.profpic)
+        img.resize(width=160, height=160)
+        img = img.execute_transforms(output_encoding=images.PNG)
+        self.response.headers['Content-Type'] = "image/png"
+        self.response.out.write(img)
+
+
 
 app = webapp2.WSGIApplication([('/myprofile', MyProfile),
-                               ('/saveprof', SaveProfile)], debug=True)
+                               ('/saveprof', SaveProfile),
+                               ('/profpicupload', UploadProfPic),
+                               ('/profpic', GetProfPic)
+                               ], debug=True)
 

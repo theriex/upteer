@@ -70,6 +70,17 @@ handlers:
 - url: /saveprof.*
   script: src.py.profile.app
 
+## Upload a profile pic
+## POST params: picfilein, _id, authparams
+##   _id: The PenName instance id
+- url: /profpicupload.*
+  script: src.py.profile.app
+
+## Retrieve a profile pic
+## GET params: profileid
+- url: /profpic.*
+  script: src.py.profile.app
+
 
 ######################################################################
 # General endpoints

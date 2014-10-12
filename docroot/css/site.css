@@ -69,8 +69,16 @@ img { border:0px; }
 .formlabel { font-size:medium; font-weight:normal; padding:10px; }
 .formbuttonsdiv { padding:20px; text-align:center; }
 .formbuttonsdiv button { margin:0px 10px; }
+.tablediv { display:table; margin:0px auto; }
+
 
 /* profile view settings */
+.formstatdiv { font-size:medium; padding:10px; }
 .profpic { max-width:125px; max-height:125px; }
 #profpicdiv { width:130px; height:130px; text-align:center; }
 .valpadtd { padding:0px 0px 0px 20px; }
+.bigtxtdiv { font-size:medium; }
+#abouttxt { padding:2px; height:70px; font-size:small;
+  font-family:"Verdana", "Arial", "Helvetica", sans-serif;
+}
+.tdnarrow { width:5%; padding:0px 5px 0px 0px; }

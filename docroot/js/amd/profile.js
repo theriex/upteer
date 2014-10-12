@@ -23,49 +23,72 @@ app.profile = (function () {
     ////////////////////////////////////////
 
     readProfileFormValues = function () {
-        var prof = myprof, sel;
+        var prof = myprof, domelem;
         prof.name = jt.safeget('namein', 'value') || prof.name;
         prof.email = jt.safeget('emailin', 'value') || prof.email;
         prof.zipcode = jt.safeget('zipin', 'value') || prof.zipcode;
-        sel = jt.byId('statussel');
-        if(sel) {
-            prof.status = statusvals[sel.selectedIndex]; }
+        domelem = jt.byId('statussel');
+        if(domelem) {
+            prof.status = statusvals[domelem.selectedIndex]; }
+        domelem = jt.byId('abouttxt');
+        if(domelem) {
+            prof.about = domelem.value; }
         //prof.lifestat CSV
         //prof.skills CSV
     },
 
 
-    displayUploadPicForm = function (prof) {
-        jt.err("displayUploadPicForm not implemented yet");
+    monitorPicUpload = function () {
+        var tgif, txt;
+        tgif = jt.byId('tgif');
+        if(tgif) {
+            txt = tgif.contentDocument || tgif.contentWindow.document;
+            if(txt) {
+                txt = txt.body.innerHTML;
+                if(txt.indexOf("Done: ") === 0) {
+                    myprof.modified = txt.slice("Done: ".length);
+                    app.layout.closeDialog();
+                    //update pic src, but do not specify as editable.  Event
+                    //connection already set up.
+                    app.profile.profPicHTML(myprof, false);
+                    return; }
+                if(txt.indexOf("Error: ") === 0) {
+                    jt.out('imgupstatdiv', txt); } }
+            setTimeout(monitorPicUpload, 800); }
     },
 
 
-    profPicHTML = function (prof, editable) {
-        var imgsrc, picdiv, html;
-        imgsrc = "img/emptyprofpic.png";
-        if(editable && !prof.profpic) {
-            picdiv = jt.byId('profpicdiv');
-            picdiv.style.background = "url('" + imgsrc + "') no-repeat";
-            picdiv.style.backgroundSize = "125px 125px";
-            html = ["div", {id: "picplaceholderdiv", cla: "formlabel"},
-                    "Click to upload a pic of yourself"]; }
-        else { //have pic, or not editable
-            if(prof.profpic) {
-                imgsrc = "profpic?profileid=" + jt.instId(prof); }
-            html = ["img", {cla: "profpic", src: imgsrc}]; }
-        jt.out('profpicdiv', jt.tac2html(html));
-        if(editable) {
-            jt.on('profpicdiv', 'click', function (e) {
-                jt.evtend(e);
-                if(jt.byId('profsaveb')) {  //save other field edits first
-                    app.profile.save("edit"); }
-                displayUploadPicForm(myprof); }); }
+    //Assumes the profile has been saved and has an associated id.
+    displayUploadPicForm = function (prof) {
+        var html, coords;
+        html = [["form", {action: "/profpicupload", method: "post",
+                          enctype: "multipart/form-data", target: "tgif"},
+                 [["input", {type: "hidden", name: "_id", 
+                             value: jt.instId(prof)}],
+                  jt.paramsToFormInputs(app.login.authparams()),
+                  ["div", {cla: "tablediv"},
+                   [["div", {id: "imgupstatdiv", cla: "formstatdiv"},
+                     "&nbsp;"],
+                    ["div", {cla: "fileindiv"},
+                     ["input", {type: "file", name: "picfilein", 
+                                id: "picfilein"}]],
+                    ["div", {cla: "formbuttonsdiv"},
+                     ["input", {type: "submit", value: "Upload"}]]]]]],
+                ["iframe", {id: "tgif", name: "tgif", src: "/profpicupload",
+                           style: "display:none"}]];
+        html = app.layout.dlgwrapHTML("Upload Picture", html);
+        coords = jt.geoPos(jt.byId('profpicdiv'));
+        app.layout.openDialog({x: coords.x, y: coords.y}, 
+                              jt.tac2html(html), null,
+                              function () {
+                                  monitorPicUpload();
+                                  jt.byId('picfilein').focus(); });
     },
 
 
     //ATTENTION: allow for changing email after initial profile setup.
     editProfile = function () {
-        var html, prof = myprof, options = [], i;
+        var html, prof = myprof, options = [], i, domelem;
         for(i = 0; i < statusvals.length; i += 1) {
             options.push(
                 ["option", {id: "statval" + (+i),
@@ -73,10 +96,12 @@ app.profile = (function () {
                                               "selected")},
                  statusvals[i]]); }
         html = ["div", {id: "profdiv"},
-                [["div", {id: "profstatdiv"}, "&nbsp;"],
+                [["div", {id: "profstatdiv", cla: "formstatdiv"}, 
+                  "&nbsp;"],
                  ["table", {cla: "formtable"},
                   [["tr",
-                    [["td", {id: "picuploadtd", rowspan: 4},
+                    [["td", {id: "picuploadtd", cla: "tdnarrow",
+                             rowspan: 4},
                       ["div", {id: "profpicdiv"},
                        ["img", {cla: "profpic", src: "img/emptyprofpic.png"}]]],
                      ["td", {align: "right"},
@@ -87,7 +112,7 @@ app.profile = (function () {
                                  value: prof.name || "",
                                  size: 20, placeholder: "Your Name"}]]]],
                    ["tr",
-                    [//profPicHTML extends into here
+                    [//pic html extends into here
                      ["td", {align: "right"},
                       ["label", {fo: "emailin", cla: "formlabel"},
                        "Email"]],
@@ -97,7 +122,7 @@ app.profile = (function () {
                                  placeholder: app.login.getAuthName(),
                                  disabled: "disabled"}]]]],
                    ["tr",
-                    [//profPicHTML extends into here
+                    [//pic html extends into here
                      ["td", {align: "right"},
                       ["label", {fo: "zipin", cla: "formlabel"},
                        "Zipcode"]],
@@ -106,13 +131,17 @@ app.profile = (function () {
                                  value: prof.zipcode || "",
                                  size: 8, placeholder: "99999"}]]]],
                    ["tr",
-                    [//profPicHTML extends into here
+                    [//pic html extends into here
                      ["td", {align: "right"},
                       ["label", {fo: "statussel", cla: "formlabel"},
                        "Status"]],
                      ["td", {align: "left"},
                       ["select", {id: "statussel"},
                        options]]]],
+                   ["tr",
+                    ["td", {colspan: 3},
+                     ["div", {id: "aboutdiv", cla: "bigtxtdiv"},
+                      ["textarea", {id: "abouttxt", cla: "bigta"}]]]],
                    //prof.lifestat CSV
                    //prof.skills CSV
                    ["tr",
@@ -122,7 +151,13 @@ app.profile = (function () {
                                   onclick: jt.fs("app.profile.save()")},
                        "Save"]]]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
-        profPicHTML(prof, true);
+        domelem = jt.byId("abouttxt");
+        if(domelem) {
+            domelem.readOnly = false;
+            domelem.value = prof.about;
+            domelem.placeholder = "Interests? Public linkedin profile?";
+            domelem.style.width = domelem.parentNode.offsetWidth + "px"; }
+        app.profile.profPicHTML(prof, true);
     },
 
 
@@ -140,25 +175,39 @@ app.profile = (function () {
     },
 
 
+    statHTML = function (prof) {
+        if(prof.status === "No Pic") {
+            return ["a", {href: "#pic", 
+                          onclick: jt.fs("app.profile.explainPic()")},
+                    "Pending"]; }
+        return prof.status;
+    },
+
+
     readProfile = function (prof) {
         var html;
         html = ["div", {id: "profdiv"},
                 [["div", {id: "profstatdiv"}, "&nbsp;"],
                  ["table", {cla: "formtable"},
                   [["tr",
-                    [["td", {id: "picuploadtd", rowspan: 3},  //no email row
+                    [["td", {id: "picuploadtd", cla: "tdnarrow",
+                             rowspan: 3},  //no email row
                       ["div", {id: "profpicdiv"},
                        ["img", {cla: "profpic", src: "img/emptyprofpic.png"}]]],
                      ["td", {align: "left", cla: "valpadtd"},
                       prof.name]]],
                    ["tr",
-                    [//profPicHTML extends into here
+                    [//pic html extends into here
                      ["td", {align: "left", cla: "valpadtd"},
                       prof.zipcode]]],
                    ["tr",
-                    [//profPicHTML extends into here
+                    [//pic html extends into here
                      ["td", {align: "left", cla: "valpadtd"},
-                      prof.status]]],
+                      statHTML(prof)]]],
+                   ["tr",
+                    ["td", {colspan: 2},
+                     ["div", {id: "aboutdiv", cla: "bigtxtdiv"},
+                      jt.linkify(prof.about)]]],
                    //prof.lifestat CSV
                    //prof.skills CSV
                    ["tr",
@@ -166,7 +215,7 @@ app.profile = (function () {
                      ["div", {cla: "formbuttonsdiv"},
                       readProfButtonsHTML(prof)]]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
-        profPicHTML(prof, false);
+        app.profile.profPicHTML(prof, false);
     },
 
 
@@ -242,7 +291,45 @@ return {
 
     byprofid: function (profid) {
         jt.err("profile.byprofid not implemented yet");
+    },
+
+
+    explainPic: function () {
+        var html;
+        html = [["p", "Please upload a pic.  People need to be able to recognize you when coordinating opportunities."],
+                ["div", {cla: "dlgbuttonsdiv"},
+                 ["button", {type: "button", id: "okbutton",
+                             onclick: jt.fs("app.layout.closeDialog()")},
+                  "OK"]]];
+        html = app.layout.dlgwrapHTML("Missing Picture", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html), null,
+                              function () {
+                                  jt.byId('okbutton').focus(); });
+    },
+
+    profPicHTML: function (prof, editable) {
+        var imgsrc, picdiv, html;
+        imgsrc = "img/emptyprofpic.png";
+        if(editable && !prof.profpic) {
+            picdiv = jt.byId('profpicdiv');
+            picdiv.style.background = "url('" + imgsrc + "') no-repeat";
+            picdiv.style.backgroundSize = "125px 125px";
+            html = ["div", {id: "picplaceholderdiv", cla: "formlabel"},
+                    "Click to upload a pic of yourself"]; }
+        else { //have pic, or not editable
+            if(prof.profpic) {  //fetch with cachebust if updated
+                imgsrc = "profpic?profileid=" + jt.instId(prof) + 
+                    "&modified=" + prof.modified; }
+            html = ["img", {cla: "profpic", src: imgsrc}]; }
+        jt.out('profpicdiv', jt.tac2html(html));
+        if(editable) {
+            jt.on('profpicdiv', 'click', function (e) {
+                jt.evtend(e);
+                if(jt.byId('profsaveb')) {  //save other field edits first
+                    app.profile.save("edit"); }
+                displayUploadPicForm(myprof); }); }
     }
+
 
 };  //end of returned functions
 }());

@@ -39,6 +39,14 @@ def nowISO():
     return dt2ISO(datetime.datetime.utcnow())
 
 
+def intz(val):
+    if not val:
+        return 0
+    if isinstance(val, basestring) and val.startswith("\""):
+        val = val[1:len(val) - 1]
+    return int(val)
+
+
 def asciienc(val):
     val = unicode(val)
     return val.encode('utf8')
@@ -78,13 +86,19 @@ def decodeToken(key, token):
     return token
 
 
+def normalize_email(emaddr):
+    emaddr = emaddr.lower()
+    emaddr = re.sub('%40', '@', emaddr)
+    return emaddr
+
+
 def authenticated(request):
     """ Return an account if the token is valid """
     email = request.get('an')
     token = request.get('at')
     if not email or not token:
         return False
-    email = email.lower()
+    email = normalize_email(email)
     where = "WHERE email=:1 LIMIT 1"
     accounts = UpteerAccount.gql(where, email)
     for account in accounts:
@@ -206,19 +220,13 @@ def verifySecureComms(handler, url):
     return False
 
 
-def normalize_email(emaddr):
-    emaddr = emaddr.lower()
-    emaddr = re.sub('%40', '@', emaddr)
-    return emaddr
-
-
 class CreateAccount(webapp2.RequestHandler):
     def post(self):
         url = self.request.url;
         if not verifySecureComms(self, url):
             return
         emaddr = self.request.get('emailin') or ""
-        emaddr = normalize_email(lower)
+        emaddr = normalize_email(emaddr)
         # something @ something . something
         if not re.match(r"[^@]+@[^@]+\.[^@]+", emaddr):
             self.error(412)
