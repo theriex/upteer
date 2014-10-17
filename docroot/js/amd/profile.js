@@ -16,6 +16,8 @@ app.profile = (function () {
     var myprof = null,
         currprof = null,
         statusvals = [ "Available", "Busy", "Inactive" ],
+        lifekw = null,
+        skillkw = null,
 
 
     ////////////////////////////////////////
@@ -33,8 +35,8 @@ app.profile = (function () {
         domelem = jt.byId('abouttxt');
         if(domelem) {
             prof.about = domelem.value; }
-        //prof.lifestat CSV
-        //prof.skills CSV
+        prof.lifestat = lifekw.getSelectedKeywordsCSV();
+        prof.skills = skillkw.getSelectedKeywordsCSV();
     },
 
 
@@ -83,6 +85,39 @@ app.profile = (function () {
                               function () {
                                   monitorPicUpload();
                                   jt.byId('picfilein').focus(); });
+    },
+
+
+    lifeStatusDisplay = function (mode) {
+        if(lifekw) {
+            lifekw.destroy(); }
+        lifekw = app.kwentry(
+            "lifestatdiv", "Life Status",
+            ["Student", "Professional", "Retired", "Under-Employed",
+             "Seeking Skills", "Volunteer Coordinator"],
+            myprof.lifestat);
+        if(mode === "edit") {
+            lifekw.displayEntry(); }
+        else {
+            lifekw.displayList(); }
+    },
+
+
+    skillKeywordsDisplay = function(mode) {
+        if(skillkw) {
+            skillkw.destroy(); }
+        skillkw = app.kwentry(
+            "skillsdiv", "Volunteer Skills",
+            ["Graphic Design", "Web Development", "Video Production",
+             "Web Technology", "GIS", "Quilting", "Technical Writing",
+             "Warehouse Management", "Grant Writing", "Copy Editing", 
+             "Land Use Research", "Dog Fostering", "Photography",
+             "Print Graphics", "Architectural Drawing", "Law"],
+            myprof.skills);
+        if(mode === "edit") {
+            skillkw.displayEntry(); }
+        else {
+            skillkw.displayList(); }
     },
 
 
@@ -142,8 +177,8 @@ app.profile = (function () {
                     ["td", {colspan: 3},
                      ["div", {id: "aboutdiv", cla: "bigtxtdiv"},
                       ["textarea", {id: "abouttxt", cla: "bigta"}]]]],
-                   //prof.lifestat CSV
-                   //prof.skills CSV
+                   ["tr", ["td", {colspan: 3}, ["div", {id: "lifestatdiv"}]]],
+                   ["tr", ["td", {colspan: 3}, ["div", {id: "skillsdiv"}]]],
                    ["tr",
                     ["td", {colspan: 3},
                      ["div", {cla: "formbuttonsdiv"},
@@ -158,6 +193,8 @@ app.profile = (function () {
             domelem.placeholder = "Interests? Public linkedin profile?";
             domelem.style.width = domelem.parentNode.offsetWidth + "px"; }
         app.profile.profPicHTML(prof, true);
+        lifeStatusDisplay("edit");
+        skillKeywordsDisplay("edit");
     },
 
 
@@ -208,14 +245,16 @@ app.profile = (function () {
                     ["td", {colspan: 2},
                      ["div", {id: "aboutdiv", cla: "bigtxtdiv"},
                       jt.linkify(prof.about || "")]]],
-                   //prof.lifestat CSV
-                   //prof.skills CSV
+                   ["tr", ["td", {colspan: 2}, ["div", {id: "lifestatdiv"}]]],
+                   ["tr", ["td", {colspan: 2}, ["div", {id: "skillsdiv"}]]],
                    ["tr",
                     ["td", {colspan: 2},  //no labels column
                      ["div", {cla: "formbuttonsdiv"},
                       readProfButtonsHTML(prof)]]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
         app.profile.profPicHTML(prof, false);
+        lifeStatusDisplay();
+        skillKeywordsDisplay();
     },
 
 

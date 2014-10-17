@@ -70,6 +70,7 @@ img { border:0px; }
 .formbuttonsdiv { padding:20px; text-align:center; }
 .formbuttonsdiv button { margin:0px 10px; }
 .tablediv { display:table; margin:0px auto; }
+.footerlink { background:#f4fcff; padding:2px 5px; border-radius:3px; }
 
 
 /* profile view settings */
@@ -82,3 +83,21 @@ img { border:0px; }
   font-family:"Verdana", "Arial", "Helvetica", sans-serif;
 }
 .tdnarrow { width:5%; padding:0px 5px 0px 0px; }
+
+
+/* kwentry widget settings */
+.selkwspan {}
+.selkwdelspan { cursor:pointer; }
+.selkwdiv {}
+.kwselectdiv { cursor:pointer; white-space:nowrap; }
+.kwcontainerdiv {}
+.kwtitlediv { padding:0px 0px 0px 5px; font-size:medium; }
+.kwworkdiv {}
+.kwlistdiv { float:left; font-size:small; border:2px solid #333; 
+  padding:5px; height: 75px; width:150px; overflow:scroll; background:#fff; 
+  margin-right:10px; }
+.kwin { width:120px; }
+.kwplus { width:30px; padding:0px 0px 0px 10px; }
+.kwentrydiv { width:160px; overflow:hidden; white-space:nowrap; }
+.kwkeywordsdiv {}
+
