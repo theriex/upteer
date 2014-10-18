@@ -60,24 +60,6 @@ return (function () {
     },
 
 
-    elkwxSetup = function () {
-        elkwx = function (e) {
-            var kwdiv, keyword, filterval, i;
-            kwdiv = this.parentNode;
-            keyword = kwdiv.childNodes[0].innnerHTML;
-            filterval = jt.byId(divid + "kwin").value;
-            removeKeyword(keyword);                 //remove from CSV
-            kwdiv.parentNode.removeChild(kwdiv);    //remove display div
-            if(keyword.toLowerCase().indexOf(filterval.toLowerCase) < 0) {
-                for(i = 0; i < keywords.length; i += 1) {
-                    if(keywords[i].toLowerCase() === keyword.toLowerCase()) {
-                        jt.byId(divid + "kwsd" + i).
-                            style.display = "block"; } } }
-            jt.evtend(e); 
-        };
-    },
-
-
     selectedKeywordHTML = function(keyword, mode, index) {
         var html = [];
         html.push(["span", {cla: "selkwspan"}, keyword]);
@@ -85,7 +67,6 @@ return (function () {
             html.push(["span", {id: divid + "skwx" + index,
                                 cla: "selkwdelspan"}, 
                        "x"]); }
-        html = ["div", {cla: "selkwdiv"}, html];
         return html;
     },
 
@@ -94,11 +75,30 @@ return (function () {
         var i, keys, html = [];
         keys = csvarray();
         for(i = 0; i < keys.length; i += 1) {
-            html.push(selectedKeywordHTML(keys[i], mode, i)); }
+            html.push(["div", {cla: "selkwdiv"},
+                       selectedKeywordHTML(keys[i], mode, i)]); }
         jt.out(divid + "kwk", jt.tac2html(html));
         if(mode === "edit") {
             if(!elkwx) {
-                elkwxSetup(); }
+                elkwx = function (e) {
+                    var kwdiv, spandiv, keyword, filterval, i;
+                    kwdiv = this.parentNode;
+                    spandiv = kwdiv.childNodes[0];
+                    keyword = spandiv.innerHTML;
+                    if(!keyword) {  //spurious click
+                        return; }
+                    filterval = jt.byId(divid + "kwin").value || "";
+                    filterval = filterval.toLowerCase();
+                    removeKeyword(keyword);                 //remove from CSV
+                    jt.off(spandiv, "click", elkwx);        //unhook click
+                    kwdiv.parentNode.removeChild(kwdiv);    //remove display div
+                    if(!filterval ||
+                           keyword.toLowerCase().indexOf(filterval) !== 0) {
+                        for(i = 0; i < keywords.length; i += 1) {
+                            if(keywords[i] === keyword) {
+                                jt.byId(divid + "kwsd" + i).
+                                    style.display = "block"; } } }
+                    jt.evtend(e); }; }
             for(i = 0; i < keys.length; i += 1) {
                 jt.on(divid + "skwx" + i, "click", elkwx); } }
     },
@@ -113,17 +113,20 @@ return (function () {
 
 
     appendKeyword = function (keyword) {
-        var html;
+        var index, div;
         valcsv = valcsv || "";
         if(keywordSelected(keyword)) {
             return; }  //already there
         if(valcsv) {
             valcsv += ","; }
         valcsv += keyword;
-        html = jt.byId(divid + "kwk").innerHTML;
-        html += jt.tac2html(selectedKeywordHTML(keyword, "edit",
-                                                csvarray().length -1));
-        jt.out(divid + "kwk", html);
+        index = csvarray().length - 1;
+        div = document.createElement("div");
+        div.className = "selkwdiv";
+        div.innerHTML = jt.tac2html(
+            selectedKeywordHTML(keyword, "edit", index));
+        jt.byId(divid + "kwk").appendChild(div);
+        jt.on(divid + "skwx" + index, "click", elkwx);
     },
 
 
@@ -206,6 +209,7 @@ return {
                    ["div", {id: divid + "kwe", cla: "kwentrydiv"}],
                    ["div", {id: divid + "kwk", cla: "kwkeywordsdiv"}]]]]];
         jt.out(divid, jt.tac2html(html));
+        jt.byId(divid + "kwk").style.width = (app.winw / 2) + "px";
         setupSelectionList();
         setupKeywordEntryInput();
         setupSelectedKeywords("edit");

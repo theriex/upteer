@@ -86,18 +86,25 @@ img { border:0px; }
 
 
 /* kwentry widget settings */
-.selkwspan {}
-.selkwdelspan { cursor:pointer; }
-.selkwdiv {}
-.kwselectdiv { cursor:pointer; white-space:nowrap; }
+.selkwspan { display:inline-block; font-size:small; padding:0px 0px 3px 3px;
+  }
+.selkwdelspan { display:inline-block; cursor:pointer; padding:0px 4px 0px 5px; 
+  }
+.selkwdiv { display:inline-block; padding:0px 0px 5px 5px;
+  border-radius:8px; border:1px solid #007bb6;
+  margin:2px 0px 0px 10px;
+  background: radial-gradient(#d9edf8 60%, #aadefb);
+  }
+.kwselectdiv { cursor:pointer; white-space:nowrap; 
+  }
 .kwcontainerdiv {}
 .kwtitlediv { padding:0px 0px 0px 5px; font-size:medium; }
 .kwworkdiv {}
 .kwlistdiv { float:left; font-size:small; border:2px solid #333; 
-  padding:5px; height: 75px; width:150px; overflow:scroll; background:#fff; 
-  margin-right:10px; }
+  padding:0px 5px; height: 75px; width:150px; overflow:scroll; 
+  background:#fff; }
 .kwin { width:120px; }
 .kwplus { width:30px; padding:0px 0px 0px 10px; }
-.kwentrydiv { width:160px; overflow:hidden; white-space:nowrap; }
-.kwkeywordsdiv {}
+.kwentrydiv { padding:0px 0px 0px 10px; width:160px; overflow:hidden; white-space:nowrap; }
+.kwkeywordsdiv { }
 
