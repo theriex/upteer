@@ -86,13 +86,15 @@ img { border:0px; }
 
 
 /* kwentry widget settings */
-.selkwspan { display:inline-block; font-size:small; padding:0px 0px 3px 3px;
+.selkwspan { display:inline-block; font-size:small; 
+  padding:0px 4px 3px 3px;
   }
-.selkwdelspan { display:inline-block; cursor:pointer; padding:0px 4px 0px 5px; 
+.selkwdelspan { display:inline-block; font-size:medium; 
+  padding:0px 4px 0px 0px; cursor:pointer;
   }
-.selkwdiv { display:inline-block; padding:0px 0px 5px 5px;
+.selkwdiv { display:inline-block; padding:0px 0px 4px 4px;
   border-radius:8px; border:1px solid #007bb6;
-  margin:2px 0px 0px 10px;
+  margin:3px 0px 0px 10px;
   background: radial-gradient(#d9edf8 60%, #aadefb);
   }
 .kwselectdiv { cursor:pointer; white-space:nowrap; 

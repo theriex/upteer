@@ -190,7 +190,7 @@ app.profile = (function () {
         if(domelem) {
             domelem.readOnly = false;
             domelem.value = prof.about || "";
-            domelem.placeholder = "Interests? Public linkedin profile?";
+            domelem.placeholder = "What do you do? What kinds of things would you like to get involved in? Do you have a public LinkedIn profile or website?";
             domelem.style.width = domelem.parentNode.offsetWidth + "px"; }
         app.profile.profPicHTML(prof, true);
         lifeStatusDisplay("edit");

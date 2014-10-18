@@ -1,4 +1,4 @@
-/*global app: false, jt: false, window: false */
+/*global app: false, jt: false, window: false, document: false */
 
 /*jslint unparam: true, white: true, maxerr: 50, indent: 4 */
 
@@ -81,7 +81,7 @@ return (function () {
         if(mode === "edit") {
             if(!elkwx) {
                 elkwx = function (e) {
-                    var kwdiv, spandiv, keyword, filterval, i;
+                    var kwdiv, spandiv, keyword, filterval;
                     kwdiv = this.parentNode;
                     spandiv = kwdiv.childNodes[0];
                     keyword = spandiv.innerHTML;
@@ -114,9 +114,16 @@ return (function () {
 
     appendKeyword = function (keyword) {
         var index, div;
+        keyword = keyword || "";
+        keyword = keyword.trim();
+        if(!keyword) {
+            return; }
         valcsv = valcsv || "";
         if(keywordSelected(keyword)) {
             return; }  //already there
+        //capitalize contained words
+        keyword = keyword.replace(/(?:^|\s)\S/g, function(a) { 
+            return a.toUpperCase(); });
         if(valcsv) {
             valcsv += ","; }
         valcsv += keyword;
@@ -134,9 +141,10 @@ return (function () {
         var i, disp;
         for(i = 0; i < keywords.length; i += 1) {
             disp = "block";
-            if(kwval && keywords[i].indexOf(kwval) !== 0) {
+            if(kwval && 
+               keywords[i].toLowerCase().indexOf(kwval.toLowerCase()) !== 0) {
                 disp = "none"; }
-            if(keywordSelected(keywords[i])) {
+            else if(keywordSelected(keywords[i])) {
                 disp = "none"; }
             jt.byId(divid + "kwsd" + i).style.display = disp; }
     },
@@ -167,6 +175,12 @@ return (function () {
     },
 
 
+    followSelectInput = function () {
+        hideListedKeywords(jt.byId(divid + "kwin").value);
+        tout = window.setTimeout(followSelectInput, 200);
+    },
+
+
     setupKeywordEntryInput = function () {
         var html;
         html = [["input", {type: "text", id: divid + "kwin", cla: "kwin"}],
@@ -183,8 +197,7 @@ return (function () {
         if(tout) {
             window.clearTimeout(tout);
             tout = null; }
-        tout = window.setTimeout(function () {
-            hideListedKeywords(jt.byId(divid + "kwin").value); }, 200);
+        followSelectInput();
     },
 
 
@@ -233,7 +246,12 @@ return {
 
 
     displayList: function () {
-        jt.out(divid, "TODO: values for " + title);
+        var html;
+        html = ["div", {id: divid + "kwc", cla: "kwcontainerdiv"},
+                ["div", {id: divid + "kww", cla: "kwworkdiv"},
+                 ["div", {id: divid + "kwk", cla: "kwkeywordsdiv"}]]];
+        jt.out(divid, jt.tac2html(html));
+        setupSelectedKeywords("list");
     },
 
 
