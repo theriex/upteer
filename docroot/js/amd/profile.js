@@ -252,6 +252,9 @@ app.profile = (function () {
                      ["div", {cla: "formbuttonsdiv"},
                       readProfButtonsHTML(prof)]]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
+        if(app.winw > 700) {
+            jt.byId('aboutdiv').style.width =
+                (Math.round((app.winw * 2) / 3)) + "px"; }
         app.profile.profPicHTML(prof, false);
         lifeStatusDisplay();
         skillKeywordsDisplay();
