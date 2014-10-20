@@ -62,9 +62,10 @@ img { border:0px; }
 #tagcontainerdiv { padding:0; }
 #taglinediv { position: relative; top: -20px; margin:0px 0px 0px 120px; 
   font-size:medium; font-weight:normal; }
-#footerdiv { font-size:x-small; text-align:center; 
+#bottomspacerdiv { height:300px; }
+#footerdiv { font-size:x-small; font-style:italic; text-align:center; 
   word-spacing:40px; padding:0px 20px 5px 20px;
-  position:fixed; left:0px; bottom:0px; height:30px; width:100%; }
+  position:fixed; left:0px; bottom:0px; height:15px; width:100%; }
 #loginstatdiv { font-size:small; font-weight:bold; }
 .formlabel { font-size:medium; font-weight:normal; padding:10px; }
 .formbuttonsdiv { padding:20px; text-align:center; }
@@ -92,11 +93,12 @@ img { border:0px; }
 .selkwdelspan { display:inline-block; font-size:medium; 
   padding:0px 4px 0px 0px; cursor:pointer;
   }
-.selkwdiv { display:inline-block; padding:0px 0px 4px 4px;
+.selkwdivlist, .selkwdivedit { display:inline-block; padding:0px 0px 4px 4px;
   border-radius:8px; border:1px solid #007bb6;
-  margin:3px 0px 0px 10px;
+  margin:3px 10px 0px 0px;
   background: radial-gradient(#d9edf8 60%, #aadefb);
   }
+.selkwdivedit { margin:3px 0px 0px 10px; }
 .kwselectdiv { cursor:pointer; white-space:nowrap; 
   }
 .kwcontainerdiv {}

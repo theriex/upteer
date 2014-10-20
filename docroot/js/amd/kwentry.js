@@ -75,7 +75,7 @@ return (function () {
         var i, keys, html = [];
         keys = csvarray();
         for(i = 0; i < keys.length; i += 1) {
-            html.push(["div", {cla: "selkwdiv"},
+            html.push(["div", {cla: "selkwdiv" + mode},
                        selectedKeywordHTML(keys[i], mode, i)]); }
         jt.out(divid + "kwk", jt.tac2html(html));
         if(mode === "edit") {
@@ -129,7 +129,7 @@ return (function () {
         valcsv += keyword;
         index = csvarray().length - 1;
         div = document.createElement("div");
-        div.className = "selkwdiv";
+        div.className = "selkwdivedit";
         div.innerHTML = jt.tac2html(
             selectedKeywordHTML(keyword, "edit", index));
         jt.byId(divid + "kwk").appendChild(div);
