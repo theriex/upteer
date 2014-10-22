@@ -21,6 +21,7 @@ class Profile(db.Model):
     skills = db.TextProperty()                  # skill keywords CSV
     lifestat = db.TextProperty()                # life status keywords CSV
     mailverify = db.StringProperty()            # ISO date
+    orgs = db.StringProperty()                  # CSV of org IDs
 
 
 def set_profile_fields(req, prof):
@@ -36,6 +37,7 @@ def set_profile_fields(req, prof):
     prof.about = req.get('about') or ""
     prof.skills = req.get('skills') or ""
     prof.lifestat = req.get('lifestat') or ""
+    prof.orgs = req.get('orgs') or ""
 
 
 def verify_profile_fields(handler, prof):

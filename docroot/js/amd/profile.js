@@ -24,6 +24,21 @@ app.profile = (function () {
     // helper functions
     ////////////////////////////////////////
 
+    verifyProfileFieldValues = function(prof) {
+        prof.email = prof.email || "";
+        prof.zipcode = prof.zipcode || "";
+        prof.modified = prof.modified || "";
+        prof.name = prof.name || "";
+        prof.status = prof.status || "";
+        prof.profpic = prof.profpic || "";
+        prof.about = prof.about || "";
+        prof.skills = prof.skills || "";
+        prof.lifestat = prof.lifestat || "";
+        prof.mailverify = prof.mailverify || "";
+        prof.orgs = prof.orgs || "";
+    },
+
+
     readProfileFormValues = function () {
         var prof = myprof, domelem;
         prof.name = jt.safeget('namein', 'value') || prof.name;
@@ -37,6 +52,7 @@ app.profile = (function () {
             prof.about = domelem.value; }
         prof.lifestat = lifekw.getSelectedKeywordsCSV();
         prof.skills = skillkw.getSelectedKeywordsCSV();
+        prof.orgs = prof.orgs || "";
     },
 
 
@@ -97,6 +113,17 @@ app.profile = (function () {
              "Seeking Skills", "Volunteer Coordinator"],
             myprof.lifestat);
         if(mode === "edit") {
+            lifekw.setKeywordSelectUnselectHooks(
+                function (keyword) {
+                    if(keyword === "Volunteer Coordinator") {
+                        return app.org.enable("orgsdiv", "profstatdiv"); }
+                    return true;
+                },
+                function (keyword) {
+                    if(keyword === "Volunteer Coordinator") {
+                        return app.org.disable("orgsdiv", "profstatdiv"); }
+                    return true;
+                });
             lifekw.displayEntry(); }
         else {
             lifekw.displayList(); }
@@ -124,6 +151,7 @@ app.profile = (function () {
     //ATTENTION: allow for changing email after initial profile setup.
     editProfile = function () {
         var html, prof = myprof, options = [], i, domelem;
+        verifyProfileFieldValues(prof);
         for(i = 0; i < statusvals.length; i += 1) {
             options.push(
                 ["option", {id: "statval" + (+i),
@@ -179,6 +207,8 @@ app.profile = (function () {
                       ["textarea", {id: "abouttxt", cla: "bigta"}]]]],
                    ["tr", ["td", {colspan: 3}, ["div", {id: "lifestatdiv"}]]],
                    ["tr", ["td", {colspan: 3}, ["div", {id: "skillsdiv"}]]],
+                   ["tr", ["td", {colspan: 3}, ["div", {id: "voluntdiv"}]]],
+                   ["tr", ["td", {colspan: 3}, ["div", {id: "orgsdiv"}]]],
                    ["tr",
                     ["td", {colspan: 3},
                      ["div", {cla: "formbuttonsdiv"},
@@ -223,6 +253,7 @@ app.profile = (function () {
 
     readProfile = function (prof) {
         var html;
+        verifyProfileFieldValues(prof);
         html = ["div", {id: "profdiv"},
                 [["div", {id: "profstatdiv"}, "&nbsp;"],
                  ["table", {cla: "formtable"},
@@ -371,6 +402,16 @@ return {
                 jt.evtend(e);
                 if(jt.byId('profsaveb')) {  //save other field edits first
                     app.profile.save("picupld"); } }); }
+    },
+
+
+    getMyProfile: function () {
+        return myprof;
+    },
+
+
+    getCurrentProfile: function () {
+        return currprof;
     }
 
 

@@ -36,6 +36,28 @@
     }
 
 
+    //This is just too useful for properly dealing with csv lists of
+    //IDs without the dreaded [""] empty string conversion.
+    if (!String.prototype.csvarray) {
+        String.prototype.csvarray = function () {
+            if (this && this.trim()) {
+                return this.split(",");
+            }
+            return [];
+        };
+    }
+
+
+    if (!String.prototype.csvcontains) {
+        String.prototype.csvcontains = function (val) {
+            if (this.endsWith(val) || this.indexOf(val + ",") >= 0) {
+                return true;
+            }
+            return false;
+        };
+    }
+
+
     if (!Array.prototype.indexOf) {
         Array.prototype.indexOf = function (searchElement) {
             var i;

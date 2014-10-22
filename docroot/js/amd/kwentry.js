@@ -22,25 +22,13 @@ return (function () {
         elkwsel = null,     //select keyword from list click event listener
         elkwadd = null,     //keyword entry field add/change event listener
         tout = null,        //keyword entry field change listener timout handle
+        selhook = null,     //optional select hook function
+        delhook = null,     //option delete hook function
 
 
     ////////////////////////////////////////
     // helper functions
     ////////////////////////////////////////
-
-    csvarray = function () {
-        if(valcsv && valcsv.trim()) {
-            return valcsv.split(","); }
-        return [];
-    },
-
-
-    keywordSelected = function(keyword) {
-        if(valcsv.endsWith(keyword) || valcsv.indexOf(keyword + ",") >= 0) {
-            return true; }
-        return false;
-    },
-
 
     //The given keyword may be contained in other keywords, e.g. "web"
     //from "web,web developer,coder" leaves "web developer,coder"
@@ -73,7 +61,7 @@ return (function () {
 
     setupSelectedKeywords = function (mode) {
         var i, keys, html = [];
-        keys = csvarray();
+        keys = valcsv.csvarray();
         for(i = 0; i < keys.length; i += 1) {
             html.push(["div", {cla: "selkwdiv" + mode},
                        selectedKeywordHTML(keys[i], mode, i)]); }
@@ -87,17 +75,18 @@ return (function () {
                     keyword = spandiv.innerHTML;
                     if(!keyword) {  //spurious click
                         return; }
-                    filterval = jt.byId(divid + "kwin").value || "";
-                    filterval = filterval.toLowerCase();
-                    removeKeyword(keyword);                 //remove from CSV
-                    jt.off(spandiv, "click", elkwx);        //unhook click
-                    kwdiv.parentNode.removeChild(kwdiv);    //remove display div
-                    if(!filterval ||
-                           keyword.toLowerCase().indexOf(filterval) !== 0) {
-                        for(i = 0; i < keywords.length; i += 1) {
-                            if(keywords[i] === keyword) {
-                                jt.byId(divid + "kwsd" + i).
-                                    style.display = "block"; } } }
+                    if(!delhook || delhook(keyword)) {
+                        filterval = jt.byId(divid + "kwin").value || "";
+                        filterval = filterval.toLowerCase();
+                        removeKeyword(keyword);              //remove from CSV
+                        jt.off(spandiv, "click", elkwx);     //unhook click
+                        kwdiv.parentNode.removeChild(kwdiv); //remove disp div
+                        if(!filterval ||
+                               keyword.toLowerCase().indexOf(filterval) !== 0) {
+                            for(i = 0; i < keywords.length; i += 1) {
+                                if(keywords[i] === keyword) {
+                                    jt.byId(divid + "kwsd" + i).
+                                        style.display = "block"; } } } }
                     jt.evtend(e); }; }
             for(i = 0; i < keys.length; i += 1) {
                 jt.on(divid + "skwx" + i, "click", elkwx); } }
@@ -106,7 +95,7 @@ return (function () {
 
     unhookSelectedKeywords = function () {
         var i, keys;
-        keys = csvarray();
+        keys = valcsv.csvarray();
         for(i = 0; i < keys.length; i += 1) {
             jt.off(divid + "skwx" + i, "click", elkwx); }
     },
@@ -119,7 +108,7 @@ return (function () {
         if(!keyword) {
             return; }
         valcsv = valcsv || "";
-        if(keywordSelected(keyword)) {
+        if(valcsv.csvcontains(keyword)) {
             return; }  //already there
         //capitalize contained words
         keyword = keyword.replace(/(?:^|\s)\S/g, function(a) { 
@@ -127,7 +116,7 @@ return (function () {
         if(valcsv) {
             valcsv += ","; }
         valcsv += keyword;
-        index = csvarray().length - 1;
+        index = valcsv.csvarray().length - 1;
         div = document.createElement("div");
         div.className = "selkwdivedit";
         div.innerHTML = jt.tac2html(
@@ -144,7 +133,7 @@ return (function () {
             if(kwval && 
                keywords[i].toLowerCase().indexOf(kwval.toLowerCase()) !== 0) {
                 disp = "none"; }
-            else if(keywordSelected(keywords[i])) {
+            else if(valcsv.csvcontains(keywords[i])) {
                 disp = "none"; }
             jt.byId(divid + "kwsd" + i).style.display = disp; }
     },
@@ -159,8 +148,9 @@ return (function () {
         jt.out(divid + "kwl", jt.tac2html(html));
         if(!elkwsel) {
             elkwsel = function (e) {
-                this.style.display = "none";
-                appendKeyword(this.innerHTML);
+                if(!selhook || selhook(this.innerHTML)) {
+                    this.style.display = "none";
+                    appendKeyword(this.innerHTML); }
                 jt.evtend(e); }; }
         for(i = 0; i < keywords.length; i += 1) {
             jt.on(divid + "kwsd" + i, "click", elkwsel); }
@@ -257,6 +247,12 @@ return {
 
     getSelectedKeywordsCSV: function () {
         return valcsv;
+    },
+
+
+    setKeywordSelectUnselectHooks: function (selectf, deletef) {
+        selhook = selectf;
+        delhook = deletef;
     }
 
 };  //end of returned functions

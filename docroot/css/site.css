@@ -85,6 +85,10 @@ img { border:0px; }
 }
 .tdnarrow { width:5%; padding:0px 5px 0px 0px; }
 
+/* org view settings */
+.sectionentryplus { width:30px; margin:0px 0px 0px 5px; }
+.orglistdiv { font-size:small; padding:5px 0px 5px 20px; }
+
 
 /* kwentry widget settings */
 .selkwspan { display:inline-block; font-size:small; 
@@ -102,7 +106,7 @@ img { border:0px; }
 .kwselectdiv { cursor:pointer; white-space:nowrap; 
   }
 .kwcontainerdiv {}
-.kwtitlediv { padding:0px 0px 0px 5px; font-size:medium; }
+.kwtitlediv, .sectiontitle { padding:0px 0px 0px 5px; font-size:medium; }
 .kwworkdiv {}
 .kwlistdiv { float:left; font-size:small; border:2px solid #333; 
   padding:0px 5px; height: 75px; width:150px; overflow:scroll; 
