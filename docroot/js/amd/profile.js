@@ -109,14 +109,15 @@ app.profile = (function () {
             lifekw.destroy(); }
         lifekw = app.kwentry(
             "lifestatdiv", "Life Status",
-            ["Student", "Professional", "Retired", "Under-Employed",
-             "Seeking Skills", "Volunteer Coordinator"],
+            ["Volunteer Coordinator", "Student", "Professional", "Retired", 
+             "Seeking Skills", "Under-employed"],
             myprof.lifestat);
         if(mode === "edit") {
             lifekw.setKeywordSelectUnselectHooks(
                 function (keyword) {
                     if(keyword === "Volunteer Coordinator") {
-                        return app.org.enable("orgsdiv", "profstatdiv"); }
+                        return app.org.enable("orgsdiv", "profstatdiv",
+                                              "app.profile.addOrg"); }
                     return true;
                 },
                 function (keyword) {
@@ -124,8 +125,13 @@ app.profile = (function () {
                         return app.org.disable("orgsdiv", "profstatdiv"); }
                     return true;
                 });
+            if(myprof.lifestat.csvcontains("Volunteer Coordinator")) {
+                app.org.listOrganizations("orgsdiv", myprof, "edit",
+                                          "app.profile.addOrg"); }
             lifekw.displayEntry(); }
         else {
+            if(myprof.lifestat.csvcontains("Volunteer Coordinator")) {
+                app.org.listOrganizations("orgsdiv", myprof); }
             lifekw.displayList(); }
     },
 
@@ -242,6 +248,13 @@ app.profile = (function () {
     },
 
 
+    fetchProfThenRetryRefDisplay = function (profid, refcsv, divid,
+                                             clickfnamestr) {
+        app.lcs.getFull("prof", profid, function () {
+            app.profile.displayProfileRefs(refcsv, divid, clickfnamestr); });
+    },
+
+
     statHTML = function (prof) {
         if(prof.status === "No Pic") {
             return ["a", {href: "#pic", 
@@ -263,7 +276,7 @@ app.profile = (function () {
                       ["div", {id: "profpicdiv"},
                        ["img", {cla: "profpic", src: "img/emptyprofpic.png"}]]],
                      ["td", {align: "left", cla: "valpadtd"},
-                      prof.name]]],
+                      ["span", {cla: "namespan"}, prof.name]]]],
                    ["tr",
                     [//pic html extends into here
                      ["td", {align: "left", cla: "valpadtd"},
@@ -278,6 +291,8 @@ app.profile = (function () {
                       jt.linkify(prof.about || "")]]],
                    ["tr", ["td", {colspan: 2}, ["div", {id: "lifestatdiv"}]]],
                    ["tr", ["td", {colspan: 2}, ["div", {id: "skillsdiv"}]]],
+                   ["tr", ["td", {colspan: 2}, ["div", {id: "voluntdiv"}]]],
+                   ["tr", ["td", {colspan: 2}, ["div", {id: "orgsdiv"}]]],
                    ["tr",
                     ["td", {colspan: 2},  //no labels column
                      ["div", {cla: "formbuttonsdiv"},
@@ -309,6 +324,8 @@ app.profile = (function () {
                     myprof = saveprofs[0];
                     if(edit === "picupld") {
                         displayUploadPicForm(myprof); }
+                    else if(edit === "addorg") {
+                        app.org.add(); }
                     else if(edit) {
                         editProfile(); }
                     else {
@@ -336,6 +353,28 @@ return {
     },
 
 
+    verifyOrg: function (orgid) {
+        var saveneeded = false, data;
+        if(!myprof.lifestat.csvcontains("Volunteer Coordinator")) {
+            saveneeded = true;
+            myprof.lifestat = 
+                myprof.lifestat.csvappend("Volunteer Coordinator"); }
+        if(!myprof.orgs.csvcontains(orgid)) {
+            saveneeded = true;
+            myprof.orgs = myprof.orgs.csvappend(orgid); }
+        if(saveneeded) {
+            data = jt.objdata(myprof);
+            jt.call('POST', "saveprof?" + app.login.authparams(), data,
+                    function (profs) {
+                        myprof = profs[0];
+                        app.lcs.put("prof", myprof);
+                        jt.log("profile.verifyOrg added " + orgid); },
+                    app.failf(function (code, errtxt) {
+                        jt.log("profile.verifyOrg " + code + ": " + errtxt); }),
+                    jt.semaphore("profile.verifyOrg")); }
+    },
+
+
     contact: function () {
         jt.err("Contact not implemented yet");
     },
@@ -345,6 +384,7 @@ return {
     //only the first startup call triggers a server call.
     display: function () {
         var url;
+        app.history.checkpoint({view: "profile", profid: jt.instId(myprof)});
         if(myprof) {
             return readProfile(myprof); }
         jt.out('contentdiv', "Fetching your profile...");
@@ -353,6 +393,9 @@ return {
                 function (profiles) {
                     if(profiles.length > 0) {
                         myprof = profiles[0];
+                        //cache this copy with the private info included so
+                        //the cache doesn't fetch a generic copy
+                        app.lcs.put("prof", myprof);
                         readProfile(myprof); }
                     else {
                         myprof = { email: app.login.getAuthName };
@@ -382,6 +425,7 @@ return {
                                   jt.byId('okbutton').focus(); });
     },
 
+
     profPicHTML: function (prof, editable) {
         var imgsrc, picdiv, html;
         imgsrc = "img/emptyprofpic.png";
@@ -410,8 +454,40 @@ return {
     },
 
 
+    setMyProfile: function (prof) {
+        myprof = prof;
+    },
+
+
     getCurrentProfile: function () {
         return currprof;
+    },
+
+
+    addOrg: function () {
+        saveProfile("addorg");
+    },
+
+
+    displayProfileRefs: function (refcsv, divid, clickfnamestr) {
+        var i, profref, refs;
+        clickfnamestr = clickfnamestr || "app.profile.byprofid";
+        refs = refcsv.csvarray();
+        for(i = 0; i < refs.length; i += 1) {
+            profref = app.lcs.getRef("prof", refs[i]);
+            if(profref.status === "not cached") {
+                return fetchProfThenRetryRefDisplay(refs[i], refcsv, divid,
+                                                    clickfnamestr); }
+            if(profref.prof) {
+                refs[i] = jt.tac2html(
+                    ["a", {href: "#" + jt.instId(profref.prof),
+                           onclick: jt.fs(clickfnamestr + "(" + 
+                                          jt.instId(profref.prof) + ")")},
+                     profref.prof.name]); } }
+        refs = refs.join(", ");
+        if(!refs) {
+            refs = "None"; }
+        jt.out(divid, refs);
     }
 
 

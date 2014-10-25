@@ -65,6 +65,11 @@ handlers:
 - url: /myprofile.*
   script: src.py.profile.app
 
+## Retrieve profile by ID
+## GET params: profid, authparams
+- url: /profbyid.*
+  script: src.py.profile.app
+
 ## Save a new or modified profile
 ## POST params: profile data, authparams
 - url: /saveprof.*
@@ -80,6 +85,30 @@ handlers:
 ## GET params: profileid
 - url: /profpic.*
   script: src.py.profile.app
+
+
+######################################################################
+##        Organization access
+
+## Retrieve org by ID
+## GET params: orgid, authparams
+- url: /orgbyid
+  script: src.py.organization.app
+
+## Save a new or modified organization
+## POST params: org data, authparams
+- url: /orgsave.*
+  script: src.py.organization.app
+
+## Request association to an organization
+## POST params: orgid, profid, authparams
+- url: /orgassoc.*
+  script: src.py.organization.app
+
+## Retrieve a few organizations with the specified name prefix
+## GET params: pre, authparams
+- url: /orgnames.*
+  script: src.py.organization.app
 
 
 ######################################################################

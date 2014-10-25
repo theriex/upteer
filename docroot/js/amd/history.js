@@ -83,6 +83,10 @@ return {
                 if(jt.isId(state.profid)) {
                     app.profile.byprofid(state.profid); }
                 break; 
+            case "org":
+                if(jt.isId(state.orgid)) {
+                    app.org.byorgid(state.orgid); }
+                break;
             //other history state handling cases go here...
             } }
         else if(app.login.isLoggedIn()) {

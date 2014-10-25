@@ -30,24 +30,6 @@ return (function () {
     // helper functions
     ////////////////////////////////////////
 
-    //The given keyword may be contained in other keywords, e.g. "web"
-    //from "web,web developer,coder" leaves "web developer,coder"
-    removeKeyword = function (keyword) {
-        var idx, temp;
-        if(valcsv === keyword) {
-            valcsv = "";
-            return; }
-        idx = valcsv.indexOf(keyword + ",");
-        while(idx >= 0) {
-            temp = valcsv.slice(0, idx);
-            temp += valcsv.slice(idx + keyword.length + 1);
-            valcsv = temp;
-            idx = valcsv.indexOf(keyword + ","); }
-        if(valcsv.endsWith("," + keyword)) {
-            valcsv = valcsv.slice(0, -1 * (keyword.length + 1)); }
-    },
-
-
     selectedKeywordHTML = function(keyword, mode, index) {
         var html = [];
         html.push(["span", {cla: "selkwspan"}, keyword]);
@@ -78,7 +60,7 @@ return (function () {
                     if(!delhook || delhook(keyword)) {
                         filterval = jt.byId(divid + "kwin").value || "";
                         filterval = filterval.toLowerCase();
-                        removeKeyword(keyword);              //remove from CSV
+                        valcsv = valcsv.csvremove(keyword);
                         jt.off(spandiv, "click", elkwx);     //unhook click
                         kwdiv.parentNode.removeChild(kwdiv); //remove disp div
                         if(!filterval ||
@@ -113,9 +95,7 @@ return (function () {
         //capitalize contained words
         keyword = keyword.replace(/(?:^|\s)\S/g, function(a) { 
             return a.toUpperCase(); });
-        if(valcsv) {
-            valcsv += ","; }
-        valcsv += keyword;
+        valcsv = valcsv.csvappend(keyword);
         index = valcsv.csvarray().length - 1;
         div = document.createElement("div");
         div.className = "selkwdivedit";
@@ -166,8 +146,10 @@ return (function () {
 
 
     followSelectInput = function () {
-        hideListedKeywords(jt.byId(divid + "kwin").value);
-        tout = window.setTimeout(followSelectInput, 200);
+        var kwin = jt.byId(divid + "kwin");
+        if(kwin) {
+            hideListedKeywords(kwin.value);
+            tout = window.setTimeout(followSelectInput, 200); }
     },
 
 

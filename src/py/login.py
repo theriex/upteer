@@ -39,6 +39,13 @@ def nowISO():
     return dt2ISO(datetime.datetime.utcnow())
 
 
+def canonize(strval):
+    """ Convert to lower case and remove all whitespace """
+    strval = re.sub(r"\s+", "", strval)
+    strval = strval.lower();
+    return strval
+
+
 def intz(val):
     if not val:
         return 0

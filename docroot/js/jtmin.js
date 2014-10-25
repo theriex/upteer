@@ -15,6 +15,10 @@
 (function () {
     "use strict";
 
+    ////////////////////////////////////////
+    // simple string extensions
+    ////////////////////////////////////////
+
     if (!String.prototype.trim) {  //thanks to Douglas Crockford
         String.prototype.trim = function () {
             return this.replace(/^\s*(\S*(?:\s+\S+)*)\s*$/, "$1");
@@ -35,6 +39,10 @@
         };
     }
 
+
+    ////////////////////////////////////////
+    // CSV string extensions
+    ////////////////////////////////////////
 
     //This is just too useful for properly dealing with csv lists of
     //IDs without the dreaded [""] empty string conversion.
@@ -57,6 +65,42 @@
         };
     }
 
+
+    if (!String.prototype.csvappend) {
+        String.prototype.csvappend = function (val) {
+            var csv = this || "";
+            csv = csv.trim();
+            if (csv) {
+                csv += ",";
+            }
+            csv += val;
+            return csv;
+        };
+    }
+
+
+    if (!String.prototype.csvremove) {
+        String.prototype.csvremove = function (val) {
+            //val may be a prefix of other values in the CSV
+            var idx, temp, csv = this;
+            idx = csv.indexOf(val + ",");
+            if (idx >= 0) {
+                temp = csv.slice(0, idx);
+                temp += csv.slice(idx + val.length + 1);
+                csv = temp;
+            } else if (csv.endsWith("," + val)) {
+                csv = csv.slice(0, -1 * (val.length + 1));
+            } else if (csv === val) {
+                csv = "";
+            }
+            return csv;
+        };
+    }
+
+
+    ////////////////////////////////////////
+    // Array extensions
+    ////////////////////////////////////////
 
     if (!Array.prototype.indexOf) {
         Array.prototype.indexOf = function (searchElement) {
@@ -87,6 +131,10 @@
         };
     }
 
+
+    ////////////////////////////////////////
+    // Date extensions
+    ////////////////////////////////////////
 
     if (!Date.prototype.toISOString) {
         Date.prototype.toISOString = function () {

@@ -91,6 +91,21 @@ class SaveProfile(webapp2.RequestHandler):
         returnJSON(self.response, [ prof ])
 
 
+# Authentication is not required, but only public information is returned.
+class ProfileById(webapp2.RequestHandler):
+    def get(self):
+        profid = self.request.get('profid')
+        prof = Profile.get_by_id(intz(profid))
+        if not prof:
+            self.error(404) # Not Found
+            self.response.out.write("No profile found with id: " + profid)
+            return
+        # strip all non-public information
+        prof.email = ""
+        prof.mailverify = ""
+        returnJSON(self.response, [ prof ])
+
+
 class UploadProfPic(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/html'
@@ -152,6 +167,7 @@ class GetProfPic(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([('/myprofile', MyProfile),
                                ('/saveprof', SaveProfile),
+                               ('/profbyid', ProfileById),
                                ('/profpicupload', UploadProfPic),
                                ('/profpic', GetProfPic)
                                ], debug=True)
