@@ -304,6 +304,7 @@ app.profile = (function () {
         app.profile.profPicHTML(prof, false);
         lifeStatusDisplay();
         skillKeywordsDisplay();
+        app.menu.display();
     },
 
 
@@ -380,8 +381,8 @@ return {
     },
 
 
-    //The profile display is the starting display after login, so
-    //only the first startup call triggers a server call.
+    //The profile display gets called after login, and that triggers
+    //the server call.  Afterwards myprof is cached and available.
     display: function () {
         var url;
         app.history.checkpoint({view: "profile", profid: jt.instId(myprof)});
@@ -488,6 +489,14 @@ return {
         if(!refs) {
             refs = "None"; }
         jt.out(divid, refs);
+    },
+
+
+    resetStateVars: function () {
+        myprof = null;
+        currprof = null;
+        lifekw = null;
+        skillkw = null;
     }
 
 

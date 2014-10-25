@@ -73,6 +73,9 @@ img { border:0px; }
 .tablediv { display:table; margin:0px auto; }
 .footerlink { background:#f4fcff; padding:2px 5px; border-radius:3px; }
 
+/* menu settings */
+#noticemenudiv { display:inline-block; }
+#mainmenudiv { display:inline-block; padding:0px 30px 0px 0px; }
 
 /* profile view settings */
 .formstatdiv { font-size:medium; padding:10px; }

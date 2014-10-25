@@ -74,10 +74,7 @@ app.login = (function () {
         authmethod = "";
         authtoken = "";
         authname = "";
-        app.review.resetStateVars();
         app.profile.resetStateVars();
-        app.pen.resetStateVars();
-        app.rel.resetStateVars("logout");
     },
 
 
@@ -129,7 +126,7 @@ app.login = (function () {
         //it provides another check to make sure it is valid.
         jt.byId('pagecontentdiv').style.
             backgroundImage = "url('../img/blank.png')";
-        jt.out('emailspan', authname);
+        jt.out('mainmenudiv', authname);
         jt.out('logodiv', jt.tac2html(
             ["img", {src: "img/logo.png", width:"155", height:"48"}]));
     },

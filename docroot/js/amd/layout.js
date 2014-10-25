@@ -37,7 +37,7 @@ app.layout = (function () {
         switch(url) {
         case "about": url = "About Upteer"; break;
         case "terms": url = "Terms of Use"; break;
-        case "privacy": url = "Privacy Statement"; break
+        case "privacy": url = "Privacy Statement"; break;
         default: url = url.capitalize(); }
         //display content
         html = app.layout.dlgwrapHTML(url, html);
