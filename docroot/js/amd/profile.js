@@ -409,7 +409,11 @@ return {
 
 
     byprofid: function (profid) {
-        jt.err("profile.byprofid not implemented yet");
+        if(profid === jt.instId(myprof)) {
+            readProfile(myprof); }
+        app.lcs.getFull("prof", profid, function (profref) {
+            currprof = profref.prof;
+            readProfile(currprof); });
     },
 
 

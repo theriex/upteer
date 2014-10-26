@@ -72,6 +72,7 @@ img { border:0px; }
 .formbuttonsdiv button { margin:0px 10px; }
 .tablediv { display:table; margin:0px auto; }
 .footerlink { background:#f4fcff; padding:2px 5px; border-radius:3px; }
+.paradiv { padding:10px 0px 0px 0px; }
 
 /* menu settings */
 #noticemenudiv { display:inline-block; }
@@ -92,6 +93,7 @@ img { border:0px; }
 .sectionentryplus { width:30px; margin:0px 0px 0px 5px; }
 .orglistdiv { font-size:small; padding:5px 0px 5px 20px; }
 .namespan { font-size:x-large; }
+.orgpic { max-height:100px; max-width:150px; }
 
 
 /* kwentry widget settings */

@@ -69,6 +69,46 @@ app.org = (function () {
     },
 
 
+    orgStatusEditValue = function (org) {
+        var statval;
+        statval = currorg.status;
+        switch(statval) {
+        case "Pending":
+            statval = jt.tac2html(
+                ["a", {href: "#Activate",
+                       onclick: jt.fs("app.org.activate()")},
+                 "Pending"]);
+            break;
+        case "Approved":
+            statval += " " + jt.tac2html(
+                ["a", {href: "#Deactivate", cla: "subtext",
+                       onclick: jt.fs("app.org.deactivate()")},
+                 "Deactivate"]);
+            break;
+        case "Inactive":
+            statval = jt.tac2html(
+                ["a", {href: "#Reactivate",
+                       onclick: jt.fs("app.org.reactivate()")},
+                 "Inactive"]);
+            break;
+        }
+        return statval;
+    },
+
+
+    addressLink = function (org) {
+        var addr, url, html;
+        addr = org.details.addr + (org.details.addr? ", " : "") + 
+            org.details.city + " " + org.details.state +  " " + 
+            org.details.zip;
+        url = "http://maps.google.com?q=" + jt.embenc(addr);
+        html = ["a", {href: url, 
+                      onclick: jt.fs("window.open('" + url + "')")},
+                addr];
+        return jt.tac2html(html);
+    },
+
+
     lvtr = function (id, label, val, placeholder, type) {
         type = type || "text";
         return ["tr",
@@ -256,17 +296,8 @@ return {
 
 
     edit: function () {
-        var statval, html;
+        var html;
         verifyOrganizationFieldValues(currorg);
-        statval = currorg.status;
-        if(currorg.status === "Approved") {
-            statval += " " + jt.tac2html(
-                ["a", {href: "#deactivate",
-                       onclick: jt.fs("app.org.deactivate()")}]); }
-        else {
-            statval += " " + jt.tac2html(
-                ["a", {href: "#changestat",
-                       onclick: jt.fs("app.org.changestat()")}]); }
         html = ["div", {id: "orgdispdiv"},
                 [["div", {id: "orgstatdiv"}, "&nbsp;"],
                  ["table", {cla: "formtable"},
@@ -277,12 +308,20 @@ return {
                       ["label", {fo: "statusin", cla: "formlabel"},
                        "Status"]],
                      ["td", {align: "left"},
-                      statval]]],
+                      orgStatusEditValue(currorg)]]],
                    lvtr("siteurlin", "Site URL", currorg.details.siteurl,
                         "https://yoursite.org/index.html", "url"),
-                   lvtr("logourlin", "Logo URL", currorg.details.logourl,
+                   lvtr("logourlin", 
+                        ["a", {href: "#LogoURL",
+                               onclick: jt.fs("app.org.logoexpl()")},
+                         "Logo URL"], 
+                        currorg.details.logourl,
                         "https://yoursite.org/logo.png", "url"),
-                   lvtr("appurlin", "Application URL", currorg.details.applyurl,
+                   lvtr("appurlin", 
+                        ["a", {href: "#ApplicationURL",
+                               onclick: jt.fs("app.org.appexpl()")},
+                         "Application URL"],
+                        currorg.details.applyurl,
                         "https://yoursite.org/apply.html", "url"),
                    lvtr("phonein", "Phone", currorg.details.phone,
                         "808 111 2222", "tel"),
@@ -339,7 +378,8 @@ return {
         html = ["div", {id: "orgdispdiv"},
                 [["table", {cla: "formtable"},
                   [["tr",
-                    [["td", {id: "orgpictd", cla: "tdnarrow", rowspan: 3},
+                    [["td", {id: "orgpictd", cla: "tdnarrow", 
+                             rowspan: 3, align: "right"},
                       ["div", {id: "orgpicdiv"},
                        ["img", {cla: "orgpic", src: imgsrc}]]],
                      ["td", {align: "left", cla: "valpadtd"},
@@ -354,7 +394,8 @@ return {
                       ["a", {href: currorg.details.applyurl,
                              onclick: jt.fs("window.open('" +
                                             currorg.details.applyurl + "')")},
-                       currorg.details.applyurl]]]],
+                       ["span", {cla: "subtext"},
+                        "Volunteer Application Form(s)"]]]]],
                    ["tr",
                     [["td", {align: "left", cla: "valpadtd"},
                       ["a", {href: "mailto:" + currorg.details.email},
@@ -364,10 +405,7 @@ return {
                        currorg.details.phone]]]],
                    ["tr",
                     ["td", {align: "left", cla: "valpadtd", colspan: 2},
-                     currorg.details.addr + 
-                     (currorg.details.addr? ", " : "") + 
-                     currorg.details.city + " " + currorg.details.state + 
-                     " " + currorg.details.zip]],
+                     addressLink(currorg)]],
                    ["tr",
                     [["td", {align: "right"},
                       "Administrators:"],
@@ -453,11 +491,26 @@ return {
     },
 
 
-    changestat: function () {
-        //Dialog explaining that the organization needs to be approved
-        //by upteer before any volunteer opportunities can be
-        //created.  Please contact support so we can get you set up.
-        jt.err("TODO: org.changestat not implemented yet");
+    activate: function () {
+        var subject, body, mailref, html;
+        subject = "Please approve " + currorg.name;
+        body = subject + ". Organization id: " + jt.instId(currorg) + 
+            "\n\nThanks,\n" + app.profile.getMyProfile().name;
+        mailref = "mailto:admin@upteer.com?subject=" + jt.dquotenc(subject) +
+            "&body=" + jt.dquotenc(body);
+        html = [["div", {id: "contactdiv", cla: "paradiv"},
+                 ["Please ",
+                  ["a", {href: mailref}, "contact support"],
+                  " to get your organization approved!"]],
+                ["p", "All organizations need to be approved by Upteer before creating any volunteer opportunities.  This is just to verify existence and contact info, your understanding is appreciated."],
+                ["div", {cla: "dlgbuttonsdiv"},
+                 ["button", {type: "button", id: "okbutton",
+                             onclick: jt.fs("app.layout.closeDialog()")},
+                  "OK"]]];
+        html = app.layout.dlgwrapHTML("Approval", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html), null,
+                              function () {
+                                  jt.byId('okbutton').focus(); });
     },
 
 
@@ -470,6 +523,44 @@ return {
         //the organization was created in error and has no volunteer
         //opportunities, then contact upteer support to get rid of it.
         jt.err("TODO: org.deactivate not implemented yet");
+    },
+
+
+    reactivate: function () {
+        //Dialog confirming confirming the status should be switched
+        //back to active.  No biggie, just so they don't sit there
+        //toggling the status all day.
+        jt.err("TODO: org.reactivate not implemented yet");
+    },
+
+
+    logoexpl: function () {
+        var html;
+        html = [["div", {id: "expldiv", cla: "paradiv"},
+                 "Upteer uses a link to your logo rather than uploading a copy, so you won't have an old version here if you make changes. To get the url of your logo, simply \"right click\" the logo on your site and copy the image location. Then paste that URL into the form field."],
+                ["div", {cla: "dlgbuttonsdiv"},
+                 ["button", {type: "button", id: "okbutton",
+                             onclick: jt.fs("app.layout.closeDialog()")},
+                  "OK"]]];
+        html = app.layout.dlgwrapHTML("Your Logo", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html), null,
+                              function () {
+                                  jt.byId('okbutton').focus(); });
+    },
+
+
+    appexpl: function () {
+        var html;
+        html = [["div", {id: "expldiv", cla: "paradiv"},
+                 "If you require volunteers to fill out one or more forms, please provide a link to where they can access what they need.  The forms will be integrated into the standard Upteer volunteering process."],
+                ["div", {cla: "dlgbuttonsdiv"},
+                 ["button", {type: "button", id: "okbutton",
+                             onclick: jt.fs("app.layout.closeDialog()")},
+                  "OK"]]];
+        html = app.layout.dlgwrapHTML("Your Logo", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html), null,
+                              function () {
+                                  jt.byId('okbutton').focus(); });
     },
 
 
