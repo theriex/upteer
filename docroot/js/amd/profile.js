@@ -409,6 +409,7 @@ return {
 
 
     byprofid: function (profid) {
+        app.history.checkpoint({view: "profile", profid: profid});
         if(profid === jt.instId(myprof)) {
             readProfile(myprof); }
         app.lcs.getFull("prof", profid, function (profref) {

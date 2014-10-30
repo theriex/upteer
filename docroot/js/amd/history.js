@@ -82,6 +82,8 @@ return {
             case "profile":
                 if(jt.isId(state.profid)) {
                     app.profile.byprofid(state.profid); }
+                else {
+                    app.profile.display(); }
                 break; 
             case "org":
                 if(jt.isId(state.orgid)) {
