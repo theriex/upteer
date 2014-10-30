@@ -1,9 +1,29 @@
-/*global app: false, jt: false, setTimeout: false */
+/*global app: false, jt: false, setTimeout: false, window: false */
 
 /*jslint unparam: true, white: true, maxerr: 50, indent: 4 */
 
 //////////////////////////////////////////////////////////////////////
 // Display an organization that utilizes volunteers
+//
+// Organization affiliation cases:
+//   - User creates new org: profid added to org.administrators, orgid
+//     added to profile on return from new org save.
+//   - User resigns from org: Their profid is removed from all org
+//     references.  If they were the last administrator, then the org
+//     is switched to inactive.
+//   - User associates with an inactive org with no admins: They become
+//     the new administrator.  Org gets vetted before reactivating.
+//   - User associates with an existing org: Their profid is added to
+//     org.unassociated, and the orgid is added to their prof.orgs as
+//     "Pending".  Org admins are notified the new associate needs to be
+//     accepted or rejected.
+//       - org association on profile reads "Pending", "Coordinator",
+//         "Administrator" or "Not Associated" depending on acceptance.
+//       - If the user is associated with an organization that is not
+//         "Active", that org status takes precedence and the association
+//         status on their profile would read "Pending" or "Inactive".
+//   - Admins can promote from coordinator to administrator, demote from
+//     administrator to coordinator, or remove associations.
 //
 
 app.org = (function () {
@@ -49,7 +69,7 @@ app.org = (function () {
         //name_c: updated by server
         //modified: updated by server
         //status: already set via form link action
-        //adminstrators: already modified via form link action
+        //administrators: already modified via form link action
         //coordinators: ditto
         //unassociated: ditto
         currorg.details = currorg.details || {};
@@ -69,29 +89,35 @@ app.org = (function () {
     },
 
 
+    assocStatus = function (prof, org) {
+        var profid = jt.instId(prof);
+        if(!org) {
+            return "Unknown"; }
+        if(org.administrators.csvcontains(profid)) {
+            return "Administrator"; }
+        if(org.coordinators.csvcontains(profid)) {
+            return "Coordinator"; }
+        if(org.unassociated.csvcontains(profid)) {
+            return "Pending"; }
+        return "Not Associated";
+    },
+
+
     orgStatusEditValue = function (org) {
-        var statval;
+        var statval, assoc;
+        assoc = assocStatus(app.profile.getMyProfile(), org);
         statval = currorg.status;
-        switch(statval) {
-        case "Pending":
+        if(statval === "Approved") {
+            if(assoc === "Administrator") {
+                statval += " " + jt.tac2html(
+                    ["a", {href: "#Deactivate", cla: "subtext",
+                           onclick: jt.fs("app.org.confirmDeactivate()")},
+                     "Deactivate"]); } }
+        else { //"Pending" or "Inactive"
             statval = jt.tac2html(
                 ["a", {href: "#Activate",
                        onclick: jt.fs("app.org.activate()")},
-                 "Pending"]);
-            break;
-        case "Approved":
-            statval += " " + jt.tac2html(
-                ["a", {href: "#Deactivate", cla: "subtext",
-                       onclick: jt.fs("app.org.deactivate()")},
-                 "Deactivate"]);
-            break;
-        case "Inactive":
-            statval = jt.tac2html(
-                ["a", {href: "#Reactivate",
-                       onclick: jt.fs("app.org.reactivate()")},
-                 "Inactive"]);
-            break;
-        }
+                 statval]); }
         return statval;
     },
 
@@ -122,44 +148,28 @@ app.org = (function () {
     },
 
 
-    assocStatus = function (prof, org) {
-        var profid = jt.instId(prof);
-        if(!org) {
-            return "Unknown"; }
-        if(org.administrators.csvcontains(profid)) {
-            return "Administrator"; }
-        if(org.coordinators.csvcontains(profid)) {
-            return "Coordinator"; }
-        if(org.unnassociated.csvcontains(profid)) {
-            return "Pending"; }
-        return "Not Associated";
-    },
-
-
-    displayOrgs = function (prof, mode) {
-        var i, html = [], line, isSelf, orgref, orgstat;
-        if(!prof.orgrefs.length) {
+    displayOrgs = function (prof, orgrefs, mode) {
+        var i, html = [], line, orgref;
+        if(!orgrefs.length) {
             jt.out('orglistdiv', "No associated organizations");
             return; }
-        isSelf = jt.instId(prof) === jt.instId(app.profile.getMyProfile());
-        for(i = 0; i < prof.orgrefs.length; i += 1) {
-            orgref = prof.orgrefs[i];
-            orgstat = assocStatus(prof, orgref.org);
-            if(isSelf || orgstat === "Administrator" || 
-                   orgstat === "Coordinator") {
-                line = [];
-                if(mode === "edit") {
-                    line.push(["span", {id: "remorg" + i, cla: "orgx",
-                                onclick: jt.fs("app.org.removeOrg(" + i + ")")},
-                               "x"]); }
-                line.push(["span", {id: "orgname" + i, cla: "orgnamespan"},
-                           ["a", {href: "#",
-                                  onclick: jt.fs("app.org.display(" + 
-                                                 jt.instId(orgref.org) + ")")},
-                            orgref.org.name]]);
-                line.push(["span", {id: "stat" + i, cla: "orgstatus"},
-                           " (" + orgstat + ")"]);
-                html.push(["div", {cla: "orgsummaryline"}, line]); } }
+        for(i = 0; i < orgrefs.length; i += 1) {
+            orgref = orgrefs[i];
+            line = [];
+            if(mode === "edit") {
+                line.push(["span", {id: "remorg" + i, cla: "orgx",
+                                    onclick: jt.fs("app.org.removeOrg('" + 
+                                        jt.instId(orgref.org) + "','" + 
+                                        orgref.org.name + "')")},
+                           "x"]); }
+            line.push(["span", {id: "orgname" + i, cla: "orgnamespan"},
+                       ["a", {href: "#",
+                              onclick: jt.fs("app.org.display(" + 
+                                             jt.instId(orgref.org) + ")")},
+                        orgref.org.name]]);
+            line.push(["span", {id: "stat" + i, cla: "orgstatus"},
+                       " (" + assocStatus(prof, orgref.org) + ")"]);
+            html.push(["div", {cla: "orgsummaryline"}, line]); }
         jt.out('orglistdiv', jt.tac2html(html));
     },
 
@@ -174,11 +184,8 @@ app.org = (function () {
                        "+"]); }
         html.push(["div", {id: "orglistdiv", cla: "orglistdiv"}]);
         jt.out(dispdiv, jt.tac2html(html));
-        if(prof.orgrefs) {
-            return displayOrgs(prof, mode); }
-        app.lcs.resolveCSV("org", prof.orgs, function(orgrefs) {
-            prof.orgrefs = orgrefs;
-            displayOrgs(prof, mode); });
+        app.lcs.resolveCSV("org", prof.orgs, function (orgrefs) {
+            displayOrgs(prof, orgrefs, mode); });
     },
 
 
@@ -262,21 +269,29 @@ return {
            org.coordinators.csvcontains(profid)) {
             jt.log("orgselect already member");
             app.profile.edit(); }
-        else if(org.unassociated.csvcontains(profid)) {
-            html = [["p", "You have already applied to be associated with"],
-                    ["div", {cla: "orgsummaryline"}, org.name],
-                    ["p", "Please contact one of your organization's administrators directly so they can approve you.  If the existing administrators cannot be located, please contact Upteer support."],
-                    ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"},
-                     ["button", {type: "button", id: "orgselokb",
-                                 onclick: jt.fs("app.profile.edit()")},
-                      "Ok"]]];
-            jt.out('contentdiv', jt.tact2html(html)); }
+        else if(org.unassociated && org.unassociated.csvcontains(profid)) {
+            html = ["div", {id: "assocnoticediv"},
+                    [["p", "You have already applied to be associated with"],
+                     ["div", {cla: "orgassocnameline"}, org.name],
+                     ["p", "Please contact one of your organization's administrators directly so they can approve you."],
+                     ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"},
+                      ["button", {type: "button", id: "orgselokb",
+                                  onclick: jt.fs("app.profile.edit()")},
+                       "Ok"]]]];
+            jt.out('contentdiv', jt.tac2html(html)); }
         else {
-            html = [["p", "Adding your association to"],
-                    ["div", {cla: "orgsummaryline"}, org.name],
-                    ["p", "Your association as a volunteer coordinator will need to be approved by one of your organization's administrators before you can create volunteer opportunities.  All listed administrators will see your application next time they log in, but you might want to contact one of them directly.  After they add you, log in again or click the refresh button on your browser."],
-                    ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"}]];
+            html = "Your association as a volunteer coordinator will need to be approved by one of your organization's administrators, please contact them directly and ask them to login again or reload the page in their browser to see your association request.";
+            if(!org.administrators) {
+                html = "You have been accepted as an administrator."; }
+            html = ["div", {id: "assocnoticediv"},
+                    [["p", {id: "assocverbpara"}, "Adding your association to"],
+                     ["div", {cla: "orgassocnameline"}, org.name],
+                     ["p", html],
+                     ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"}]]];
             jt.out('contentdiv', jt.tac2html(html));
+            if(app.winw > 700) {
+                jt.byId('assocnoticediv').style.width =
+                    (Math.round((app.winw * 2) / 3)) + "px"; }
             data = jt.objdata({ orgid: jt.instId(org), profid: profid });
             jt.call('POST', "orgassoc?" + app.login.authparams(), data,
                     function (objs) {
@@ -284,6 +299,7 @@ return {
                         app.profile.setMyProfile(objs[0]);
                         app.lcs.put("org", objs[1]);
                         currorg = objs[1];
+                        jt.out('assocverbpara', "Added your association to");
                         jt.out('formbuttonsdiv', jt.tac2html(
                             ["button", {type: "button", id: "orgselokb",
                                         onclick: jt.fs("app.profile.edit()")},
@@ -322,7 +338,7 @@ return {
                                onclick: jt.fs("app.org.appexpl()")},
                          "Application URL"],
                         currorg.details.applyurl,
-                        "https://yoursite.org/apply.html", "url"),
+                        "https://yoursite.org/optionalforms.html", "url"),
                    lvtr("phonein", "Phone", currorg.details.phone,
                         "808 111 2222", "tel"),
                    lvtr("emailin", "Email", currorg.details.email,
@@ -335,12 +351,16 @@ return {
                         "Hawai'i or ?"),
                    lvtr("zipin", "Zip", currorg.details.zip, "96817 or ?"),
                    ["tr",
-                    ["td", {colspan: 2},
-                     ["div", {id: "adminlistdiv", cla: "refcsvdiv"}]]],
+                    [["td", {align: "right", cla: "listlabel"},
+                      "Administrators: "],
+                     ["td", {align: "left"},
+                      ["div", {id: "adminlistdiv", cla: "refcsvdiv"}]]]],
                    ["tr",
-                    ["td", {colspan: 2},
-                     ["div", {id: "coordlistdiv", cla: "refcsvdiv"}]]],
-                   //unnassociated members not displayed (notice only)
+                    [["td", {align: "right", cla: "listlabel"},
+                      "Coordinators: "],
+                     ["td", {align: "left"},
+                      ["div", {id: "coordlistdiv", cla: "refcsvdiv"}]]]],
+                   //unassociated members not displayed (notice only)
                    ["tr",
                     ["td", {colspan: 2},
                      ["div", {id: "oppslistdiv", cla: "refcsvdiv"},
@@ -395,7 +415,8 @@ return {
                              onclick: jt.fs("window.open('" +
                                             currorg.details.applyurl + "')")},
                        ["span", {cla: "subtext"},
-                        "Volunteer Application Form(s)"]]]]],
+                        (currorg.details.applyurl? 
+                         "Volunteer Application Form(s)" : "")]]]]],
                    ["tr",
                     [["td", {align: "left", cla: "valpadtd"},
                       ["a", {href: "mailto:" + currorg.details.email},
@@ -407,16 +428,16 @@ return {
                     ["td", {align: "left", cla: "valpadtd", colspan: 2},
                      addressLink(currorg)]],
                    ["tr",
-                    [["td", {align: "right"},
-                      "Administrators:"],
+                    [["td", {align: "right", cla: "listlabel"},
+                      "Administrators: "],
                      ["td", {align: "left"},
                       ["div", {id: "adminlistdiv", cla: "refcsvdiv"}]]]],
                    ["tr",
-                    [["td", {align: "right"},
-                      "Coordinators:"],
+                    [["td", {align: "right", cla: "listlabel"},
+                      "Coordinators: "],
                      ["td", {align: "left"},
                       ["div", {id: "coordlistdiv", cla: "refcsvdiv"}]]]],
-                   //unnassociated members not displayed (notice only)
+                   //unassociated members not displayed (notice only)
                    ["tr",
                     ["td", {colspan: 2},
                      ["div", {id: "oppslistdiv", cla: "refcsvdiv"},
@@ -439,9 +460,9 @@ return {
     },
 
 
-    save: function () {
+    save: function (directive) {
         var bdiv, html, data;
-        if(readFormValues()) {
+        if(directive === "noform" || readFormValues()) {
             bdiv = jt.byId("formbuttonsdiv");
             if(bdiv) {
                 html = bdiv.innerHTML;
@@ -459,6 +480,7 @@ return {
                             nextf = app.org.edit; }
                         currorg = orgs[0];
                         app.lcs.put("org", currorg);
+                        app.menu.rebuildNotices();
                         nextf(); },
                     app.failf(function (code, errtxt) {
                         if(html) {
@@ -469,25 +491,115 @@ return {
     },
 
 
-    byorgid: function (orgid) {
-        //set currorg and call display...
-        jt.err("TODO: org.byorgid not implemented yet");
+    removeOrg: function (orgid, name) {
+        var prof = app.profile.getMyProfile();
+        if(!window.confirm("Are you sure you want to delete " + name + "?")) {
+            return; }
+        prof.orgs = prof.orgs.csvremove(orgid);
+        app.lcs.resolveCSV("org", prof.orgs, function(orgrefs) {
+            displayOrgs(prof, orgrefs, "edit"); });
     },
 
 
-    membership: function (profid) {
-        //dlg: $NAME is currently $ASSOCSTAT. You can 
-        //  radios: promote, demote, remove, accept as coord/admin, reject
-        //  explanation section with details of what will happen
-        // update button makes the change and closes the dialog
-        //The last admin may not resign. They will serve as the last
-        //remaining authority if the organization is to resume
-        //activity at some point.  If they are unresponsive at that
-        //time, then someone looking to take over as the new admin can
-        //talk to upteer support which can swap the adminID in the
-        //database (provided the user and organization both check out
-        //as legit)
-        jt.err("TODO: org.membership not implemented yet");
+    byorgid: function (orgid) {
+        app.org.display(orgid);
+    },
+
+
+    enableok: function () {
+        var okb = jt.byId("okbutton");
+        if(okb) {
+            okb.disabled = false; }
+    },
+
+
+    membership: function (prof) {
+        var stat, options, html;
+        if(prof && typeof prof === "object" && prof.prof) {
+            prof = prof.prof; }
+        else if(prof) {
+            return app.lcs.getFull("prof", prof, app.org.membership); }
+        stat = assocStatus(prof, currorg);
+        options = [];
+        if(stat !== "Administrator") {
+            options.push(
+                ["tr",
+                 [["td", {valign: "top"},
+                   ["input", {type: "radio", name: "memact", 
+                              value: "admin", id: "adminrad",
+                              onclick: "app.org.enableok()"}]],
+                  ["td",
+                   [["label", {fo: "adminrad"}, 
+                     "Make " + prof.name + " an administrator"],
+                    ["br"],
+                    ["Administrators have full edit rights to accept or remove others and change the organization fields."]]]]]); }
+        if(stat !== "Coordinator") {
+            options.push(
+                ["tr",
+                 [["td", {valign: "top"},
+                   ["input", {type: "radio", name: "memact", 
+                              value: "coord", id: "coordrad",
+                              onclick: "app.org.enableok()"}]],
+                  ["td",
+                   [["label", {fo: "coordrad"}, 
+                     "Make " + prof.name + " a volunteer coordinator"],
+                    ["br"],
+                    ["Coordinators can create and manage volunteer opportunities for the organization."]]]]]); }
+        options.push(
+            ["tr",
+             [["td", {valign: "top"},
+               ["input", {type: "radio", name: "memact", 
+                          value: "remove", id: "removerad",
+                          onclick: "app.org.enableok()"}]],
+              ["td",
+               [["label", {fo: "removerad"}, 
+                 "Remove " + prof.name],
+                ["br"],
+                [prof.name + " is not currently managing volunteer opportunities or administrating the organization."]]]]]);
+        html = [["p", 
+                 [prof.name + " is associated with " + currorg.name + " as ", 
+                  ["em", stat],
+                  ". You can"]],
+                ["table", options],
+                ["div", {cla: "dlgbuttonsdiv"},
+                 [["button", {type: "button", id: "cancelbutton",
+                              onclick: jt.fs("app.layout.closeDialog()")},
+                  "Cancel"],
+                  ["button", {type: "button", id: "okbutton",
+                              disabled: "disabled",
+                              onclick: jt.fs("app.org.memberchange('" + 
+                                             jt.instId(prof) + "')")},
+                   "OK"]]]];
+        html = app.layout.dlgwrapHTML("Membership", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html), null,
+                              function () {
+                                  jt.byId('okbutton').focus(); });
+    },
+
+
+    memberchange: function (profid) {
+        var cb;
+        cb = jt.byId('adminrad');
+        if(cb && cb.checked) {
+            if(!currorg.administrators.csvcontains(profid)) {
+                currorg.administrators = 
+                    currorg.administrators.csvappend(profid); }
+            currorg.coordinators = currorg.coordinators.csvremove(profid);
+            currorg.unassociated = currorg.unassociated.csvremove(profid); }
+        cb = jt.byId('coordrad');
+        if(cb && cb.checked) {
+            currorg.administrators = currorg.administrators.csvremove(profid);
+            if(!currorg.coordinators.csvcontains(profid)) {
+                currorg.coordinators = 
+                    currorg.coordinators.csvappend(profid); }
+            currorg.unassociated = currorg.unassociated.csvremove(profid); }
+        cb = jt.byId('removerad');
+        if(cb && cb.checked) {
+            currorg.administrators = currorg.administrators.csvremove(profid);
+            currorg.coordinators = currorg.coordinators.csvremove(profid);
+            currorg.unassociated = currorg.unassociated.csvremove(profid); }
+        app.layout.closeDialog();
+        app.org.save("noform");
     },
 
 
@@ -499,10 +611,9 @@ return {
         mailref = "mailto:admin@upteer.com?subject=" + jt.dquotenc(subject) +
             "&body=" + jt.dquotenc(body);
         html = [["div", {id: "contactdiv", cla: "paradiv"},
-                 ["Please ",
+                 ["All new or reactivating organizations must be approved by Upteer before creating new volunteer opportunities. Please ",
                   ["a", {href: mailref}, "contact support"],
                   " to get your organization approved!"]],
-                ["p", "All organizations need to be approved by Upteer before creating any volunteer opportunities.  This is just to verify existence and contact info, your understanding is appreciated."],
                 ["div", {cla: "dlgbuttonsdiv"},
                  ["button", {type: "button", id: "okbutton",
                              onclick: jt.fs("app.layout.closeDialog()")},
@@ -514,30 +625,36 @@ return {
     },
 
 
-    deactivate: function () {
-        //Dialog confirming it should be switched to inactive, which
-        //means no new opportunities can be created.  Existing
-        //opportunities must be closed out.  Any listed admin can
-        //reactivate.  Explain that an organization cannot be deleted
-        //because it needs to stick around for volunteer history.  If
-        //the organization was created in error and has no volunteer
-        //opportunities, then contact upteer support to get rid of it.
-        jt.err("TODO: org.deactivate not implemented yet");
+    confirmDeactivate: function () {
+        var html;
+        html = [["p", "Organizations generally cannot be deleted because they are part of the volunteering log, however they can be switched to \"Inactive\" which prevents any new volunteer opportunities from being created. Once inactivated, an organization must be re-approved by Upteer before becoming active again."],
+                ["div", {cla: "dlgconfmsgdiv"},
+                 "Are you sure you want to deactivate " + currorg.name + "?"],
+                ["div", {cla: "dlgbuttonsdiv"},
+                 [["button", {type: "button", id: "cancelb",
+                              onclick: jt.fs("app.layout.closeDialog()")},
+                   "Cancel"],
+                  ["button", {type: "button", id: "deactivateb",
+                             onclick: jt.fs("app.org.deactivate()")},
+                   "Deactivate"]]]];
+        html = app.layout.dlgwrapHTML("Deactivate", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html), null,
+                              function () {
+                                  jt.byId('cancelb').focus(); });
     },
+                
 
-
-    reactivate: function () {
-        //Dialog confirming confirming the status should be switched
-        //back to active.  No biggie, just so they don't sit there
-        //toggling the status all day.
-        jt.err("TODO: org.reactivate not implemented yet");
+    deactivate: function () {
+        app.layout.closeDialog();
+        currorg.status = "Inactive";
+        app.org.save();
     },
 
 
     logoexpl: function () {
         var html;
         html = [["div", {id: "expldiv", cla: "paradiv"},
-                 "Upteer uses a link to your logo rather than uploading a copy, so you won't have an old version here if you make changes. To get the url of your logo, simply \"right click\" the logo on your site and copy the image location. Then paste that URL into the form field."],
+                 "Upteer uses a link to your logo rather than uploading a copy, so you won't have an old version here if you make changes. To get the url of your logo, simply \"right click\" the image on your web site and copy the image location. Then paste that URL into the form field."],
                 ["div", {cla: "dlgbuttonsdiv"},
                  ["button", {type: "button", id: "okbutton",
                              onclick: jt.fs("app.layout.closeDialog()")},
@@ -552,7 +669,8 @@ return {
     appexpl: function () {
         var html;
         html = [["div", {id: "expldiv", cla: "paradiv"},
-                 "If you require volunteers to fill out one or more forms, please provide a link to where they can access what they need.  The forms will be integrated into the standard Upteer volunteering process."],
+                 "If you require volunteers to fill out one or more forms before volunteering, please provide a link to where they can access what they need.  The forms will be integrated into the standard Upteer volunteering process."],
+                ["p", "It is NOT required to have application forms. The standard Upteer volunteering process already provides contact information, sign up commitments, completion status and time tracking."],
                 ["div", {cla: "dlgbuttonsdiv"},
                  ["button", {type: "button", id: "okbutton",
                              onclick: jt.fs("app.layout.closeDialog()")},
@@ -561,6 +679,32 @@ return {
         app.layout.openDialog({y:90}, jt.tac2html(html), null,
                               function () {
                                   jt.byId('okbutton').focus(); });
+    },
+
+
+    checkForNotices: function (orgrefs) {
+        var prof, i, j, profids;
+        prof = app.profile.getMyProfile();
+        if(!orgrefs) {
+            return app.lcs.resolveCSV("org", prof.orgs, 
+                                      app.org.checkForNotices); }
+        for(i = 0; i < orgrefs.length; i += 1) {
+            if(assocStatus(prof, orgrefs[i].org) === "Administrator") {
+                profids = orgrefs[i].org.unassociated.csvarray();
+                //jt.log("org.checkForNotices " + profids.length + " pending");
+                for(j = 0; profids && j < profids.length; j += 1) {
+                    app.menu.createNotice({
+                        noticetype: "Association Request",
+                        noticeprof: profids[j],
+                        noticefunc: "app.org.associationNotice(" + profids[j] +
+                            "," + jt.instId(orgrefs[i].org) + ")"}); } } }
+    },
+
+
+    associationNotice: function (profid, orgid) {
+        app.lcs.getFull("org", orgid, function(orgref) {
+            currorg = orgref.org;
+            app.org.membership(profid); });
     },
 
 
@@ -590,7 +734,11 @@ return {
     disable: function (dispdiv, errdiv) {
         var orgs = app.profile.getMyProfile().orgs.csvarray();
         if(orgs.length > 0) {
-            jt.out(errdiv, "Delete your organization affiliations first..");
+            //The form error output can easily be off the top of the screen
+            //when clicking the 'X' button next to Volunteer Coordinator,
+            //and if you don't see the message it just seems broken.
+            //jt.out(errdiv, "Delete your organization affiliations first..");
+            jt.err("Please remove your organization affiliations before removing your Volunteer Coordinator status");
             return false; }
         jt.out(dispdiv, "");
         return true;

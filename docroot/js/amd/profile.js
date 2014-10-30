@@ -104,14 +104,14 @@ app.profile = (function () {
     },
 
 
-    lifeStatusDisplay = function (mode) {
+    lifeStatusDisplay = function (prof, mode) {
         if(lifekw) {
             lifekw.destroy(); }
         lifekw = app.kwentry(
             "lifestatdiv", "Life Status",
             ["Volunteer Coordinator", "Student", "Professional", "Retired", 
              "Seeking Skills", "Under-employed"],
-            myprof.lifestat);
+            prof.lifestat);
         if(mode === "edit") {
             lifekw.setKeywordSelectUnselectHooks(
                 function (keyword) {
@@ -125,18 +125,18 @@ app.profile = (function () {
                         return app.org.disable("orgsdiv", "profstatdiv"); }
                     return true;
                 });
-            if(myprof.lifestat.csvcontains("Volunteer Coordinator")) {
-                app.org.listOrganizations("orgsdiv", myprof, "edit",
+            if(prof.lifestat.csvcontains("Volunteer Coordinator")) {
+                app.org.listOrganizations("orgsdiv", prof, "edit",
                                           "app.profile.addOrg"); }
             lifekw.displayEntry(); }
         else {
-            if(myprof.lifestat.csvcontains("Volunteer Coordinator")) {
-                app.org.listOrganizations("orgsdiv", myprof); }
+            if(prof.lifestat.csvcontains("Volunteer Coordinator")) {
+                app.org.listOrganizations("orgsdiv", prof); }
             lifekw.displayList(); }
     },
 
 
-    skillKeywordsDisplay = function(mode) {
+    skillKeywordsDisplay = function(prof, mode) {
         if(skillkw) {
             skillkw.destroy(); }
         skillkw = app.kwentry(
@@ -146,7 +146,7 @@ app.profile = (function () {
              "Warehouse Management", "Grant Writing", "Copy Editing", 
              "Land Use Research", "Dog Fostering", "Photography",
              "Print Graphics", "Architectural Drawing", "Law"],
-            myprof.skills);
+            prof.skills);
         if(mode === "edit") {
             skillkw.displayEntry(); }
         else {
@@ -229,8 +229,8 @@ app.profile = (function () {
             domelem.placeholder = "What do you do? What kinds of things would you like to get involved in? Do you have a public LinkedIn profile or website?";
             domelem.style.width = domelem.parentNode.offsetWidth + "px"; }
         app.profile.profPicHTML(prof, true);
-        lifeStatusDisplay("edit");
-        skillKeywordsDisplay("edit");
+        lifeStatusDisplay(myprof, "edit");
+        skillKeywordsDisplay(myprof, "edit");
     },
 
 
@@ -302,8 +302,8 @@ app.profile = (function () {
             jt.byId('aboutdiv').style.width =
                 (Math.round((app.winw * 2) / 3)) + "px"; }
         app.profile.profPicHTML(prof, false);
-        lifeStatusDisplay();
-        skillKeywordsDisplay();
+        lifeStatusDisplay(prof);
+        skillKeywordsDisplay(prof);
         app.menu.display();
     },
 
@@ -470,6 +470,7 @@ return {
 
 
     addOrg: function () {
+        readProfileFormValues();  //don't lose interim edits
         saveProfile("addorg");
     },
 

@@ -3,7 +3,7 @@ import datetime
 from google.appengine.ext import db
 import logging
 from login import *
-from profile import authprof
+import profile
 
 # Some organizations might want to store application forms with their
 # profile, but this is better served by having the organization upload
@@ -24,32 +24,81 @@ class Organization(db.Model):
     details = db.TextProperty()         # JSON
 
 
+def remove_from_csv(val, csv):
+    csv = csv.split(",")
+    csv = [x for x in csv if x != str(val)]
+    return ",".join(csv)
+    
+
+def resign_from_organization(profid, org):
+    admins = remove_from_csv(profid, org.administrators)
+    coords = remove_from_csv(profid, org.coordinators)
+    unassoc = remove_from_csv(profid, org.unassociated)
+    if (admins != org.administrators or coords != org.coordinators or
+        unassoc != org.unassociated):
+        org.administrators = admins
+        org.coordinators = coords
+        org.unassociated = unassoc
+        org.put()
+
+
+def note_resignations(profid, prevorgids, currorgids):
+    prevorgids = (prevorgids or "").split(",")
+    currorgids = (currorgids or "").split(",")
+    for prevorgid in prevorgids:
+        if prevorgid and not prevorgid in currorgids:
+            org = Organization.get_by_id(intz(prevorgid))
+            resign_from_organization(profid, org)
+
+
 @db.transactional(xg=True)
 def note_requested_association(prof, org):
-    org.unnassociated = org.unnassociated or ""
-    if org.unnassociated:
-        org.unnassociated += ","
-    org.unnassociated += str(prof.key().id())
+    orgid = str(org.key().id())
     prof.orgs = prof.orgs or ""
-    if prof.orgs:
-        prof.orgs += ","
-    prof.orgs += str(org.key().id())
-    prof.put()
-    org.put()
+    if not orgid in prof.orgs:
+        if prof.orgs:
+            prof.orgs += ","
+        prof.orgs += orgid
+        prof.put()
+    profid = str(prof.key().id())
+    org.administrators = org.administrators or ""
+    org.coordinators = org.coordinators or ""
+    org.unassociated = org.unassociated or ""
+    if not org.administrators:  # taking over abandoned org
+        org.administrators = profid
+        org.put()
+    elif profid in org.administrators:  # already associated
+        pass
+    elif profid in org.coordinators:    # already associated
+        pass
+    elif profid in org.unassociated:    # association already requested
+        pass
+    else:
+        if org.unassociated:
+            org.unassociated += ","
+        org.unassociated += profid
+        org.put()
     return [ prof, org ]
-
 
 
 class OrgById(webapp2.RequestHandler):
     def get(self):
         orgid = self.request.get('orgid')
+        if not orgid or not intz(orgid):
+            self.error(412)  # Precondition Failed
+            self.response.out.write("No orgid specified")
+            return
         org = Organization.get_by_id(intz(orgid))
+        if not org:
+            self.error(404)  # Not Found
+            self.response.out.write("Organization id: " + orgid + " not found.")
+            return
         returnJSON(self.response, [ org ])
 
 
 class SaveOrganization(webapp2.RequestHandler):
     def post(self):
-        myprof = authprof(self)
+        myprof = profile.authprof(self)
         if not myprof:
             return
         org = None
@@ -95,7 +144,7 @@ class SaveOrganization(webapp2.RequestHandler):
 
 class AssociationRequest(webapp2.RequestHandler):
     def post(self):
-        myprof = authprof(self)
+        myprof = profile.authprof(self)
         if not myprof:
             return
         profid = intz(self.request.get('profid'))
@@ -108,8 +157,7 @@ class AssociationRequest(webapp2.RequestHandler):
             self.error(404)  # Not Found
             self.response.out.write("Could not find organization")
             return
-        if not str(profid) in org.unnassociated:
-            myprof, org = note_requested_association(myprof, org)
+        myprof, org = note_requested_association(myprof, org)
         returnJSON(self.response, [ myprof, org ])
 
 

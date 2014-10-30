@@ -4,6 +4,8 @@ from google.appengine.ext import db
 from google.appengine.api import images
 import logging
 from login import *
+import organization
+
 
 # The email address is verified by confirmation.  Before that the
 # status field may be filled out with a token or other value.  The
@@ -81,12 +83,17 @@ class MyProfile(webapp2.RequestHandler):
 class SaveProfile(webapp2.RequestHandler):
     def post(self):
         prof = authprof(self)
+        profid = 0
         if not prof:
             prof = Profile(email=self.request.get('email'),
                            zipcode=self.request.get('zipcode'))
+        else:
+            profid = prof.key().id();
+        prevorgs = prof.orgs or ""
         set_profile_fields(self.request, prof)
         if not verify_profile_fields(self, prof):
             return
+        organization.note_resignations(profid, prevorgs, prof.orgs);
         prof.put();
         returnJSON(self.response, [ prof ])
 
@@ -101,7 +108,7 @@ class ProfileById(webapp2.RequestHandler):
             self.response.out.write("No profile found with id: " + profid)
             return
         # strip all non-public information
-        prof.email = ""
+        prof.email = "removed"
         prof.mailverify = ""
         returnJSON(self.response, [ prof ])
 

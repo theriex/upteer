@@ -58,6 +58,8 @@ img { border:0px; }
 .dlgclosex { float:right; font-size:x-small; }
 .headingtxt { font-size:large; font-weight:bold; text-align:center; }
 .dlgbuttonsdiv { text-align:center; padding:20px 0px 10px 0px; }
+.dlgbuttonsdiv button { margin:0px 10px; }
+.dlgconfmsgdiv { text-align:center; }
 .floatclear { clear:both; }
 #tagcontainerdiv { padding:0; }
 #taglinediv { position: relative; top: -20px; margin:0px 0px 0px 120px; 
@@ -67,6 +69,7 @@ img { border:0px; }
   word-spacing:40px; padding:0px 20px 5px 20px;
   position:fixed; left:0px; bottom:0px; height:15px; width:100%; }
 #loginstatdiv { font-size:small; font-weight:bold; }
+.listlabel { font-size:medium; font-weight:normal; padding:0px 10px; }
 .formlabel { font-size:medium; font-weight:normal; padding:10px; }
 .formbuttonsdiv { padding:20px; text-align:center; }
 .formbuttonsdiv button { margin:0px 10px; }
@@ -75,7 +78,9 @@ img { border:0px; }
 .paradiv { padding:10px 0px 0px 0px; }
 
 /* menu settings */
-#noticemenudiv { display:inline-block; }
+#noticemenudiv { display:inline-block; padding:0px 10px 0px 0px; }
+.noticediv { background-color: #fdfeff; padding:3px; 
+  border:1px solid #ccc; border-radius:3px;}
 #mainmenudiv { display:inline-block; padding:0px 30px 0px 0px; }
 
 /* profile view settings */
@@ -94,6 +99,10 @@ img { border:0px; }
 .orglistdiv { font-size:small; padding:5px 0px 5px 20px; }
 .namespan { font-size:x-large; }
 .orgpic { max-height:100px; max-width:150px; }
+#assocnoticediv { font-size:medium; }
+.orgassocnameline { font-size:large; text-align:center; }
+.orgx { cursor:pointer; font-size:medium; padding:0px 2px 0px 0px; }
+.refcsvdiv { font-size:medium; }
 
 
 /* kwentry widget settings */

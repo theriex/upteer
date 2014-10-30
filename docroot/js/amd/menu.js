@@ -13,7 +13,7 @@ app.menu = (function () {
     // closure variables
     ////////////////////////////////////////
 
-    var notices = [],
+    var notices = null,
 
 
     ////////////////////////////////////////
@@ -21,11 +21,27 @@ app.menu = (function () {
     ////////////////////////////////////////
 
     displayNoticesMenu = function () {
-        jt.out('noticemenudiv', "");
-        //ATTENTION: If there are any notices, then display a "Hey!"
-        //link to access them.  Clicking a notice link brings up a
-        //dialog explaining what needs to be done and providing
-        //options.  The dialog function is part of the notice object..
+        var i, html = [], profref;
+        if(!notices) {
+            //At startup, there are several orgid and profid
+            //references being resolved, and colliding with those while
+            //checking for secondary display info like this can lead to
+            //calls getting ignored due to retrieval semaphores.  Best
+            //to chill for a moment before rebuilding the notices.  That
+            //also makes the "Hey" stand out more.
+            setTimeout(app.menu.rebuildNotices, 800);
+            return; }
+        for(i = 0; i < notices.length; i += 1) {
+            profref = app.lcs.getRef("prof", notices[i].noticeprof);
+            if(profref.status === "not cached") {
+                //load the profile so we have the name available later
+                app.lcs.getFull("prof", notices[i].noticeprof, 
+                                app.menu.profload); } }
+        if(notices.length > 0) {
+            html = ["a", {href: "noticesmenu",
+                          onclick: jt.fs("app.menu.noticesmenu()")},
+                    "Hey!"]; }
+        jt.out('noticemenudiv', jt.tac2html(html));
     },
 
 
@@ -42,6 +58,12 @@ app.menu = (function () {
     // published functions
     ////////////////////////////////////////
 return {
+
+    createNotice: function (notice) {
+        notices.push(notice);
+        displayNoticesMenu();
+    },
+
 
     select: function (menuitem) {
         app.layout.closeDialog();
@@ -72,14 +94,56 @@ return {
         app.layout.openDialog({x: mc.x, y: mc.y}, jt.tac2html(html),
                               //override the dialog screen overflow protection
                               function () {
-                                  jt.byId('dlgdiv').style.left = 
-                                      mc.x + "px"; });
+                                  var dlgdiv = jt.byId('dlgdiv');
+                                  dlgdiv.style.left = mc.x + "px";
+                                  dlgdiv.style.width = "85px"; });
+    },
+
+
+    noticesmenu: function () {
+        var i, html = [], name, profref, mc;
+        for(i = 0; i < notices.length; i += 1) {
+            name = "";
+            profref = app.lcs.getRef("prof", notices[i].noticeprof);
+            if(profref.prof) {
+                name = profref.prof.name; }
+            html.push(
+                ["div", {id: "noticediv" + i, cla: "noticediv"},
+                 ["a", {href: "#" + name,
+                        onclick: jt.fs(notices[i].noticefunc)},
+                  [notices[i].noticetype,
+                   ["br"],
+                   name]]]); }
+        html = app.layout.dlgwrapHTML("", html);
+        mc = jt.geoPos(jt.byId('noticemenudiv'));
+        mc.x = Math.min(mc.x, app.winw - 210); //width below + 20
+        mc.y = mc.y || 1;  //have to specify something to avoid default
+        app.layout.openDialog({x: mc.x, y: mc.y}, jt.tac2html(html),
+                              //override the dialog screen overflow protection
+                              function () {
+                                  var dlgdiv = jt.byId('dlgdiv');
+                                  dlgdiv.style.left = mc.x + "px";
+                                  dlgdiv.style.width = "175px"; });
     },
 
 
     display: function () {
         displayNoticesMenu();
         displayMainMenu();
+    },
+
+
+    rebuildNotices: function () {
+        notices = [];
+        app.org.checkForNotices();
+        //ATTENTION: Check for contact requests, volunteering status
+        //updates, site announcements
+        app.menu.display();
+    },
+
+
+    profload: function (profref) {
+        jt.log("app.menu preloaded profile " + profref.profid);
     }
 
 };  //end of returned functions

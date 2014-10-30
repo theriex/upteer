@@ -219,7 +219,7 @@ return {
             mtn = cval.split(cookdelim);
             authmethod = mtn[0];
             authtoken = mtn[1];
-            authname = mtn[2]; }
+            authname = mtn[2].replace("%40", "@"); }
         return authtoken;  //true if set earlier
     },
 
