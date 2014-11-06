@@ -981,7 +981,7 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
     // dynamic script loader
     ////////////////////////////////////////
 
-    uo.loadAppModules = function (app, modulenames, path, callback) {
+    uo.loadAppModules = function (app, modulenames, path, callback, parastr) {
         var i, url, modname, js;
         if (path.lastIndexOf(".") > path.lastIndexOf("/")) {
             path = path.slice(0, path.lastIndexOf("/"));
@@ -989,8 +989,9 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
         if (path.charAt(path.length - 1) !== '/') {
             path += "/";
         }
+        parastr = parastr || "";
         for (i = 0; i < modulenames.length; i += 1) {
-            url = path + modulenames[i] + ".js";
+            url = path + modulenames[i] + ".js" + parastr;
             modname = modulenames[i];
             if (modname.indexOf("/") >= 0) {
                 modname = modname.slice(modname.lastIndexOf("/") + 1);
