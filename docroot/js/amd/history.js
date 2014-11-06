@@ -89,6 +89,10 @@ return {
                 if(jt.isId(state.orgid)) {
                     app.org.byorgid(state.orgid); }
                 break;
+            case "opp":
+                if(jt.isId(state.oppid)) {
+                    app.opp.byoppid(state.oppid); }
+                break;
             //other history state handling cases go here...
             } }
         else if(app.login.isLoggedIn()) {

@@ -166,7 +166,7 @@ app.opp = (function () {
         var retval = "Flexible";
         if(opp.spacetime.schedule === "As Described") {
             retval = opp.spacetime.schdescr; }
-        else if(opp.spacetime === "See Calendar") {
+        else if(opp.spacetime.schedule === "See Calendar") {
             retval = ["a", {href: opp.spacetime.schedcal,
                             onclick: jt.fs("window.open('" + 
                                            opp.spacetime.schedcal + "')")},
@@ -333,10 +333,6 @@ return {
                         curropp = results[0];
                         app.lcs.put("org", results[1]);
                         app.org.setCurrentOrganization(results[1]);
-                        if(!jt.instId(curropp)) {
-                            setTimeout(function () {
-                                app.org.addOpportunity(jt.instId(curropp)); },
-                                       200); }
                         app.opp.display(curropp); },
                     app.failf(function (code, errtxt) {
                         if(html) {
@@ -353,9 +349,18 @@ return {
             curropp = opp.opp; }
         else if(opp) {
             return app.lcs.getFull("opp", opp, app.opp.display); }
-        app.history.checkpoint({view: "opp", orgid: jt.instId(curropp)});
         verifyOpportunityFieldValues(curropp);  //fill defaults if needed
-        org = app.org.getCurrentOrganization();
+        jt.out('contentdiv', "Fetching organization " + curropp.organization);
+        org = app.lcs.getRef("org", curropp.organization);
+        if(org.status === "not cached") {
+            app.lcs.getFull("org", curropp.organization, function (orgref) {
+                app.opp.display(opp); });
+            return; }
+        if(!org.org) {
+            jt.out('contentdiv', "Org " + curropp.organization + "not found.");
+            return; }
+        org = org.org;
+        app.history.checkpoint({view: "opp", oppid: jt.instId(curropp)});
         profid = jt.instId(app.profile.getMyProfile());
         imgsrc = org.details.logourl || "img/blank.png";
         html = ["div", {id: "oppdispdiv"},
@@ -364,10 +369,12 @@ return {
                    [["td", {id: "orgpictd", cla: "tdnarrow",
                             rowspan: 3, align: "right"},
                       ["div", {id: "orgpicdiv"},
-                       //ATTENTION: Make this a link to display the org
-                       ["img", {cla: "orgpic", src: imgsrc}]]],
-                     ["td", {align: "left", cla: "valpadtd"},
-                      curropp.name]]],
+                       ["a", {href: "#" + jt.dquotenc(org.name),
+                              onclick: jt.fs("app.org.display('" +
+                                             jt.instId(org) + "')")},
+                        ["img", {cla: "orgpic", src: imgsrc}]]]],
+                    ["td", {align: "left", cla: "valpadtd"},
+                     curropp.name]]],
                   ["tr",
                    [//pic html extends into here
                     ["td", {align: "left", cla: "valpadtd"},
@@ -380,7 +387,6 @@ return {
                    ["td", {colspan: 2},
                     ["div", {id: "descripdiv", cla: "bigtxtdiv"},
                      jt.linkify(curropp.description || "")]]],
-                  //ATTENTION: contact profile links
                   ["tr", ["td", {colspan: 2}, ["div", {id: "accessdiv"}]]],
                   ["tr",
                    ["td", {colspan: 2},
@@ -396,6 +402,12 @@ return {
                       "Schedule:"]],
                     ["td", {align: "left"},
                      scheduleDescription(curropp)]]],
+                  ["tr",
+                   [["td", {align: "right"},
+                     ["label", {fo: "contact", cla: "formlabel"},
+                      "Contact:"]],
+                    ["td", {align: "left"},
+                     ["div", {id: "contactlistdiv", cla: "refcsvdiv"}]]]],
                   ["tr",
                    ["td", {colspan: 2},
                     ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"}]]]]]];
@@ -413,6 +425,7 @@ return {
         app.limitwidth("accdescdiv");
         initAccessKeywords();
         initSkillsKeywords();
+        app.profile.displayProfileRefs(curropp.contact, 'contactlistdiv');
     },
 
 
@@ -426,6 +439,11 @@ return {
         org.opportunities = org.opportunities.csvremove(oppid);
         app.lcs.resolveCSV("opp", org.opportunities, function (opprefs) {
             displayOpps(org, opprefs, "edit"); });
+    },
+
+
+    byoppid: function (oppid) {
+        app.opp.display(oppid);
     },
 
 
