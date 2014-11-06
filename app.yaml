@@ -112,6 +112,20 @@ handlers:
 
 
 ######################################################################
+##        Opportunity access
+
+## Retrieve opp by ID
+## GET params: oppid, authparams
+- url: /oppbyid
+  script: src.py.opportunity.app
+
+## Save a new or modified opportunity
+## POST params: opp data, authparams
+- url: /oppsave.*
+  script: src.py.opportunity.app
+
+
+######################################################################
 # General endpoints
 
 ## Trap anything ending with a slash and send it to index.html since

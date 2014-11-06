@@ -89,7 +89,7 @@ img { border:0px; }
 #profpicdiv { width:130px; height:130px; text-align:center; }
 .valpadtd { padding:0px 0px 0px 20px; }
 .bigtxtdiv { font-size:medium; }
-#abouttxt { padding:2px; height:70px; font-size:small;
+.bigta { padding:2px; height:70px; font-size:small;
   font-family:"Verdana", "Arial", "Helvetica", sans-serif;
 }
 .tdnarrow { width:5%; padding:0px 5px 0px 0px; }
@@ -103,6 +103,12 @@ img { border:0px; }
 .orgassocnameline { font-size:large; text-align:center; }
 .orgx { cursor:pointer; font-size:medium; padding:0px 2px 0px 0px; }
 .refcsvdiv { font-size:medium; }
+
+
+/* opp view settings */
+.opplistdiv { font-size:small; padding:5px 0px 5px 20px; }
+.oppx { cursor:pointer; font-size:medium; padding:0px 2px 0px 0px; }
+#accdesctxt { height:40px; }
 
 
 /* kwentry widget settings */

@@ -96,7 +96,8 @@ app.profile = (function () {
                            style: "display:none"}]];
         html = app.layout.dlgwrapHTML("Upload Picture", html);
         coords = jt.geoPos(jt.byId('profpicdiv'));
-        app.layout.openDialog({x: coords.x, y: coords.y}, 
+        coords.w = jt.byId('abouttxt').offsetWidth - 50;
+        app.layout.openDialog({x: coords.x, y: coords.y, w: coords.w}, 
                               jt.tac2html(html), null,
                               function () {
                                   monitorPicUpload();
@@ -139,6 +140,10 @@ app.profile = (function () {
     skillKeywordsDisplay = function(prof, mode) {
         if(skillkw) {
             skillkw.destroy(); }
+        //Even after the match engine is loaded, some skills will need
+        //to always be available regardless of the opportunity landscape.
+        //Among those should be languages Filipino/Tagalog, Japanese,
+        //Chinese, Portugese, Spanish.
         skillkw = app.kwentry(
             "skillsdiv", "Volunteer Skills",
             ["Graphic Design", "Web Development", "Video Production",
@@ -156,7 +161,7 @@ app.profile = (function () {
 
     //ATTENTION: allow for changing email after initial profile setup.
     editProfile = function () {
-        var html, prof = myprof, options = [], i, domelem;
+        var html, prof = myprof, options = [], i;
         verifyProfileFieldValues(prof);
         for(i = 0; i < statusvals.length; i += 1) {
             options.push(
@@ -222,12 +227,7 @@ app.profile = (function () {
                                   onclick: jt.fs("app.profile.save()")},
                        "Save"]]]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
-        domelem = jt.byId("abouttxt");
-        if(domelem) {
-            domelem.readOnly = false;
-            domelem.value = prof.about || "";
-            domelem.placeholder = "What do you do? What kinds of things would you like to get involved in? Do you have a public LinkedIn profile or website?";
-            domelem.style.width = domelem.parentNode.offsetWidth + "px"; }
+        app.initTextArea("abouttxt", prof.about, "What do you do? What kinds of things would you like to get involved in? Do you have a public LinkedIn profile or website?");
         app.profile.profPicHTML(prof, true);
         lifeStatusDisplay(myprof, "edit");
         skillKeywordsDisplay(myprof, "edit");
@@ -298,9 +298,7 @@ app.profile = (function () {
                      ["div", {cla: "formbuttonsdiv"},
                       readProfButtonsHTML(prof)]]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
-        if(app.winw > 700) {
-            jt.byId('aboutdiv').style.width =
-                (Math.round((app.winw * 2) / 3)) + "px"; }
+        app.limitwidth('aboutdiv');
         app.profile.profPicHTML(prof, false);
         lifeStatusDisplay(prof);
         skillKeywordsDisplay(prof);

@@ -28,7 +28,9 @@ app.lcs = (function () {
         opp:  { refs: {},
                 fetchend: "oppbyid",
                 fetchparamf: function (id) {
-                    return "oppid=" + id; } } },
+                    return "oppid=" + id; },
+                putprep: function (oppobj) {
+                    app.opp.deserializeFields(oppobj); } } },
 
 
     ////////////////////////////////////////

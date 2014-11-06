@@ -78,7 +78,7 @@ var app = {},  //Global container for application level funcs and values
         var href = window.location.href,
             modules = [ "js/amd/layout", "js/amd/login", "js/amd/history",
                         "js/amd/profile", "js/amd/kwentry", "js/amd/org",
-                        "js/amd/lcs", "js/amd/menu" ];
+                        "js/amd/lcs", "js/amd/menu", "js/amd/opp" ];
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {
@@ -144,6 +144,40 @@ var app = {},  //Global container for application level funcs and values
             //   412 (precondition failed) -> general error handling
             case 500: return app.crash(code, errtxt, method, url, data);
             default: failfunc(code, errtxt, method, url, data); } };
+    };
+
+
+    //factored to save typing when creating input forms
+    app.lvtr = function (id, label, val, placeholder, type) {
+        type = type || "text";
+        return ["tr", {id: id + "tr"},
+                [["td", {align: "right"},
+                  ["label", {fo: id, cla: "formlabel"},
+                   label]],
+                 ["td", {align: "left"},
+                  ["input", {type: type, id: id, name: id,
+                             value: val, size: 30,
+                             placeholder: placeholder}]]]];
+    };
+
+
+    app.limitwidth = function (divid) {
+        var width, domelem;
+        if(app.winw > 700) {
+            domelem = jt.byId(divid);
+            if(domelem) {
+                width = Math.min(600, Math.round(app.winw * 2 / 3));
+                domelem.style.width = width + "px"; } }
+    };
+
+
+    app.initTextArea = function (divid, val, placeholder) {
+        var domelem = jt.byId(divid);
+        if(domelem) {
+            domelem.readOnly = false;
+            domelem.value = val || "";
+            domelem.placeholder = placeholder;
+            app.limitwidth(divid); }
     };
 
 } () );

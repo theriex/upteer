@@ -22,6 +22,7 @@ class Organization(db.Model):
     # things like volunteer application forms etc.  Fields and values
     # are flexible and not worth indexing.
     details = db.TextProperty()         # JSON
+    opportunities = db.TextProperty()   # CSV of Opportunity IDs
 
 
 def remove_from_csv(val, csv):
@@ -132,6 +133,7 @@ class SaveOrganization(webapp2.RequestHandler):
         org.coordinators = self.request.get('coordinators')
         org.unassociated = self.request.get('unassociated')
         org.details = self.request.get('details')
+        org.opportunities = self.request.get("opportunities")
         # You can remove yourself as an administrator, but there has
         # to be at least one administrator left as a final contact.
         # Not checking too thoroughly, this is more just supporting

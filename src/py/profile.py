@@ -23,7 +23,7 @@ class Profile(db.Model):
     skills = db.TextProperty()                  # skill keywords CSV
     lifestat = db.TextProperty()                # life status keywords CSV
     mailverify = db.StringProperty()            # ISO date
-    orgs = db.StringProperty()                  # CSV of org IDs
+    orgs = db.TextProperty()                    # CSV of org IDs
 
 
 def set_profile_fields(req, prof):

@@ -184,7 +184,7 @@ return {
         coords.y = coords.y + jt.byId('bodyid').scrollTop;  //logical height
         dlgdiv.style.left = String(coords.x) + "px";
         dlgdiv.style.top = String(coords.y) + "px";
-        dlgdiv.style.width = Math.round(app.winw * 0.7) + "px";
+        dlgdiv.style.width = (coords.w || Math.round(app.winw * 0.7)) + "px";
         if(app.winw < 500) {
             dlgdiv.style.width = Math.round(app.winw * 0.9) + "px"; }
         if(!app.escapefuncstack) {

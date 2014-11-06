@@ -135,19 +135,6 @@ app.org = (function () {
     },
 
 
-    lvtr = function (id, label, val, placeholder, type) {
-        type = type || "text";
-        return ["tr",
-                [["td", {align: "right"},
-                  ["label", {fo: id, cla: "formlabel"},
-                   label]],
-                 ["td", {align: "left"},
-                  ["input", {type: type, id: id, name: id,
-                             value: val, size: 30,
-                             placeholder: placeholder}]]]];
-    },
-
-
     displayOrgs = function (prof, orgrefs, mode) {
         var i, html = [], line, orgref;
         if(!orgrefs.length) {
@@ -317,39 +304,39 @@ return {
         html = ["div", {id: "orgdispdiv"},
                 [["div", {id: "orgstatdiv"}, "&nbsp;"],
                  ["table", {cla: "formtable"},
-                  [lvtr("namein", "Name", currorg.name, 
-                        "Name of your organization"),
+                  [app.lvtr("namein", "Name", currorg.name, 
+                            "Name of your organization"),
                    ["tr",
                     [["td", {align: "right"},
                       ["label", {fo: "statusin", cla: "formlabel"},
                        "Status"]],
                      ["td", {align: "left"},
                       orgStatusEditValue(currorg)]]],
-                   lvtr("siteurlin", "Site URL", currorg.details.siteurl,
-                        "https://yoursite.org/index.html", "url"),
-                   lvtr("logourlin", 
-                        ["a", {href: "#LogoURL",
-                               onclick: jt.fs("app.org.logoexpl()")},
-                         "Logo URL"], 
-                        currorg.details.logourl,
-                        "https://yoursite.org/logo.png", "url"),
-                   lvtr("appurlin", 
-                        ["a", {href: "#ApplicationURL",
-                               onclick: jt.fs("app.org.appexpl()")},
-                         "Application URL"],
-                        currorg.details.applyurl,
-                        "https://yoursite.org/optionalforms.html", "url"),
-                   lvtr("phonein", "Phone", currorg.details.phone,
-                        "808 111 2222", "tel"),
-                   lvtr("emailin", "Email", currorg.details.email,
-                        "volunteer@yourorg.com", "email"),
-                   lvtr("addrin", "Address", currorg.details.addr,
-                        "1234 MakeThingsBetter Way"),
-                   lvtr("cityin", "City", currorg.details.city, 
-                        "Honolulu or ?"),
-                   lvtr("statein", "State", currorg.details.state, 
-                        "Hawai'i or ?"),
-                   lvtr("zipin", "Zip", currorg.details.zip, "96817 or ?"),
+                   app.lvtr("siteurlin", "Site URL", currorg.details.siteurl,
+                            "https://yoursite.org/index.html", "url"),
+                   app.lvtr("logourlin", 
+                            ["a", {href: "#LogoURL",
+                                   onclick: jt.fs("app.org.logoexpl()")},
+                             "Logo URL"], 
+                            currorg.details.logourl,
+                            "https://yoursite.org/logo.png", "url"),
+                   app.lvtr("appurlin", 
+                            ["a", {href: "#ApplicationURL",
+                                   onclick: jt.fs("app.org.appexpl()")},
+                             "Application URL"],
+                            currorg.details.applyurl,
+                            "https://yoursite.org/optionalforms.html", "url"),
+                   app.lvtr("phonein", "Phone", currorg.details.phone,
+                            "808 111 2222", "tel"),
+                   app.lvtr("emailin", "Email", currorg.details.email,
+                            "volunteer@yourorg.com", "email"),
+                   app.lvtr("addrin", "Address", currorg.details.addr,
+                            "1234 MakeThingsBetter Way"),
+                   app.lvtr("cityin", "City", currorg.details.city, 
+                            "Honolulu or ?"),
+                   app.lvtr("statein", "State", currorg.details.state, 
+                            "Hawai'i or ?"),
+                   app.lvtr("zipin", "Zip", currorg.details.zip, "96817 or ?"),
                    ["tr",
                     [["td", {align: "right", cla: "listlabel"},
                       "Administrators: "],
@@ -363,8 +350,7 @@ return {
                    //unassociated members not displayed (notice only)
                    ["tr",
                     ["td", {colspan: 2},
-                     ["div", {id: "oppslistdiv", cla: "refcsvdiv"},
-                      "TODO: volunteer opportunities go here"]]],
+                     ["div", {id: "oppslistdiv", cla: "refcsvdiv"}]]],
                    ["tr",
                     ["td", {colspan: 2},
                      ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"},
@@ -376,6 +362,8 @@ return {
                                        "app.org.membership");
         app.profile.displayProfileRefs(currorg.coordinators, 'coordlistdiv',
                                        "app.org.membership");
+        app.opp.listOpportunities("oppslistdiv", currorg, "edit",
+                                  "app.org.addOpportunity");
     },
 
 
@@ -386,7 +374,7 @@ return {
         else if(org) {
             return app.lcs.getFull("org", org, app.org.display); }
         app.history.checkpoint({view: "org", orgid: jt.instId(currorg)});
-        verifyOrganizationFieldValues(currorg);
+        verifyOrganizationFieldValues(currorg);  //fill defaults if needed
         assoc = assocStatus(app.profile.getMyProfile(), currorg);
         imgsrc = currorg.details.logourl || "img/blank.png";
         namelink = ["span", {cla: "namespan"}, currorg.name];
@@ -440,8 +428,7 @@ return {
                    //unassociated members not displayed (notice only)
                    ["tr",
                     ["td", {colspan: 2},
-                     ["div", {id: "oppslistdiv", cla: "refcsvdiv"},
-                      "TODO: volunteer opportunities go here"]]],
+                     ["div", {id: "oppslistdiv", cla: "refcsvdiv"}]]],
                    ["tr",
                     ["td", {colspan: 2},
                      ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"}]]]
@@ -457,12 +444,15 @@ return {
         jt.out('formbuttonsdiv', jt.tac2html(html));
         app.profile.displayProfileRefs(currorg.administrators, 'adminlistdiv');
         app.profile.displayProfileRefs(currorg.coordinators, 'coordlistdiv');
+        app.opp.listOpportunities("oppslistdiv", currorg);
     },
 
 
     save: function (directive) {
-        var bdiv, html, data;
-        if(directive === "noform" || readFormValues()) {
+        var noform, bdiv, html, data;
+        noform = (directive === "memchg" || 
+                  (directive === "addopp" && !jt.byId("logourlin")));
+        if(noform || readFormValues()) {
             bdiv = jt.byId("formbuttonsdiv");
             if(bdiv) {
                 html = bdiv.innerHTML;
@@ -478,6 +468,8 @@ return {
                                 app.profile.verifyOrg(jt.instId(orgs[0])); },
                                        200);
                             nextf = app.org.edit; }
+                        else if(directive === "addopp") {
+                            nextf = app.opp.add; }
                         currorg = orgs[0];
                         app.lcs.put("org", currorg);
                         app.menu.rebuildNotices();
@@ -488,6 +480,14 @@ return {
                         jt.out('orgstatdiv', "save failed " + code +
                                ": " + errtxt); }),
                     jt.semaphore("org.save")); }
+    },
+
+
+    getCurrentOrganization: function () {
+        return currorg;
+    },
+    setCurrentOrganization: function (org) {
+        currorg = org;
     },
 
 
@@ -599,7 +599,7 @@ return {
             currorg.coordinators = currorg.coordinators.csvremove(profid);
             currorg.unassociated = currorg.unassociated.csvremove(profid); }
         app.layout.closeDialog();
-        app.org.save("noform");
+        app.org.save("memchg");
     },
 
 
@@ -705,6 +705,13 @@ return {
         app.lcs.getFull("org", orgid, function(orgref) {
             currorg = orgref.org;
             app.org.membership(profid); });
+    },
+
+
+    addOpportunity: function (opp) {
+        if(opp) {
+            currorg.opportunities.csvappend(jt.instId(opp)); }
+        app.org.save("addopp");
     },
 
 
