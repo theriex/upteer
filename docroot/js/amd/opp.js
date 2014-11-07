@@ -419,7 +419,10 @@ return {
            opp.contact.csvcontains(profid)) {
             html.push(["button", {type: "button", id: "oppeditb",
                                   onclick: jt.fs("app.opp.edit()")},
-                       "Edit"]); }
+                       "Edit"]);
+            html.push(["button", {type: "button", id: "srchvolsb",
+                                  onclick: jt.fs("app.opp.srchvols()")},
+                       "Find Volunteers"]); }
         jt.out('formbuttonsdiv', jt.tac2html(html));
         app.limitwidth("descripdiv");
         app.limitwidth("accdescdiv");
@@ -444,6 +447,11 @@ return {
 
     byoppid: function (oppid) {
         app.opp.display(oppid);
+    },
+
+
+    srchvols: function () {
+        jt.err("Finding volunteers not implemented yet");
     },
 
 

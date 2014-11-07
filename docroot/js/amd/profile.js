@@ -239,7 +239,10 @@ app.profile = (function () {
         if(prof === myprof) {
             buttons.push(["button", {type: "button", id: "editprofb",
                                      onclick: jt.fs("app.profile.edit()")},
-                          "Edit"]); }
+                          "Edit"]);
+            buttons.push(["button", {type: "button", id: "searchoppsb",
+                                     onclick: jt.fs("app.profile.oppsrch()")},
+                          "Find Volunteer Opportunities"]); }
         else {
             buttons.push(["button", {type: "button", id: "contactprofb",
                                      onclick: jt.fs("app.profile.contact()")},
@@ -471,6 +474,11 @@ return {
     addOrg: function () {
         readProfileFormValues();  //don't lose interim edits
         saveProfile("addorg");
+    },
+
+
+    oppsrch: function () {
+        jt.err("Finding opportunities not implemented yet");
     },
 
 
