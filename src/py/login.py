@@ -293,12 +293,14 @@ class TokenAndRedirect(webapp2.RequestHandler):
         if "%3A" in redurl:
             redurl = urllib.unquote(redurl)
         redurl += "#"
-        email = self.request.get('emailin')
-        if not email or len(email) < 1:
-            redurl += "loginerr=" + "Please enter an email address"
-        else:
-            email = normalize_email(email)
-            password = self.request.get('passin')
+        email = self.request.get('emailin') or ""
+        email = normalize_email(email)
+        password = self.request.get('passin') or ""
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            redurl += "loginerr=" + "Please enter a valid email address"
+        elif len(password) < 6:
+            redurl += "loginerr=" + "Password must be at least 6 characters"
+        else:  # have valid email and password
             where = "WHERE email=:1 AND password=:2 LIMIT 1"
             accounts = UpteerAccount.gql(where, email, password)
             found = accounts.count()
@@ -306,8 +308,19 @@ class TokenAndRedirect(webapp2.RequestHandler):
                 token = newtoken(email, password)
                 redurl += "authtoken=" + token
                 redurl += "&authname=" + urllib.quote(asciienc(email))
-            else:
-                redurl += "loginerr=" + "No match for those credentials"
+            else:  # email and password did not match
+                where = "WHERE email=:1 LIMIT 1"
+                accounts = UpteerAccount.gql(where, email)
+                found = accounts.count()
+                if found:  # account exists, must have been wrong password
+                    redurl += "loginerr=" + "No match for those credentials"
+                else:  # account doesn't exist, create it for them
+                    account = UpteerAccount(email=email, password=password)
+                    account.modified = nowISO()
+                    account.put()  #nocache
+                    token = newtoken(email, password)
+                    redurl += "authtoken=" + token
+                    redurl += "&authname=" + urllib.quote(asciienc(email))
         logging.info("TokenAndRedirect " + redurl);
         self.redirect(str(redurl))
 

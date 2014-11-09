@@ -254,8 +254,11 @@ return {
                     //database eventual consistency... give it a few seconds
                     setTimeout(app.profile.display, 3000); },
                 app.failf(function (code, errtxt) {
-                    jt.out('loginstatdiv', String(code) + " " + errtxt);
-                    jt.out('loginbuttonsdiv', buttonhtml); }),
+                    if(code === 412 && errtxt.startsWith("Account exists")) {
+                        jt.byId('loginform').submit(); }
+                    else {
+                        jt.out('loginstatdiv', String(code) + " " + errtxt);
+                        jt.out('loginbuttonsdiv', buttonhtml); } }),
                 jt.semaphore("login.createAccount"));
     },
 
