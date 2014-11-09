@@ -107,13 +107,31 @@ app.login = (function () {
     },
 
 
+    //webkit likes to escape at signs
+    fixEmailAddress = function (emaddr) {
+        emaddr = emaddr.replace(/%40/g, "@");
+        return emaddr;
+    },
+
+
     //safari displays "No%20match%20for%20those%20credentials"
     //and even "No%2520match%2520for%2520those%2520credentials"
     fixServerText = function (text) {
+        var emailin;
         if(!text) {
             text = ""; }
         text = text.replace(/%20/g, " ");
         text = text.replace(/%2520/g, " ");
+        if(text.startsWith("Not registered")) {
+            emailin = jt.byId('emailin');
+            if(emailin && emailin.value) {
+                text = fixEmailAddress(emailin.value); }
+            else {
+                text = "That account"; }
+            text += " is not registered yet.<br/>" +
+                "If you want to create it, verify your<br/>" + 
+                "password is entered correctly and<br/>" + 
+                "click \"Create account\"."; }
         return text;
     },
 
@@ -177,6 +195,8 @@ return {
         if(!loginhtml) {  //save html form in case needed later
             loginhtml = jt.byId('logindiv').innerHTML; }
         initparams = jt.parseParams();
+        if(initparams.authname && jt.byId('emailin')) {
+            jt.byId('emailin').value = fixEmailAddress(initparams.authname); }
         if(initparams.loginerr) {
             jt.out('loginstatdiv', fixServerText(initparams.loginerr)); }
         else if(initparams.authtoken && initparams.authname) {
@@ -219,7 +239,7 @@ return {
             mtn = cval.split(cookdelim);
             authmethod = mtn[0];
             authtoken = mtn[1];
-            authname = mtn[2].replace("%40", "@"); }
+            authname = fixEmailAddress(mtn[2]); }
         return authtoken;  //true if set earlier
     },
 
