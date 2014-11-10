@@ -314,7 +314,7 @@ class TokenAndRedirect(webapp2.RequestHandler):
                     redurl += "loginerr=" + "Wrong password"
                 else:
                     redurl += "loginerr=" + "Not registered"
-                    redurl += "&authname=" + urllib.quote(asciienc(email))
+                redurl += "&authname=" + urllib.quote(asciienc(email))
         logging.info("TokenAndRedirect " + redurl);
         self.redirect(str(redurl))
 
