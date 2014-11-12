@@ -416,12 +416,13 @@ return {
                             onclick: jt.fs("app.history.pop()")},
                  "&#x21B0; Back"]];
         if(org.administrators.csvcontains(profid) || 
-           opp.contact.csvcontains(profid)) {
+           curropp.contact.csvcontains(profid)) {
             html.push(["button", {type: "button", id: "oppeditb",
                                   onclick: jt.fs("app.opp.edit()")},
                        "Edit"]);
             html.push(["button", {type: "button", id: "srchvolsb",
-                                  onclick: jt.fs("app.opp.srchvols()")},
+                                  onclick: jt.fs("app.match.init('" +
+                                                 jt.instId(curropp) + "')")},
                        "Find Volunteers"]); }
         jt.out('formbuttonsdiv', jt.tac2html(html));
         app.limitwidth("descripdiv");
@@ -447,11 +448,6 @@ return {
 
     byoppid: function (oppid) {
         app.opp.display(oppid);
-    },
-
-
-    srchvols: function () {
-        jt.err("Finding volunteers not implemented yet");
     },
 
 

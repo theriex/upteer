@@ -93,6 +93,9 @@ return {
                 if(jt.isId(state.oppid)) {
                     app.opp.byoppid(state.oppid); }
                 break;
+            case "match":
+                app.match.init(state.oppid);
+                break;
             //other history state handling cases go here...
             } }
         else if(app.login.isLoggedIn()) {

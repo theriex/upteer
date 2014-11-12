@@ -113,6 +113,9 @@ img { border:0px; }
 
 /* match view settings */
 .matchcountspan { display:inline-block; font-size:small; width:30px; }
+.matchnamespan { font-size:medium; }
+.matchlinelogo { max-height:20px; max-width:50px; vertical-align:middle; 
+  padding:0px 5px 0px 5px; }
 
 
 /* kwentry widget settings */

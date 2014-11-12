@@ -41,8 +41,54 @@ app.match = (function () {
     },
 
 
+    //It is possible for an object to have been referenced by an
+    //incomplete subset of the retrieved match nodes.  It might have
+    //been pushed off the end of the more popular match keys but still
+    //be present in some of the more specific ones.  When that happens
+    //the match count will be off.  This utility counts up the
+    //matching keys directly from the the object, rather than from
+    //the match node references.
+    countMatchedSkills = function (obj) {
+        var requestskills, skill, i, j, count = 0;
+        requestskills = obj.skills.csvarray();
+        for(i = 0; i < requestskills.length; i += 1) {
+            skill = jt.canonize(requestskills[i]);
+            for(j = 0; j < canonskills.length; j += 1) {
+                if(skill === canonskills[j]) {
+                    count += 1; } } }
+        return count;
+    },
+
+
+    fillMatchEntryFromRefObject = function(obj) {
+        var match = matchacc[jt.instId(obj)];
+        match.name_c = obj.name_c || jt.canonize(obj.name);
+        match.skillsmatched = countMatchedSkills(obj);
+        match.skillsrequested = obj.skills.csvarray().length;
+    },
+
+
+    getMatchLineImageURL = function (obj) {
+        var cachetype, orgref;
+        cachetype = (findtype === "volunteers" ? "prof" : "opp");
+        if(cachetype === "prof") {
+            if(obj.profpic) {
+                return "profpic?profileid=" + jt.instId(obj); }
+            return "img/emptyprofpic.png"; }
+        if(cachetype === "opp") {
+            orgref = app.lcs.getRef("org", obj.organization);
+            if(orgref.status === "not cached") {
+                app.lcs.getFull("org", obj.organization,
+                                app.match.redisplayMatchImages);
+                return "img/blank.png"; }
+            if(orgref.org && orgref.org.details.logourl) {
+                return orgref.org.details.logourl; } }
+        return "img/blank.png";
+    },
+
+
     displayMatchLinks = function () {
-        var cachetype, dispfname, i, match, ref, html;
+        var cachetype, dispfname, i, match, ref, html, obj;
         cachetype = (findtype === "volunteers" ? "prof" : "opp");
         dispfname = (findtype === "volunteers" ? "profile" : "opp");
         dispfname = "app." + dispfname + ".by" + cachetype + "id";
@@ -53,12 +99,18 @@ app.match = (function () {
                 return app.lcs.getFull(cachetype, match.id, 
                                        app.match.redisplayMatchLinks); }
             if(ref[cachetype]) {
+                obj = ref[cachetype];
+                fillMatchEntryFromRefObject(obj);
                 html = [["span", {cla: "matchcountspan"}, 
                          (+match.skillsmatched) + "/" + match.skillsrequested],
                         ["a", {href: "#" + match.name_c,
                                onclick: jt.fs(dispfname + "('" + 
                                               match.id + "')")},
-                         ref[cachetype].name]];
+                         [["img", {id: jt.instId(obj) + "img", 
+                                   cla: "matchlinelogo", 
+                                   src: getMatchLineImageURL(obj)}],
+                          ["span", {cla: "matchnamespan"},
+                           ref[cachetype].name]]]];
                 jt.out("mdiv" + match.id, jt.tac2html(html)); } }
     },
 
@@ -113,25 +165,6 @@ app.match = (function () {
         skillkw.displayList();
         rebuildMatches();
         displayMatches();
-    },
-
-
-    //It is possible for an object to have been referenced by an
-    //incomplete subset of the retrieved match nodes.  It might have
-    //been pushed off the end of the more popular match keys but still
-    //be present in some of the more specific ones.  When that happens
-    //the match count will be off.  This utility counts up the
-    //matching keys directly from the the object, rather than from
-    //the match node references.
-    countMatchedSkills = function (obj) {
-        var requestskills, skill, i, j, count = 0;
-        requestskills = obj.skills.csvarray();
-        for(i = 0; i < requestskills.length; i += 1) {
-            skill = jt.canonize(requestskills[i]);
-            for(j = 0; j < canonskills.length; j += 1) {
-                if(skill === canonskills[j]) {
-                    count += 1; } } }
-        return count;
     };
 
 
@@ -140,16 +173,21 @@ app.match = (function () {
     ////////////////////////////////////////
 return {
 
-    //If no opportunity is given, assume we are searching for
+    //If no oppref is given, assume we are searching for
     //opportunities using the skills listed in the profile.
-    init: function (opportunity) {
-        var skills, url;
-        if(nodes) {  //no need to refetch each time, they can reload if desired
-            return displayNodes(); }
-        findtype = opportunity ? "volunteers" : "opportunities";
+    init: function (oppref) {
+        var prevtype, skills, url;
+        if(oppref && typeof oppref !== "object") {
+            return app.lcs.getFull("opp", oppref, app.match.init); }
+        app.history.checkpoint({view: "match", 
+                                oppid: oppref ? oppref.oppid : 0});
+        prevtype = findtype;
+        findtype = oppref ? "volunteers" : "opportunities";
         jt.out('contentdiv', "Searching for matching " + findtype + "...");
-        if(opportunity) {
-            skills = opportunity.skills; }
+        if(nodes && prevtype === findtype) {
+            return displayNodes(); }
+        if(oppref) {
+            skills = oppref.opp.skills; }
         else {
             skills = app.profile.getMyProfile().skills; }
         url = "match?" + app.login.authparams() + "&skills=" + jt.enc(skills);
@@ -165,14 +203,15 @@ return {
 
 
     redisplayMatchLinks: function (ref) {
-        var reftype, obj, match;
+        var reftype;
         reftype = (findtype === "volunteers"? "prof" : "opp");
         if(ref[reftype]) {
-            obj = ref[reftype];
-            match = matchacc[jt.instId(obj)];
-            match.name_c = obj.name_c;
-            match.skillsmatched = countMatchedSkills(obj);
-            match.skillsrequested = obj.skills.csvarray().length; }
+            fillMatchEntryFromRefObject(ref[reftype]); }
+        displayMatches();
+    },
+
+
+    redisplayMatchImages: function (ref) {
         displayMatches();
     }
 
