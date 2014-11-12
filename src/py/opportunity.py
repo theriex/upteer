@@ -5,13 +5,15 @@ import logging
 from login import *
 import profile
 import organization
+import match
+
 
 # Opportunities range from definite times and places to open ended
 # flexible situations
 class Opportunity(db.Model):
     name = db.StringProperty(required=True)
     name_c = db.StringProperty(required=True)  # canonized name for matching
-    organization = db.IntegerProperty(required=True) # Organization ID
+    organization = db.IntegerProperty(required=True)  # Organization ID
     contact = db.StringProperty(required=True)       # Profile ID CSV (min 1)
     modified = db.StringProperty()          # ISO date
     accstart = db.StringProperty()          # ISO date of accounting start
@@ -104,10 +106,12 @@ class SaveOpportunity(webapp2.RequestHandler):
         if not verify_unique_opportunity_name(self, name_c, orgid, oppid):
             return  # name not unique within open opps within org
         contact = str(self.request.get('contact')) or str(myprof.key().id())
+        prevskills = ""
         if not opp:
             opp = Opportunity(name=name, name_c=name_c, organization=orgid,
                               contact=contact)
         else:
+            prevskills = opp.skills
             opp.name = name
             opp.name_c = name_c
             opp.organization = orgid
@@ -122,6 +126,8 @@ class SaveOpportunity(webapp2.RequestHandler):
         opp.accesscomment = self.request.get('accesscomment')
         opp.skills = self.request.get('skills')
         opp, org = save_organization_opportunity(opp, org)
+        match.update_match_nodes("opportunity", opp.key().id(), 
+                                 prevskills, opp.skills)
         returnJSON(self.response, [ opp, org ])
 
 

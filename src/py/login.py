@@ -150,13 +150,14 @@ def obj2JSON(obj):
         if(isinstance(val, Blob)):
             props[prop] = str(obj.key().id())
         # javascript integer value cannot hold database integer value..
-        if(isinstance(val, (int, long)) and (prop.endswith("id"))):
+        if(isinstance(val, (int, long)) and ((prop.endswith("id")) or
+                                             (prop == "organization") or
+                                             (prop == "opportunity") or
+                                             (prop == "volunteer"))):
             props[prop] = str(props[prop])
-        if(prop == "top20s"):
-            props[prop] = quoteTop20IDs(props[prop])
         # logging.info(prop + ": " + str(props[prop]))
     jsontxt = json.dumps(props, True)
-    jsontxt = "{\"_id\":\"" + str(obj.key().id()) + "\", " + jsontxt[1:]
+    jsontxt = "{\"_id\":\"" + str(obj.key().id_or_name()) + "\", " + jsontxt[1:]
     # logging.info(jsontxt)
     return jsontxt
 
@@ -225,6 +226,36 @@ def verifySecureComms(handler, url):
     handler.error(405)
     handler.response.out.write("request must be over https")
     return False
+
+
+def remove_from_csv(val, csv):
+    if csv == val:
+        return ""
+    if csv.startswith(val + ","):
+        return csv[len(val) + 1:]
+    val = "," + val
+    index = csv.find(val)
+    if index >= 0:
+        return csv[0:index] + csv[index + len(val):]
+    return csv
+
+
+def prepend_to_csv(val, csv):
+    if not csv:
+        return val
+    return val + "," + csv
+
+
+def csv_elem_count(csv):
+    if not csv:
+        return 0
+    return csv.count(",") + 1
+
+
+def csv_list(csv):
+    if not csv:
+        return []
+    return csv.split(",")
 
 
 class CreateAccount(webapp2.RequestHandler):

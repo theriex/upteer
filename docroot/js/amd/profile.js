@@ -227,7 +227,7 @@ app.profile = (function () {
                                   onclick: jt.fs("app.profile.save()")},
                        "Save"]]]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
-        app.initTextArea("abouttxt", prof.about, "What do you do? What kinds of things would you like to get involved in? Do you have a public LinkedIn profile or website?");
+        app.initTextArea("abouttxt", prof.about, "What are you interested in? Do you have a blog or public profile?");
         app.profile.profPicHTML(prof, true);
         lifeStatusDisplay(myprof, "edit");
         skillKeywordsDisplay(myprof, "edit");
@@ -241,7 +241,7 @@ app.profile = (function () {
                                      onclick: jt.fs("app.profile.edit()")},
                           "Edit"]);
             buttons.push(["button", {type: "button", id: "searchoppsb",
-                                     onclick: jt.fs("app.profile.oppsrch()")},
+                                     onclick: jt.fs("app.match.init()")},
                           "Find Volunteer Opportunities"]); }
         else {
             buttons.push(["button", {type: "button", id: "contactprofb",
@@ -474,11 +474,6 @@ return {
     addOrg: function () {
         readProfileFormValues();  //don't lose interim edits
         saveProfile("addorg");
-    },
-
-
-    oppsrch: function () {
-        jt.err("Finding opportunities not implemented yet");
     },
 
 

@@ -111,6 +111,10 @@ img { border:0px; }
 #accdesctxt { height:40px; }
 
 
+/* match view settings */
+.matchcountspan { display:inline-block; font-size:small; width:30px; }
+
+
 /* kwentry widget settings */
 .selkwspan { display:inline-block; font-size:small; 
   padding:0px 4px 3px 3px;

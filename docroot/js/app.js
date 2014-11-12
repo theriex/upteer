@@ -78,7 +78,8 @@ var app = {},  //Global container for application level funcs and values
         var href = window.location.href,
             modules = [ "js/amd/layout", "js/amd/login", "js/amd/history",
                         "js/amd/profile", "js/amd/kwentry", "js/amd/org",
-                        "js/amd/lcs", "js/amd/menu", "js/amd/opp" ];
+                        "js/amd/lcs", "js/amd/menu", "js/amd/opp",
+                        "js/amd/match" ];
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {
@@ -86,7 +87,7 @@ var app = {},  //Global container for application level funcs and values
         jtminjsDecorateWithUtilities(jt);
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
-        jt.loadAppModules(app, modules, href, app.init2, "?v=141109");
+        jt.loadAppModules(app, modules, href, app.init2, "?v=141111");
     };
 
 

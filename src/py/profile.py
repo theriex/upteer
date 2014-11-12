@@ -5,6 +5,7 @@ from google.appengine.api import images
 import logging
 from login import *
 import organization
+import match
 
 
 # The email address is verified by confirmation.  Before that the
@@ -44,12 +45,16 @@ def set_profile_fields(req, prof):
 
 def verify_profile_fields(handler, prof):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", prof.email):
-        handler.error(412)
+        handler.error(412)  # Precondition Failed
         handler.response.out.write("Invalid email address.")
         return False
     if not re.match(r"\d\d\d\d\d", prof.zipcode):
-        handler.error(413)
+        handler.error(412)  # Precondition Failed
         handler.response.out.write("Zipcode must be exactly 5 digits.")
+        return False
+    if prof.skills and len(prof.skills.split(",")) > 30:
+        handler.error(412)  # Precondition Failed
+        handler.response.out.write("Listing too many volunteering skills.")
         return False
     return True
 
@@ -90,11 +95,14 @@ class SaveProfile(webapp2.RequestHandler):
         else:
             profid = prof.key().id();
         prevorgs = prof.orgs or ""
+        prevskills = prof.skills or ""
         set_profile_fields(self.request, prof)
         if not verify_profile_fields(self, prof):
             return
         organization.note_resignations(profid, prevorgs, prof.orgs);
         prof.put();
+        profid = prof.key().id()
+        match.update_match_nodes("profile", profid, prevskills, prof.skills)
         returnJSON(self.response, [ prof ])
 
 

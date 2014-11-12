@@ -126,6 +126,20 @@ handlers:
 
 
 ######################################################################
+##        Match access
+
+## Fetch the top keywords for use in matching
+## GET params: search ("profile" or "opportunity"), authparams
+- url: /topkeys.*
+  script: src.py.match.app
+
+## Fetch match nodes for the specified skills
+## GET params: skills (CSV), authparams
+- url: /match.*
+  script: src.py.match.app
+
+
+######################################################################
 # General endpoints
 
 ## Trap anything ending with a slash and send it to index.html since
