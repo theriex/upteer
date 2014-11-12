@@ -31,6 +31,7 @@ app.opp = (function () {
     ////////////////////////////////////////
 
     var curropp = null,
+        topskills = null,
         accesskw = null,
         skillskw = null,
         statusvals = [ "Inactive", "Open", "Closed" ],
@@ -134,15 +135,22 @@ app.opp = (function () {
 
 
     initSkillsKeywords = function (mode) {
+        var url;
+        if(!topskills) {
+            url = "topkeys?" + app.login.authparams() + "&search=profile";
+            jt.call('GET', url, null,
+                    function (keyobjs) {
+                        topskills = keyobjs[0].keys.csvarray();
+                        initSkillsKeywords(mode); },
+                    app.failf(function (code, errtxt) {
+                        jt.err("Skill keywords retrieval failed " + code + 
+                               ": " + errtxt); }),
+                    jt.semaphore("opp.skillkeywords"));
+            return; }
         if(skillskw) {
             skillskw.destroy(); }
-        skillskw = app.kwentry("skillsdiv", "Desired Skills", [
-            "Graphic Design", "Web Development", "Video Production",
-             "Web Technology", "GIS", "Quilting", "Technical Writing",
-             "Warehouse Management", "Grant Writing", "Copy Editing", 
-             "Land Use Research", "Dog Fostering", "Photography",
-             "Print Graphics", "Architectural Drawing", "Law"], 
-                               curropp.skills);
+        skillskw = app.kwentry("skillsdiv", "Desired Skills",
+                               topskills, curropp.skills);
         if(mode === "edit") {
             skillskw.displayEntry(); }
         else {

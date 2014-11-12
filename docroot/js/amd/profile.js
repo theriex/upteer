@@ -16,6 +16,7 @@ app.profile = (function () {
     var myprof = null,
         currprof = null,
         statusvals = [ "Available", "Busy", "Inactive" ],
+        topskills = null,
         lifekw = null,
         skillkw = null,
 
@@ -138,20 +139,20 @@ app.profile = (function () {
 
 
     skillKeywordsDisplay = function(prof, mode) {
+        if(!topskills) {
+            jt.call('GET', "topkeys?" + app.login.authparams(), null,
+                    function (keyobjs) {
+                        topskills = keyobjs[0].keys.csvarray();
+                        skillKeywordsDisplay(prof, mode); },
+                    app.failf(function (code, errtxt) {
+                        jt.err("Skill keywords retrieval failed " + code + 
+                               ": " + errtxt); }),
+                    jt.semaphore("profile.skillkeywords"));
+            return; }
         if(skillkw) {
             skillkw.destroy(); }
-        //Even after the match engine is loaded, some skills will need
-        //to always be available regardless of the opportunity landscape.
-        //Among those should be languages Filipino/Tagalog, Japanese,
-        //Chinese, Portugese, Spanish.
-        skillkw = app.kwentry(
-            "skillsdiv", "Volunteer Skills",
-            ["Graphic Design", "Web Development", "Video Production",
-             "Web Technology", "GIS", "Quilting", "Technical Writing",
-             "Warehouse Management", "Grant Writing", "Copy Editing", 
-             "Land Use Research", "Dog Fostering", "Photography",
-             "Print Graphics", "Architectural Drawing", "Law"],
-            prof.skills);
+        skillkw = app.kwentry("skillsdiv", "Volunteer Skills", 
+                              topskills, prof.skills);
         if(mode === "edit") {
             skillkw.displayEntry(); }
         else {
