@@ -125,6 +125,10 @@ class SaveOpportunity(webapp2.RequestHandler):
         opp.accessibility = self.request.get('accessibility')
         opp.accesscomment = self.request.get('accesscomment')
         opp.skills = self.request.get('skills')
+        if opp.skills and len(opp.skills.split(",")) > 22:
+            self.error(412)  # Precondition failed
+            self.response.out.write("Listing too many desired skills.")
+            return;
         opp, org = save_organization_opportunity(opp, org)
         match.update_match_nodes("opportunity", opp.key().id(), 
                                  prevskills, opp.skills)

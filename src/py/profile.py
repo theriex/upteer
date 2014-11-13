@@ -52,7 +52,7 @@ def verify_profile_fields(handler, prof):
         handler.error(412)  # Precondition Failed
         handler.response.out.write("Zipcode must be exactly 5 digits.")
         return False
-    if prof.skills and len(prof.skills.split(",")) > 30:
+    if prof.skills and len(prof.skills.split(",")) > 22:
         handler.error(412)  # Precondition Failed
         handler.response.out.write("Listing too many volunteering skills.")
         return False
