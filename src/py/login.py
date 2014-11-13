@@ -228,6 +228,18 @@ def verifySecureComms(handler, url):
     return False
 
 
+def csv_elem_count(csv):
+    if not csv:
+        return 0
+    return csv.count(",") + 1
+
+
+def csv_list(csv):
+    if not csv:
+        return []
+    return csv.split(",")
+
+
 def remove_from_csv(val, csv):
     if csv == val:
         return ""
@@ -240,22 +252,15 @@ def remove_from_csv(val, csv):
     return csv
 
 
+# CSV strings longer than 1000 elements are cumbersome to the point of
+# being useless, so roll previous elements off the end to reasonably
+# bound the length.
 def prepend_to_csv(val, csv):
     if not csv:
         return val
+    if csv_elem_count(csv) >= 1000:
+        csv = csv[0:csv.rfind(",")]
     return val + "," + csv
-
-
-def csv_elem_count(csv):
-    if not csv:
-        return 0
-    return csv.count(",") + 1
-
-
-def csv_list(csv):
-    if not csv:
-        return []
-    return csv.split(",")
 
 
 class CreateAccount(webapp2.RequestHandler):
