@@ -599,7 +599,13 @@ return {
             currorg.coordinators = currorg.coordinators.csvremove(profid);
             currorg.unassociated = currorg.unassociated.csvremove(profid); }
         app.layout.closeDialog();
-        app.org.save("memchg");
+        if(!currorg.administrators) {
+            currorg.administrators = currorg.administrators.csvappend(profid);
+            currorg.coordinators = currorg.coordinators.csvremove(profid);
+            currorg.unassociated = currorg.unassociated.csvremove(profid);
+            jt.out('orgstatdiv', "You must have at least one administrator"); }
+        else {
+            app.org.save("memchg"); }
     },
 
 
