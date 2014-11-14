@@ -142,8 +142,6 @@ app.login = (function () {
         //with the option to sign out.  While it might seem nicer to
         //display the profile name, the email address is better since
         //it provides another check to make sure it is valid.
-        jt.byId('pagecontentdiv').style.
-            backgroundImage = "url('../img/blank.png')";
         jt.out('mainmenudiv', authname);
         jt.out('logodiv', jt.tac2html(
             ["img", {src: "img/logo.png", width:"155", height:"48"}]));

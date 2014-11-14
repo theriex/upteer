@@ -26,8 +26,9 @@ body {
   height: 100%;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background-color: #feffdd;  /* plumeria */
-  background: linear-gradient(#fff690, #d9edf8);
+  background-color: #feffdd;  /* plumeria yellow */
+  /* background: linear-gradient(#fff690, #d9edf8);  plumeria */
+  background: linear-gradient(#d9edf8 60%, #0096ec);  /* ??? */
 }
 
 img { border:0px; }
@@ -37,7 +38,9 @@ img { border:0px; }
  * general class and id formatting
  ************************************************************
  */
-#pagecontentdiv { margin:0px; padding:0px; }
+#pagecontentdiv { margin:0px; padding:0px; 
+  background-image: url("../img/honu.png"); 
+  background-repeat: no-repeat; background-position: 80% 0%; }
 #headerdiv { font-size:small; padding:0px 10px; }
 #logodiv { float:left; }
 #acctstatdiv { float:right; }
