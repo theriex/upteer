@@ -238,7 +238,7 @@ app.profile = (function () {
 
     readProfButtonsHTML = function (prof) {
         var buttons = [];
-        if(prof === myprof) {
+        if(jt.instId(prof) === jt.instId(myprof)) {
             buttons.push(["button", {type: "button", id: "editprofb",
                                      onclick: jt.fs("app.profile.edit()")},
                           "Edit"]);
