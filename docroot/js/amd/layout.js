@@ -143,6 +143,8 @@ return {
 
     displayDoc: function (url) {
         var html = "Fetching " + url + " ...";
+        if(jt.byId('dlgdiv').style.visibility === "visible") {
+            return app.layout.closeDialog(); }     //toggle off
         app.layout.openDialog(null, html);
         if(url.indexOf(":") < 0) {
             url = relativeToAbsolute(url); }
