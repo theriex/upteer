@@ -21,6 +21,7 @@ return (function () {
         elkwx = null,       //'x' dismiss selected keyword event listener
         elkwsel = null,     //select keyword from list click event listener
         elkwadd = null,     //keyword entry field add/change event listener
+        mant = null,        //manual keyword entry timeout handle
         tout = null,        //keyword entry field change listener timout handle
         selhook = null,     //optional select hook function
         delhook = null,     //option delete hook function
@@ -129,6 +130,8 @@ return (function () {
         if(!elkwsel) {
             elkwsel = function (e) {
                 if(!selhook || selhook(this.innerHTML)) {
+                    if(mant) {
+                        window.clearTimeout(mant); }
                     this.style.display = "none";
                     appendKeyword(this.innerHTML); }
                 jt.evtend(e); }; }
@@ -160,9 +163,11 @@ return (function () {
         jt.out(divid + "kwe", jt.tac2html(html));
         if(!elkwadd) {
             elkwadd = function (e) {
-                var kwin = jt.byId(divid + "kwin");
-                appendKeyword(kwin.value);
-                kwin.value = "";
+                mant = window.setTimeout(function () {
+                    var kwin = jt.byId(divid + "kwin");
+                    mant = null; 
+                    appendKeyword(kwin.value);
+                    kwin.value = ""; }, 200);
                 jt.evtend(e); }; }
         jt.on(divid + "kwin", "change", elkwadd);
         jt.on(divid + "kwplus", "click", elkwadd);
