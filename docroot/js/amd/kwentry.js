@@ -49,6 +49,7 @@ return (function () {
             html.push(["div", {cla: "selkwdiv" + mode},
                        selectedKeywordHTML(keys[i], mode, i)]); }
         jt.out(divid + "kwk", jt.tac2html(html));
+        app.limitwidth(divid + "kwk");
         if(mode === "edit") {
             if(!elkwx) {
                 elkwx = function (e) {
