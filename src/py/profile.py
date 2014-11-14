@@ -102,7 +102,11 @@ class SaveProfile(webapp2.RequestHandler):
         organization.note_resignations(profid, prevorgs, prof.orgs);
         prof.put();
         profid = prof.key().id()
-        match.update_match_nodes("profile", profid, prevskills, prof.skills)
+        mode = "Clear"
+        if prof.status == "Available" or prof.status == "Busy":
+            mode = "Update"
+        match.update_match_nodes("profile", profid, 
+                                 prevskills, prof.skills, mode)
         returnJSON(self.response, [ prof ])
 
 

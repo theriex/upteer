@@ -36,7 +36,7 @@ def update_node_ids(key, objtype, objid, addback):
     node.put()
 
 
-def update_match_nodes(objtype, objid, prevkeycsv, currkeycsv):
+def update_match_nodes(objtype, objid, prevkeycsv, currkeycsv, mode):
     objid = str(objid)
     # filter prevkeycsv to only contain keys that are not in currkeycsv
     currkeys = csv_list(currkeycsv)
@@ -47,9 +47,9 @@ def update_match_nodes(objtype, objid, prevkeycsv, currkeycsv):
     for key in prevkeys:
         update_node_ids(key, objtype, objid, False)
     for key in currkeys:
-        update_node_ids(key, objtype, objid, True)
+        update_node_ids(key, objtype, objid, mode == "Update")
     # always update the "No Skills" catchall node
-    update_node_ids("No Skills", objtype, objid, True)
+    update_node_ids("No Skills", objtype, objid, mode == "Update")
 
 
 # Returns the top level keywords for use in non-critical situations
@@ -69,6 +69,7 @@ class GetTopKeys(webapp2.RequestHandler):
             if keys:
                 keys += ","
             keys += node.name
+        keys = remove_from_csv("No Skills", keys)
         writeJSONResponse("[{\"keys\":\"" + keys + "\"}]", self.response)
 
 

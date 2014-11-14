@@ -243,7 +243,7 @@ app.profile = (function () {
                                      onclick: jt.fs("app.profile.edit()")},
                           "Edit"]);
             buttons.push(["button", {type: "button", id: "searchoppsb",
-                                     onclick: jt.fs("app.match.init()")},
+                                     onclick: jt.fs("app.profile.match()")},
                           "Find Volunteer Opportunities"]); }
         else {
             buttons.push(["button", {type: "button", id: "contactprofb",
@@ -506,8 +506,18 @@ return {
         currprof = null;
         lifekw = null;
         skillkw = null;
-    }
+    },
 
+
+    match: function () {
+        var errtxt;
+        if(myprof.status === "Available" || myprof.status === "Busy") {
+            return app.match.init(); }
+        errtxt = "Complete your profile to volunteer.";
+        if(myprof.status === "Inactive") {
+            errtxt = "Activate your profile to find volunteer opportunities"; }
+        jt.out('profstatdiv', errtxt);
+    }
 
 };  //end of returned functions
 }());

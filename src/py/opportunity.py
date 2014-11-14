@@ -130,8 +130,11 @@ class SaveOpportunity(webapp2.RequestHandler):
             self.response.out.write("Listing too many desired skills.")
             return;
         opp, org = save_organization_opportunity(opp, org)
+        mode = "Clear"
+        if opp.status == "Open":
+            mode = "Update"
         match.update_match_nodes("opportunity", opp.key().id(), 
-                                 prevskills, opp.skills)
+                                 prevskills, opp.skills, mode)
         returnJSON(self.response, [ opp, org ])
 
 
