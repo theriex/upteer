@@ -112,10 +112,14 @@ img { border:0px; }
 
 
 /* match view settings */
-.matchcountspan { display:inline-block; font-size:small; width:30px; }
+#matchtitlediv { padding:20px; }
+.matchskillsdiv { padding:0px 0px 20px 0px; }
+.matchcountspan { display:inline-block; font-size:small; width:20px; }
 .matchnamespan { font-size:medium; }
+.matchlogospan { display:inline-block; width:50px; padding:0px 5px 0px 10px; 
+  text-align:center; }
 .matchlinelogo { max-height:20px; max-width:50px; vertical-align:middle; 
-  padding:0px 5px 0px 5px; }
+  margin:0px auto; }
 
 
 /* kwentry widget settings */

@@ -38,14 +38,18 @@ def update_node_ids(key, objtype, objid, addback):
 
 def update_match_nodes(objtype, objid, prevkeycsv, currkeycsv):
     objid = str(objid)
+    # filter prevkeycsv to only contain keys that are not in currkeycsv
     currkeys = csv_list(currkeycsv)
     for key in currkeys:
         prevkeycsv = remove_from_csv(key, prevkeycsv)
     prevkeys = csv_list(prevkeycsv)
+    # remove the old key values and update the new key values
     for key in prevkeys:
         update_node_ids(key, objtype, objid, False)
     for key in currkeys:
         update_node_ids(key, objtype, objid, True)
+    # always update the "No Skills" catchall node
+    update_node_ids("No Skills", objtype, objid, True)
 
 
 # Returns the top level keywords for use in non-critical situations
@@ -77,10 +81,12 @@ class GetSkillNodes(webapp2.RequestHandler):
         keys = []
         nodes = []
         if skills:
-            keys = skills.split(",")
+            logging.info("setting keys: " + skills)
+            keys = csv_list(skills)
             keys = keys[:50]  # bound procesing within sane limits
         for key in keys:
             keyname = canonize(key)
+            logging.info("keyname: " + keyname)
             node = Node.get_by_key_name(keyname)
             if node:
                 nodes.append(node)

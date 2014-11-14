@@ -95,20 +95,17 @@ app.match = (function () {
         for(i = 0; i < matches.length && i < 50; i += 1) {
             match = matches[i];
             ref = app.lcs.getRef(cachetype, match.id);
-            if(ref.status === "not cached") {
-                return app.lcs.getFull(cachetype, match.id, 
-                                       app.match.redisplayMatchLinks); }
             if(ref[cachetype]) {
                 obj = ref[cachetype];
-                fillMatchEntryFromRefObject(obj);
                 html = [["span", {cla: "matchcountspan"}, 
                          (+match.skillsmatched) + "/" + match.skillsrequested],
                         ["a", {href: "#" + match.name_c,
                                onclick: jt.fs(dispfname + "('" + 
                                               match.id + "')")},
-                         [["img", {id: jt.instId(obj) + "img", 
-                                   cla: "matchlinelogo", 
-                                   src: getMatchLineImageURL(obj)}],
+                         [["span", {cla: "matchlogospan"},
+                           ["img", {id: match.id + "img", 
+                                    cla: "matchlinelogo", 
+                                    src: getMatchLineImageURL(obj)}]],
                           ["span", {cla: "matchnamespan"},
                            ref[cachetype].name]]]];
                 jt.out("mdiv" + match.id, jt.tac2html(html)); } }
@@ -116,11 +113,22 @@ app.match = (function () {
 
 
     displayMatches = function () {
-        var html, i;
+        var cachetype, i, match, ref, html;
+        cachetype = (findtype === "volunteers" ? "prof" : "opp");
+        //fill in the detail on all the matches
+        for(i = 0; i < matches.length && i < 50; i += 1) {
+            match = matches[i];
+            ref = app.lcs.getRef(cachetype, match.id);
+            if(ref.status === "not cached") {
+                return app.lcs.getFull(cachetype, match.id, 
+                                       app.match.redisplayMatchLinks); }
+            if(ref[cachetype]) {
+                fillMatchEntryFromRefObject(ref[cachetype]); } }
         matches.sort(function (a, b) {
             if(a.skillsmatched > b.skillsmatched) { return -1; }
             if(a.skillsmatched < b.skillsmatched) { return 1; }
-            if(a.skillsrequested && b.skillsrequested) {
+            if(a.skillsrequested !== undefined && 
+               b.skillsrequested !== undefined) {
                 if(a.skillsrequested < b.skillsrequested) { return -1; }
                 if(a.skillsrequested > b.skillsrequested) { return 1; } }
             if(a.name_c && b.name_c) {
@@ -139,7 +147,9 @@ app.match = (function () {
         var html, keys = [], i, node;
         if(!jt.byId("matchlistdiv")) {
             html = ["div", {id: "matchcontentdiv"},
-                    [["div", {id: "skillsdiv", cla: "matchskillsdiv"}],
+                    [["div", {id: "matchtitlediv", cla: "headingtxt"},
+                      findtype.capitalize()],
+                     ["div", {id: "skillsdiv", cla: "matchskillsdiv"}],
                      ["div", {id: "matchlistdiv", cla: "matchlistdiv"}]]];
             jt.out('contentdiv', jt.tac2html(html)); }
         canonskills = [];
@@ -176,20 +186,20 @@ return {
     //If no oppref is given, assume we are searching for
     //opportunities using the skills listed in the profile.
     init: function (oppref) {
-        var prevtype, skills, url;
+        var skills, url;
         if(oppref && typeof oppref !== "object") {
             return app.lcs.getFull("opp", oppref, app.match.init); }
         app.history.checkpoint({view: "match", 
                                 oppid: oppref ? oppref.oppid : 0});
-        prevtype = findtype;
         findtype = oppref ? "volunteers" : "opportunities";
         jt.out('contentdiv', "Searching for matching " + findtype + "...");
-        if(nodes && prevtype === findtype) {
+        if(nodes && findtype === "opportunities") {
             return displayNodes(); }
         if(oppref) {
             skills = oppref.opp.skills; }
         else {
             skills = app.profile.getMyProfile().skills; }
+        skills = skills.csvappend("No Skills");  //include general opps
         url = "match?" + app.login.authparams() + "&skills=" + jt.enc(skills);
         jt.call("GET", url, null,
                 function (matchnodes) {
@@ -203,10 +213,6 @@ return {
 
 
     redisplayMatchLinks: function (ref) {
-        var reftype;
-        reftype = (findtype === "volunteers"? "prof" : "opp");
-        if(ref[reftype]) {
-            fillMatchEntryFromRefObject(ref[reftype]); }
         displayMatches();
     },
 

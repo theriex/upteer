@@ -52,7 +52,8 @@ app.profile = (function () {
         if(domelem) {
             prof.about = domelem.value; }
         prof.lifestat = lifekw.getSelectedKeywordsCSV();
-        prof.skills = skillkw.getSelectedKeywordsCSV();
+        if(skillkw) {
+            prof.skills = skillkw.getSelectedKeywordsCSV(); }
         prof.orgs = prof.orgs || "";
     },
 
