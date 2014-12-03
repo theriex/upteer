@@ -166,7 +166,7 @@ app.org = (function () {
         html = [["span", {id: "orgtitle", cla: "sectiontitle"}, 
                  "Organizations"]];
         if(mode === "edit") {
-            html.push(["button", {id: "addorgb", cla: "sectionentryplus",
+            html.push(["button", {id: "addorgb", cla: "kwplus",
                                   onclick: jt.fs(addfstr)}, 
                        "+"]); }
         html.push(["div", {id: "orglistdiv", cla: "orglistdiv"}]);

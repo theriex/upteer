@@ -34,9 +34,9 @@ body {
 img { border:0px; }
 
 button, .loginbutton { cursor:pointer; 
-  margin:0px 10px; padding:5px; font-size: medium;
-  border-radius:5px; border:2px solid #00552A; 
-  background: radial-gradient(#bff1e8 75%, #96cbc2); }
+  margin:0px 10px; padding:5px; font-size: medium; color:#000033;
+  border-radius:15px; border:2px solid #75e1dd; 
+  background: radial-gradient(#e0fffa 75%, #a1f1c8); }
 
 
 /*
@@ -102,19 +102,16 @@ button, .loginbutton { cursor:pointer;
 .tdnarrow { width:5%; padding:0px 5px 0px 0px; }
 
 /* org view settings */
-.sectionentryplus { width:30px; margin:0px 0px 0px 5px; }
 .orglistdiv { font-size:small; padding:5px 0px 5px 20px; }
 .namespan { font-size:x-large; }
 .orgpic { max-height:100px; max-width:150px; }
 #assocnoticediv { font-size:medium; }
 .orgassocnameline { font-size:large; text-align:center; }
-.orgx { cursor:pointer; font-size:medium; padding:0px 2px 0px 0px; }
+.orgx { cursor:pointer; font-size:small; padding:0px 10px 0px 0px; }
 .refcsvdiv { font-size:medium; }
 
 
 /* opp view settings */
-.opplistdiv { font-size:small; padding:5px 0px 5px 20px; }
-.oppx { cursor:pointer; font-size:medium; padding:0px 2px 0px 0px; }
 #accdesctxt { height:40px; }
 
 
@@ -155,7 +152,7 @@ button, .loginbutton { cursor:pointer;
   padding:0px 5px; height: 75px; width:150px; overflow:scroll; 
   background:#fff; }
 .kwin { width:120px; }
-.kwplus { width:30px; padding:0px 0px 0px 10px; }
+.kwplus { padding:0px; }
 .kwentrydiv { padding:0px 0px 0px 10px; width:160px; overflow:hidden; white-space:nowrap; }
 .kwkeywordsdiv { }
 

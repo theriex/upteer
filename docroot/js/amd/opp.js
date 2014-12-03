@@ -192,7 +192,7 @@ app.opp = (function () {
             oppref = opprefs[i];
             line = [];
             if(mode === "edit") {
-                line.push(["span", {id: "remopp" + i, cla: "oppx",
+                line.push(["span", {id: "remopp" + i, cla: "orgx",
                                     onclick: jt.fs("app.opp.removeOpp('" +
                                         jt.instId(oppref.opp) + "','" +
                                         oppref.opp.name + "','" +
@@ -215,10 +215,10 @@ app.opp = (function () {
         html = [["span", {id: "opptitle", cla: "sectiontitle"},
                  "Opportunities"]];
         if(mode === "edit") {
-            html.push(["button", {id: "addoppb", cla: "sectionentryplus",
+            html.push(["button", {id: "addoppb", cla: "kwplus",
                                   onclick: jt.fs(addfstr)},
                        "+"]); }
-        html.push(["div", {id: "opplistdiv", cla: "opplistdiv"}]);
+        html.push(["div", {id: "opplistdiv", cla: "orglistdiv"}]);
         jt.out(dispdivid, jt.tac2html(html));
         app.lcs.resolveCSV("opp", org.opportunities, function (opprefs) {
             displayOpps(org, opprefs, mode); });
