@@ -79,7 +79,7 @@ var app = {},  //Global container for application level funcs and values
             modules = [ "js/amd/layout", "js/amd/login", "js/amd/history",
                         "js/amd/profile", "js/amd/kwentry", "js/amd/org",
                         "js/amd/lcs", "js/amd/menu", "js/amd/opp",
-                        "js/amd/match" ];
+                        "js/amd/match", "js/amd/contact" ];
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {

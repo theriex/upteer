@@ -33,6 +33,11 @@ body {
 
 img { border:0px; }
 
+button { cursor:pointer; margin:0px 10px; padding:5px; font-size: medium;
+  border-radius:5px; border:2px solid #00552A; 
+  background: radial-gradient(#bff1e8 75%, #96cbc2); }
+
+
 /*
  ************************************************************
  * general class and id formatting
@@ -60,8 +65,8 @@ img { border:0px; }
 #closeline { text-align:right; font-size:x-small; }
 .dlgclosex { float:right; font-size:x-small; }
 .headingtxt { font-size:large; font-weight:bold; text-align:center; }
-.dlgbuttonsdiv { text-align:center; padding:20px 0px 10px 0px; }
-.dlgbuttonsdiv button { margin:0px 10px; }
+.dlgbuttonsdiv, .formbuttonsdiv { 
+  text-align:center; padding:20px 0px 10px 0px; }
 .dlgconfmsgdiv { text-align:center; }
 .floatclear { clear:both; }
 #tagcontainerdiv { padding:0; }
@@ -74,8 +79,6 @@ img { border:0px; }
 #loginstatdiv { font-size:small; font-weight:bold; }
 .listlabel { font-size:medium; font-weight:normal; padding:0px 10px; }
 .formlabel { font-size:medium; font-weight:normal; padding:10px; }
-.formbuttonsdiv { padding:20px; text-align:center; }
-.formbuttonsdiv button { margin:0px 10px; }
 .tablediv { display:table; margin:0px auto; }
 .footerlink { background:#f4fcff; padding:2px 5px; border-radius:3px; }
 .paradiv { padding:10px 0px 0px 0px; }
@@ -123,6 +126,10 @@ img { border:0px; }
   text-align:center; }
 .matchlinelogo { max-height:20px; max-width:50px; vertical-align:middle; 
   margin:0px auto; }
+
+/* contact settings */
+#contactsubjverbdiv { padding:5px 0px 0px 0px; }
+#contactsubjoppdiv { padding:5px 10px; }
 
 
 /* kwentry widget settings */

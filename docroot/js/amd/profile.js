@@ -229,7 +229,7 @@ app.profile = (function () {
                                   onclick: jt.fs("app.profile.save()")},
                        "Save"]]]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
-        app.initTextArea("abouttxt", prof.about, "What are you interested in? Do you have a blog or public profile?");
+        app.initTextArea("abouttxt", prof.about, "Public profile or blog? What are you interested in?");
         app.profile.profPicHTML(prof, true);
         lifeStatusDisplay(myprof, "edit");
         skillKeywordsDisplay(myprof, "edit");
@@ -246,9 +246,7 @@ app.profile = (function () {
                                      onclick: jt.fs("app.profile.match()")},
                           "Find Volunteer Opportunities"]); }
         else {
-            buttons.push(["button", {type: "button", id: "contactprofb",
-                                     onclick: jt.fs("app.profile.contact()")},
-                          "Contact"]); }
+            buttons = app.contact.getActionButtons(myprof, prof); }
         return buttons;
     },
 
@@ -379,11 +377,6 @@ return {
     },
 
 
-    contact: function () {
-        jt.err("Contact not implemented yet");
-    },
-
-
     //The profile display gets called after login, and that triggers
     //the server call.  Afterwards myprof is cached and available.
     display: function () {
@@ -470,6 +463,9 @@ return {
 
     getCurrentProfile: function () {
         return currprof;
+    },
+    setCurrentProfile: function (prof) {
+        currprof = prof;
     },
 
 

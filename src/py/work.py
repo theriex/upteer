@@ -11,13 +11,14 @@ import logging
 # up to 18 days to contest completed hours, after that they are
 # automatically approved and cannot be modified via the site.
 #   Contacted (vol): Set on inquiry, 0 hrs
+#   Responded (coord): Optionally set on initial response
 #   Withdrawn (vol): Offer didn't work out, 0 hrs
 #   Volunteering (vol): Start date set, hours filled in
 #   Done (vol): Completed but not approved yet.
 #   Canceled (coord): Opportunity didn't work out, 0 hrs
 #   No Show (coord): 0 hrs
 #   Partial (coord): Complete but total hours reduced by coordinator
-#   Modified (coord): Total hours changed by coordinator
+#   Modified (coord): Total hours corrected upwards by coordinator
 #   Completed (coord/site): Satisfactory completion, hours as specified
 class WorkPeriod(db.Model):
     volunteer = db.StringProperty(required=True)   # ID of volunteer

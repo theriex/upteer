@@ -459,6 +459,11 @@ return {
     },
 
 
+    getCurrentOpportunity: function () {
+        return curropp;
+    },
+
+
     listOpportunities: function (dispdivid, org, mode, addfstr) {
         rebuildOpportunityDisplay(dispdivid, org, mode, addfstr);
     },
