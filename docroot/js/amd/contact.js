@@ -16,25 +16,36 @@ app.contact = (function () {
     var //The contact book (profile.book field) is an array of contacts:
         //       [name, profid, email, comms, notes] 
         //The comms field is an array of communication entries:
-        //       [tstamp code msgtxt oppname oppid, wpid]
+        //       [tstamp, code, msgtxt, oppname, oppid, wpid]
         //sorted with the most recent entry first.  The opportunity
         //and work period refs are defined as needed.  Older entries
-        //roll off as they are replaced with newer ones.
+        //roll off as they are replaced with newer ones, see work.py
+        //for retentions.  The oppname is redundant and could even be
+        //out of date, but it is stored for ease of display.
         codes = { 
-            vol: {retention:  1, name: "Volunteering Inquiry", emrel: true,
+            vol: {name: "Volunteering Inquiry", emrel: true,
                   verb: "Contact", prog: "Contacting"},
-            wrk: {retention:  1, name: "Work Update",  //email already released
+            vli: {name: "Inquired"},        //coordinator book
+            wrk: {name: "Work Completion",  //have email already
                   verb: "Contact", prog: "Contacting"},
-            cov: {retention: 20, name: "Co-Volunteer"},
-            a2b: {retention:  1, name: "Contact Book Add",
+            wrd: {name: "Completed Work"},  //coordinator book
+            cov: {name: "Co-Volunteer"},
+            a2b: {name: "Contact Book Add",
                   verb: "Add", prog: "Adding"},
-            b2a: {retention:  1, name: "Contact Note"},
-            sha: {retention:  5, name: "Opportunity Share", emrel: true,
+            b2a: {name: "Contact Note"},
+            sha: {name: "Opportunity Share", emrel: true,
                   verb: "Contact", prog: "Contacting"},
-            ema: {retention:  1, name: "Contact Info Request", emrel: true,
+            shr: {name: "Received Opportunity"},  //receiver book
+            ema: {name: "Contact Info Request", emrel: true,
                   verb: "Request", prog: "Requesting"},
-            ign: {retention:  1, name: "Ignoring",
-                  verb: "Ignore", prog: "Ignoring"} },
+            emc: {name: "Contact Info Receipt"},  //receiver book
+            emr: {name: "Contact Info Release", emrel: true,
+                  verb: "Send", prog: "Sending"},
+            emd: {name: "Contact Info Delivery"}, //receiver book
+            ign: {name: "Ignoring",
+                  verb: "Ignore", prog: "Ignoring"},
+            alw: {name: "Allowing",
+                  verb: "Allow", prog: "Allowing"} },
         wp = null,    //most recently accessed WorkPeriod
 
 
@@ -72,8 +83,9 @@ app.contact = (function () {
 
 
     isFriend = function (them) {
-        var entry = findEntry(them);
         //mutually listed in contact books, or co-volunteers
+        //logic is equivalent to is_friend in work.py
+        var entry = findEntry(them);
         if(entry && ((mostRecentComm(entry, "a2b") && 
                       mostRecentComm(entry, "b2a")) ||
                      mostRecentComm(entry, "cov"))) {
@@ -83,10 +95,9 @@ app.contact = (function () {
 
 
     //Return the contact code and button text if there is a reason to
-    //contact them.  This mirrors logic is in the API call, which also
-    //traps duplicate contact requests and handles expirations.
+    //contact them.
     contextForContact = function () {
-        var me, them, opp;
+        var me, them, opp, comm;
         me = app.profile.getMyProfile();
         them = app.profile.getCurrentProfile();
         opp = app.opp.getCurrentOpportunity();
@@ -282,18 +293,19 @@ return {
         jt.out('dlgbdiv', codes[codestr].prog + "...");
         if(jt.byId('contactdlgtxtdiv')) {
             msgtxt = jt.byId('contactdlgtxtdiv').value || ""; }
-        data = {code: codestr, 
+        data = {code: codestr,
                 msgtxt: msgtxt,
                 profid: jt.instId(app.profile.getCurrentProfile()),
                 oppid: jt.instId(app.opp.getCurrentOpportunity()) || 0,
                 wpid: jt.instId(wp) || 0};
         data = jt.objdata(data);
         jt.call('POST', "contact?" + app.login.authparams(), data,
-                function (profiles) {
-                    app.profile.setCurrentProfile(profiles[0]);
-                    app.lcs.put("prof", profiles[0]);
+                function (results) {
+                    app.profile.setMyProfile(
+                        app.lcs.put("prof", results[0]).prof);
                     app.layout.closeDialog();
-                    app.profile.display(); },
+                    app.profile.byprofid(
+                        jt.instId(app.profile.getCurrentProfile())); },
                 app.failf(function (code, errtxt) {
                     //don't overwrite content in case they want to copy it
                     jt.out('dlgbdiv', "Call failed " + code +

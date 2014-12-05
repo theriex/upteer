@@ -454,8 +454,6 @@ return {
     getMyProfile: function () {
         return myprof;
     },
-
-
     setMyProfile: function (prof) {
         myprof = prof;
     },
@@ -502,6 +500,19 @@ return {
         currprof = null;
         lifekw = null;
         skillkw = null;
+    },
+
+
+    serializeFields: function (prof) {
+        //the contact book is not updated when saving the profile, so it
+        //is not necessary to serialize profile.book when saving.
+        if(typeof prof.book === 'object') {
+            prof.book = JSON.stringify(prof.book); }
+    },
+
+
+    deserializeFields: function (prof) {
+        app.lcs.reconstituteJSONObjectField("book", prof);
     },
 
 

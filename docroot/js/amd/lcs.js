@@ -18,7 +18,9 @@ app.lcs = (function () {
         prof: { refs: {},
                 fetchend: "profbyid",
                 fetchparamf: function (id) {
-                    return "profid=" + id; } },
+                    return "profid=" + id; },
+                putprep: function (profobj) {
+                    app.profile.deserializeFields(profobj); } },
         org:  { refs: {},
                 fetchend: "orgbyid",
                 fetchparamf: function (id) {

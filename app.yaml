@@ -140,6 +140,15 @@ handlers:
 
 
 ######################################################################
+##        WorkPeriod and contact access
+
+## Contact a user
+## POST params: code, msgtxt, profid, oppid, wpid, authparams
+- url: /contact.*
+  script: src.py.work.app
+
+
+######################################################################
 # General endpoints
 
 ## Trap anything ending with a slash and send it to index.html since
