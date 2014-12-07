@@ -46,7 +46,7 @@ app.contact = (function () {
                   verb: "Ignore", prog: "Ignoring"},
             alw: {name: "Allowing",
                   verb: "Allow", prog: "Allowing"} },
-        wp = null,    //most recently accessed WorkPeriod
+        currwp = null,    //most recently accessed WorkPeriod
 
 
     ////////////////////////////////////////
@@ -94,15 +94,29 @@ app.contact = (function () {
     },
 
 
+    inquiring = function (opp) {
+        var profref, oppid, i;
+        profref = app.lcs.getRef("prof", jt.instId(app.profile.getMyProfile()));
+        if(!profref.wps) {
+            return false; }
+        oppid = jt.instId(opp);
+        for(i = 0; i < profref.wps.length; i += 1) {
+            if(profref.wps[i].opportunity === oppid &&
+               profref.wps[i].status === "Inquiring") {
+                return true; } }
+        return false;
+    },
+
+
     //Return the contact code and button text if there is a reason to
     //contact them.
     contextForContact = function () {
-        var me, them, opp, comm;
+        var me, them, opp;
         me = app.profile.getMyProfile();
         them = app.profile.getCurrentProfile();
         opp = app.opp.getCurrentOpportunity();
         //They are the coordinator for the last viewed opportunity.
-        if(opp && opp.contact.csvcontains(jt.instId(them))) {
+        if(opp && opp.contact.csvcontains(jt.instId(them)) && !inquiring(opp)) {
             return { code: "vol", button: codes.vol.name }; }
         //You are searching for volunteers, or passing an opportunity
         //along to a friend:
@@ -233,6 +247,61 @@ app.contact = (function () {
                                   jt.byId('contactokb').focus(); });
         if(jt.byId('contactta')) {
             app.initTextArea("contactta", "", placeholder); }
+    },
+
+
+    noteUpdatedWorkPeriod = function (results) {
+        var wp, wpid, profref, found = false, i;
+        if(results.length <= 1) {
+            return; }  //no WorkPeriod to note
+        wp = results[1];
+        wpid = jt.instId(wp);
+        profref = app.lcs.getRef("prof", jt.instId(app.profile.getMyProfile()));
+        if(!profref.wps) {
+            profref.wps = []; }
+        for(i = 0; !found && i < profref.wps.length; i += 1) {
+            if(jt.instId(profref.wps[i]) === wpid) {
+                profref.wps[i] = wp;
+                found = true; } }
+        if(!found) {
+            profref.wps.unshift(wp); }
+        profref.wps.sort(function (a, b) {
+            if(a.modified > b.modified) { return -1; }
+            if(a.modified < b.modified) { return 1; }
+            return 0; });
+    },
+
+
+    wpEditFieldHTML = function (wp, mode, field) {
+        var html = wp[field];
+        if(mode === "myprof" || mode === "coord") {
+            html = ["a", {href: "#changestatus",
+                          onclick: jt.fs("app.contact.wpedit('" +
+                                         jt.instId(wp) + "')")},
+                    html]; }
+        return html;
+    },
+
+
+    workPeriodHTML = function (wp, mode) {
+        var namelink, html;
+        if(mode === "opp" || mode === "coord") {
+            namelink = ["a", {href: "#" + wp.volunteer,
+                              onclick: jt.fs("app.prof.byprofid('" +
+                                             wp.volunteer + "')")},
+                    wp.volname]; }
+        else { //profbasic or myprof
+            namelink = ["a", {href: "#" + wp.opportunity,
+                              onclick: jt.fs("app.opp.byoppid('" + 
+                                             wp.opportunity + "')")},
+                    wp.oppname]; }
+        html = ["div", {cla: "wpdescline"},
+                ["span", {cla: "wpnamelink"}, namelink],
+                ["span", {cla: "wpstatus"}, 
+                 wpEditFieldHTML(wp, mode, "status")],
+                ["span", {cla: "wphours"}, 
+                 wpEditFieldHTML(wp, mode, "hours")]];
+        return html;
     };
 
 
@@ -240,6 +309,47 @@ app.contact = (function () {
     // published functions
     ////////////////////////////////////////
 return {
+
+    wpedit: function (wpid) {
+        //bring up the dialog allowing for changing the stat, hours
+        //and other detail fields.  These should be arranged
+        //vertically with explanations of what can be done for each.
+        //validation and cancel/save.
+        jt.err("wpedit not implemented yet");
+    },
+
+
+    wpsProfileDisplay: function (dispdiv, prof) {
+        var html, profid, profref, url, wps, i, mode = "profbasic";
+        jt.out(dispdiv, "");
+        profid = jt.instId(prof);
+        profref = app.lcs.getRef("prof", profid);
+        wps = profref.wps;
+        if(!wps) {
+            url = "fetchwork?" + app.login.authparams() + "&profid=" + profid;
+            jt.call('GET', url, null,
+                    function (wps) {
+                        profref.wps = wps;
+                        app.contact.wpsProfileDisplay(dispdiv, prof); },
+                    app.failf(function (code, errtxt) {
+                        jt.out(dispdiv, "fetchwork failed " + code + 
+                               ": " + errtxt); }),
+                    jt.semaphore("contact.wpsProfileDisplay"));
+            return; }
+        if(!wps || wps.length === 0) {
+            return; }
+        if(jt.instId(prof) === jt.instId(app.profile.getMyProfile())) {
+            mode = "myprof"; }
+        html = [];
+        for(i = 0; i < wps.length; i += 1) {
+            html.push(workPeriodHTML(wps[i], mode)); }
+        html = [["span", {id: "wpstitle", cla: "sectiontitle"},
+                 "Volunteering"],
+                ["div", {id: "wpslistdiv", cla: "orglistdiv"},
+                 html]];
+        jt.out(dispdiv, jt.tac2html(html));
+    },
+
 
     condlg: function (code) {
         var me, them, book, profid, entry = null, i;
@@ -297,12 +407,13 @@ return {
                 msgtxt: msgtxt,
                 profid: jt.instId(app.profile.getCurrentProfile()),
                 oppid: jt.instId(app.opp.getCurrentOpportunity()) || 0,
-                wpid: jt.instId(wp) || 0};
+                wpid: jt.instId(currwp) || 0};
         data = jt.objdata(data);
         jt.call('POST', "contact?" + app.login.authparams(), data,
                 function (results) {
                     app.profile.setMyProfile(
                         app.lcs.put("prof", results[0]).prof);
+                    noteUpdatedWorkPeriod(results);
                     app.layout.closeDialog();
                     app.profile.byprofid(
                         jt.instId(app.profile.getCurrentProfile())); },

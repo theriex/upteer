@@ -147,6 +147,11 @@ handlers:
 - url: /contact.*
   script: src.py.work.app
 
+## Fetch WorkPeriod instances for a given profile or opportunity
+## GET params: oppid or profid, authparams
+- url: /fetchwork.*
+  script: src.py.work.app
+
 
 ######################################################################
 # General endpoints

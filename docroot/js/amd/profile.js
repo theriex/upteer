@@ -296,6 +296,7 @@ app.profile = (function () {
                    ["tr", ["td", {colspan: 2}, ["div", {id: "skillsdiv"}]]],
                    ["tr", ["td", {colspan: 2}, ["div", {id: "voluntdiv"}]]],
                    ["tr", ["td", {colspan: 2}, ["div", {id: "orgsdiv"}]]],
+                   ["tr", ["td", {colspan: 2}, ["div", {id: "wpsdiv"}]]],
                    ["tr",
                     ["td", {colspan: 2},  //no labels column
                      ["div", {cla: "formbuttonsdiv"},
@@ -305,6 +306,7 @@ app.profile = (function () {
         app.profile.profPicHTML(prof, false);
         lifeStatusDisplay(prof);
         skillKeywordsDisplay(prof);
+        app.contact.wpsProfileDisplay("wpsdiv", prof);
         app.menu.display();
     },
 

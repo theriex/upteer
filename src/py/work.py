@@ -6,15 +6,28 @@ import urllib
 import json
 from login import *
 import profile
+import organization
 import opportunity
 
+# The intent of a WorkPeriod is to facilitate the contact process,
+# track hours being volunteered, and make it cool to see all the work
+# getting done by all these wonderful people and organizations.  The
+# expectation is that the site work tracking will serve as the primary
+# tracking system for most volunteers and some smaller organizations.
+# The WorkPeriod does NOT encompass scheduling.  Volunteers have their
+# own ways of keeping track of where they should be when, and
+# coordinators have their own ways of tracking who will be showing up
+# when.  If they don't, and they need it, then we recommend setting
+# up a Google calendar for each opportunity they are coordinating.
+#
 # Work hours are filled out by the volunteer (with calc help) based on
 # the specified tracking interval, but they are subject to approval by
 # the volunteer coordinator.  At the longest, things are rectified
 # monthly (can't let things float for too long).  The coordinator has
-# up to 18 days to contest completed hours, after that they are
-# automatically approved and cannot be modified via the site.
-#   Contacted (vol): Set on inquiry, 0 hrs
+# up to 18 days to modify Done work, after that it is automatically
+# marked as Completed.  Completed work cannot be modified.
+# status:
+#   Inquiring (vol): Set on inquiry, 0 hrs
 #   Responded (coord): Optionally set on initial response
 #   Withdrawn (vol): Offer didn't work out, 0 hrs
 #   Volunteering (vol): Start date set, hours filled in
@@ -24,16 +37,40 @@ import opportunity
 #   Partial (coord): Complete but total hours reduced by coordinator
 #   Modified (coord): Total hours corrected upwards by coordinator
 #   Completed (coord/site): Satisfactory completion, hours as specified
+# The oppname and volname fields are set when the WorkPeriod is
+# initially created, and they are updated if the corresponding
+# Opportunity or Profile name is changed while the WorkPeriod is still
+# open (status inquiring or volunteering).
+#
+# The volnotes field provides the volunteer a place to put things they
+# want to remember relative to the work (e.g. date of timesheet filled
+# out, bring water bottle, where to meet etc).  The volshout field
+# provides the volunteer an optional public place to describe what was
+# rewarding about the work, with the intent of helping to guide
+# others.  The coordnotes field provides the coordinator a place to
+# put things they want to remember relative to the volunteer
+# (e.g. people you know in common, family constraints, work style
+# etc).  The coordshout field allows the coordinator to optionally
+# publicly laud or express gratitude for the volunteer.  Shouts are
+# stored with the work because they are relative in time.
+#
+
 class WorkPeriod(db.Model):
     volunteer = db.IntegerProperty(required=True)   # ID of volunteer
     opportunity = db.IntegerProperty(required=True) # ID of opportunity
     tracking = db.StringProperty(required=True)     # Daily, Weekly, Monthly
     modified = db.StringProperty()        # ISO date
-    renew = db.IntegerProperty()          # auto re-approves remaining
+    oppname = db.StringProperty(indexed=False)      # orgname + " " + oppname
+    volname = db.StringProperty(indexed=False)      # volunteer.name
     start = db.StringProperty()           # ISO date
     end = db.StringProperty()             # ISO date
     status = db.StringProperty()          # Volunteering, Completed etc
+    visibility = db.IntegerProperty()     # 1: vol, 2: vol/coord, 3: world
     hours = db.IntegerProperty()          # Total hours volunteered
+    volnotes = db.TextProperty()          # Volunteer notes to self
+    volshout = db.TextProperty()          # Volunteer notes to the world
+    coordnotes = db.TextProperty()        # Coordinator notes to self
+    coordshout = db.TextProperty()        # Coordinator notes to the world
 
 
 def book_for_profile(prof):
@@ -152,11 +189,15 @@ def contact_volunteer_inquiry(handler, myprof, prof, msgtxt, oppid):
     opp = verify_opp(handler, prof, oppid)
     if not opp:
         return
+    org = organization.Organization.get_by_id(opp.organization)
     tstamp = nowISO()
     wp = WorkPeriod(volunteer=myprof.key().id(), opportunity=oppid,
                     tracking="Weekly")
     wp.modified = tstamp
     wp.status = "Inquiring"
+    wp.visibility = 2
+    wp.oppname = org.name + " " + opp.name
+    wp.volname = myprof.name
     wp.put()
     wpid = str(wp.key().id())
     prepend_comm(handler, myprof, prof, 
@@ -297,5 +338,38 @@ class ContactHandler(webapp2.RequestHandler):
         self.response.out.write("Unknown contact code " + code)
 
 
-app = webapp2.WSGIApplication([('/contact', ContactHandler)
+class FetchWork(webapp2.RequestHandler):
+    def get(self):
+        myprof = profile.authprof(self)
+        if not myprof:
+            return
+        where = ""
+        fetchmax = 0
+        searchid = intz(self.request.get('profid'))
+        if searchid and searchid == myprof.key().id():
+            where = "WHERE volunteer = :1 "
+            fetchmax = 50
+        elif searchid:  # someone else's profile
+            where = "WHERE volunteer = :1 AND visibility >= 3"
+            fetchmax = 10
+        else:
+            searchid = intz(self.request.get('oppid'))
+            opp = opportunity.Opportunity.get_by_id(searchid)
+            if is_opp_contact(myprof, opp):
+                where = "WHERE opportunity = :1"
+                fetchmax = 50
+            elif searchid:  # just viewing an opportunity
+                where = "WHERE opportunity = :1 AND visibility >= 3"
+                fetchmax = 20
+        if not where:
+            self.error(412)  # Precondition Failed
+            self.response.out.write("No profid or oppid given")
+        gql = WorkPeriod.gql(where, searchid)
+        wps = gql.fetch(fetchmax, read_policy=db.EVENTUAL_CONSISTENCY,
+                        deadline=10)
+        returnJSON(self.response, wps)
+
+
+app = webapp2.WSGIApplication([('/contact', ContactHandler),
+                               ('/fetchwork', FetchWork)
                                ], debug=True)

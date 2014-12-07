@@ -21,3 +21,8 @@ indexes:
   - name: profcount
   - name: modified
   - name: name
+
+- kind: WorkPeriod
+  properties:
+  - name: volunteer
+  - name: visibility
