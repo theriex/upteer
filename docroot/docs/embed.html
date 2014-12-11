@@ -15,15 +15,15 @@
 
 <p>This is a technical document that assumes you are familiar with
 HTML and CSS.  If that's not you, the short story is that any
-opportunities you list on Upteer can be easily displayed and
-interacted with on your own website. </p>
+opportunities you list on Upteer can be easily displayed on your own
+website. </p>
 
 
 <h4>Displaying your opportunities</h4>
 
 <p>After you have set up your organization on Upteer, you can also
-display your organization's opportunities on your own site.  To do
-that, simply add this HTML to your web page: </p>
+display opportunities on your own site simply by adding the following
+HTML to one of your web pages: </p>
 
 <div class="codediv"><pre>
 &lt;div class="upteerdisplay"&gt;&lt;/div&gt;
@@ -34,12 +34,12 @@ that, simply add this HTML to your web page: </p>
 organization.  You can get your organization ID by "right clicking"
 the link to your organization from your profile.
 The <code>upteerdisplay</code> div can be anywhere you want the
-opportunities to be displayed, as long as it is before the script
-tag. </p>
+opportunities to be displayed, as long as it comes before the embed
+script. </p>
 
-<p>For security purposes, the page embedding your Upteer opportunities
-must be on the same site as the page for your organization as listed
-on Upteer. </p>
+<p>For security, the page embedding your Upteer opportunities must be
+on the same site as the home page for your organization as listed on
+Upteer. </p>
 
 <p>That's it.  With those two lines, all opportunities you have listed
 on Upteer will be displayed on your site.  The rest of this document
@@ -52,8 +52,8 @@ is additional options if you want them. </p>
 handle sign in as needed and you can just skip this section.  If you
 have volunteers who sign in to your site, and you would like to
 automatically log them in to Upteer to interact with your
-opportunities there, add the following HTML to the web page you
-display for them: </p>
+opportunities there, add the following HTML above the embed script on
+your web page: </p>
 
 <div class="codediv"><pre>
 &lt;div class="upteerUserEmail"&gt;name@example.com&lt;/div&gt;
@@ -82,18 +82,19 @@ access permission for your site before continuing. </p>
 
 <h4>Making the opportunities display match your site</h4>
 
-<p>By default, the embedded opportunities display and supporting
-processing looks like it does on Upteer.  If you want to make it match
-the look and feel of your own site, you can override the default style
-for everything in the display by providing your own css file: </p>
+<p>By default, the opportunities displayed on your site look just like
+they do on Upteer.  If you want the opportunities to match the look
+and feel of your own site, you can override the default style for
+everything in the display by providing your own css file: </p>
 
 <div class="codediv"><pre>
 &lt;div class="upteerCSSOverride"&gt;http://yoursite.org/css/upteeroverrides.css&lt;/div&gt;
 </pre></div>
 
-<p>Upteer will include this css file last when it generates the
-content display, so you can override anything you see.  If there is
-something you want to change but can't, let us know. </p>
+<p>Upteer will include your css file last when it generates your
+content display, so you can override anything your users see.  If you
+run into any difficulty customizing any display elements, let us
+know.  Our goal is to make this as easy as possible. </p>
 
 
 
