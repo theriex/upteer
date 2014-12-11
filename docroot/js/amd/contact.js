@@ -204,7 +204,7 @@ app.contact = (function () {
         var placeholder = "", html;
         switch(codestr) {
         case "vol": 
-            placeholder = "What motivations and strengths will help you contribute positivively to this group effort?";
+            placeholder = "What motivations and strengths will help you contribute positively to " + oppName() + "?";
             html = contactDialogHTML(
                 codestr, entry, "Inquiring about volunteering for", oppName());
             break;
@@ -214,7 +214,7 @@ app.contact = (function () {
                 codestr, entry, "Volunteer work completed for", oppName());
             break;
         //case "cov": server side update only
-        case "a2b": 
+        case "a2b":
             html = addToContactBookDlgHTML(entry);
             break;
         //case b2a: server side update only
@@ -287,7 +287,7 @@ app.contact = (function () {
         var namelink, html;
         if(mode === "opp" || mode === "coord") {
             namelink = ["a", {href: "#" + wp.volunteer,
-                              onclick: jt.fs("app.prof.byprofid('" +
+                              onclick: jt.fs("app.profile.byprofid('" +
                                              wp.volunteer + "')")},
                     wp.volname]; }
         else { //profbasic or myprof
@@ -296,13 +296,30 @@ app.contact = (function () {
                                              wp.opportunity + "')")},
                     wp.oppname]; }
         html = ["div", {cla: "wpdescline"},
-                ["span", {cla: "wpnamelink"}, namelink],
-                ["span", {cla: "wpstatus"}, 
-                 wpEditFieldHTML(wp, mode, "status")],
-                ["span", {cla: "wphours"}, 
-                 wpEditFieldHTML(wp, mode, "hours")]];
+                [["span", {cla: "wpnamelink"}, namelink],
+                 " ",
+                 ["span", {cla: "wpstatus"}, 
+                  wpEditFieldHTML(wp, mode, "status")],
+                 ["span", {cla: "wphours"}, 
+                  wpEditFieldHTML(wp, mode, "hours")]]];
         return html;
+    },
+
+
+    displayWorkPeriods = function (dispdiv, wps, mode) {
+        var i, html = [];
+        if(!wps || wps.length === 0) {
+            jt.out(dispdiv, "");
+            return; }
+        for(i = 0; i < wps.length; i += 1) {
+            html.push(workPeriodHTML(wps[i], mode)); }
+        html = [["span", {id: "wpstitle", cla: "sectiontitle"},
+                 "Volunteering"],
+                ["div", {id: "wpslistdiv", cla: "orglistdiv"},
+                 html]];
+        jt.out(dispdiv, jt.tac2html(html));
     };
+
 
 
     ////////////////////////////////////////
@@ -320,7 +337,7 @@ return {
 
 
     wpsProfileDisplay: function (dispdiv, prof) {
-        var html, profid, profref, url, wps, i, mode = "profbasic";
+        var profid, profref, url, wps, mode = "profbasic";
         jt.out(dispdiv, "");
         profid = jt.instId(prof);
         profref = app.lcs.getRef("prof", profid);
@@ -332,22 +349,36 @@ return {
                         profref.wps = wps;
                         app.contact.wpsProfileDisplay(dispdiv, prof); },
                     app.failf(function (code, errtxt) {
-                        jt.out(dispdiv, "fetchwork failed " + code + 
-                               ": " + errtxt); }),
+                        jt.out(dispdiv, "fetchwork for profile failed " + 
+                               code + ": " + errtxt); }),
                     jt.semaphore("contact.wpsProfileDisplay"));
-            return; }
-        if(!wps || wps.length === 0) {
             return; }
         if(jt.instId(prof) === jt.instId(app.profile.getMyProfile())) {
             mode = "myprof"; }
-        html = [];
-        for(i = 0; i < wps.length; i += 1) {
-            html.push(workPeriodHTML(wps[i], mode)); }
-        html = [["span", {id: "wpstitle", cla: "sectiontitle"},
-                 "Volunteering"],
-                ["div", {id: "wpslistdiv", cla: "orglistdiv"},
-                 html]];
-        jt.out(dispdiv, jt.tac2html(html));
+        displayWorkPeriods(dispdiv, wps, mode);
+    },
+
+
+    wpsOpportunityDisplay: function (dispdiv, opp) {
+        var oppid, oppref, url, wps, mode = "opp";
+        jt.out(dispdiv, "");
+        oppid = jt.instId(opp);
+        oppref = app.lcs.getRef("opp", oppid);
+        wps = oppref.wps;
+        if(!wps) {
+            url = "fetchwork?" + app.login.authparams() + "&oppid=" + oppid;
+            jt.call('GET', url, null,
+                    function (wps) {
+                        oppref.wps = wps;
+                        app.contact.wpsOpportunityDisplay(dispdiv, opp); },
+                    app.failf(function (code, errtxt) {
+                        jt.out(dispdiv, "fetchwork for opportunity failed " +
+                               code + ": " + errtxt); }),
+                    jt.semaphore("contact.wpsOpportunityDisplay"));
+            return; }
+        if(opp.contact.csvcontains(jt.instId(app.profile.getMyProfile()))) {
+            mode = "coord"; }
+        displayWorkPeriods(dispdiv, wps, mode);
     },
 
 

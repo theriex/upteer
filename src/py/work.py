@@ -67,9 +67,7 @@ class WorkPeriod(db.Model):
     status = db.StringProperty()          # Volunteering, Completed etc
     visibility = db.IntegerProperty()     # 1: vol, 2: vol/coord, 3: world
     hours = db.IntegerProperty()          # Total hours volunteered
-    volnotes = db.TextProperty()          # Volunteer notes to self
     volshout = db.TextProperty()          # Volunteer notes to the world
-    coordnotes = db.TextProperty()        # Coordinator notes to self
     coordshout = db.TextProperty()        # Coordinator notes to the world
 
 
@@ -301,6 +299,10 @@ def contact_remove_entry(self, myprof, prof):
 
 class ContactHandler(webapp2.RequestHandler):
     def post(self):
+        if not self.request.url.startswith('http://localhost'):
+            self.error(412)  # Precondition Failed
+            self.response.out.write("contact not implemented yet")
+            return
         myprof = profile.authprof(self)
         if not myprof:
             return

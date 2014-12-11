@@ -24,5 +24,10 @@ indexes:
 
 - kind: WorkPeriod
   properties:
+  - name: opportunity
+  - name: visibility
+
+- kind: WorkPeriod
+  properties:
   - name: volunteer
   - name: visibility

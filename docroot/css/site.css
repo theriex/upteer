@@ -38,7 +38,6 @@ button, .loginbutton { cursor:pointer;
   border-radius:15px; border:2px solid #75e1dd; 
   background: radial-gradient(#e0fffa 75%, #a1f1c8); }
 
-
 /*
  ************************************************************
  * general class and id formatting
@@ -129,7 +128,6 @@ button, .loginbutton { cursor:pointer;
 #contactsubjverbdiv { padding:5px 0px 0px 0px; }
 #contactsubjoppdiv { padding:5px 10px; }
 
-
 /* kwentry widget settings */
 .selkwspan { display:inline-block; font-size:small; 
   padding:0px 4px 3px 3px;
@@ -155,4 +153,10 @@ button, .loginbutton { cursor:pointer;
 .kwplus { padding:0px; }
 .kwentrydiv { padding:0px 0px 0px 10px; width:160px; overflow:hidden; white-space:nowrap; }
 .kwkeywordsdiv { }
+
+/* supporting document content */
+.dcdiv { padding:0px 10px 10px 10px; }
+.dcdiv h2 { text-align: center; }
+.codediv { background: #fff; font-family: monospace; 
+  margin:0% 12% 0% 5%; padding:0px 10px; overflow:scroll; }
 

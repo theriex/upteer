@@ -150,7 +150,7 @@ app.org = (function () {
                                         orgref.org.name + "')")},
                            "x"]); }
             line.push(["span", {id: "orgname" + i, cla: "orgnamespan"},
-                       ["a", {href: "#",
+                       ["a", {href: "#view=org&orgid=" + jt.instId(orgref.org),
                               onclick: jt.fs("app.org.display(" + 
                                              jt.instId(orgref.org) + ")")},
                         orgref.org.name]]);

@@ -18,7 +18,7 @@ class Opportunity(db.Model):
     modified = db.StringProperty()          # ISO date
     accstart = db.StringProperty()          # ISO date of accounting start
     zipcode = db.StringProperty()           # up to 5 numbers
-    status = db.StringProperty()            # Inactive, Open, Completed
+    status = db.StringProperty()            # Inactive, Open, Closed
     description = db.TextProperty()         # General description
     # Both time and location may be "TBD" or "Flexible".  Time may be 
     # intervallic repeating or a start/end.  Hours may be specific or

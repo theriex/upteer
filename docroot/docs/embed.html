@@ -1,0 +1,112 @@
+<!doctype html>
+<html itemscope="itemscope" itemtype="https://schema.org/WebPage"
+      xmlns="https://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="robots" content="noodp" />
+  <meta name="description" content="How to use use upteer with your site." />
+  <title>Using Upteer with your website</title>
+  <link href="../css/site.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div class="dcdiv">
+
+<h2>Using Upteer with your website</h2>
+
+<p>This is a technical document that assumes you are familiar with
+HTML and CSS.  If that's not you, the short story is that any
+opportunities you list on Upteer can be easily displayed and
+interacted with on your own website. </p>
+
+
+<h4>Displaying your opportunities</h4>
+
+<p>After you have set up your organization on Upteer, you can also
+display your organization's opportunities on your own site.  To do
+that, simply add this HTML to your web page: </p>
+
+<div class="codediv"><pre>
+&lt;div class="upteerdisplay"&gt;&lt;/div&gt;
+&lt;script src="https://www.upteer.com/embed.js?orgid=12345"&gt;&lt;/script&gt;
+</pre></div>
+
+<p>Replace the <code>12345</code> in the example with the ID of your
+organization.  You can get your organization ID by "right clicking"
+the link to your organization from your profile.
+The <code>upteerdisplay</code> div can be anywhere you want the
+opportunities to be displayed, as long as it is before the script
+tag. </p>
+
+<p>For security purposes, the page embedding your Upteer opportunities
+must be on the same site as the page for your organization as listed
+on Upteer. </p>
+
+<p>That's it.  With those two lines, all opportunities you have listed
+on Upteer will be displayed on your site.  The rest of this document
+is additional options if you want them. </p>
+
+
+<h4>Automatic login for your users</h4>
+
+<p>If volunteers do not already sign in to your website, Upteer will
+handle sign in as needed and you can just skip this section.  If you
+have volunteers who sign in to your site, and you would like to
+automatically log them in to Upteer to interact with your
+opportunities there, add the following HTML to the web page you
+display for them: </p>
+
+<div class="codediv"><pre>
+&lt;div class="upteerUserEmail"&gt;name@example.com&lt;/div&gt;
+&lt;div class="upteerUserName"&gt;Profile Name&lt;/div&gt;
+&lt;div class="upteerUserPic"&gt;http://yoursite.org/pics/profpic.png&lt;/div&gt;
+</pre></div>
+
+<p>The first div is required.  The second two are optional, but Upteer
+may prompt the user to complete their profile if they are not
+available.  The divs can be anywhere on the page before the embed
+script.  If you don't want this information to show on the page, you
+can set the style of the divs to <code>display:none</code>.  Either
+way, only the person logged in will see their own information. </p>
+
+<p>When the user interacts with Upteer through your site, Upteer first
+checks to see if they have an Upteer account using their email
+address.  If no account is found, then Upteer creates a profile using
+the information provided and sets it to be accessible via your web
+site.  If the user has a profile accessible from your site, then they
+are automatically logged in and interact with the listed opportunities
+the same way as if they had logged into Upteer directly.  No need to
+log in a second time.  If the user already has a profile, but it is
+not yet accessible from your site, then they are prompted to add
+access permission for your site before continuing. </p>
+
+
+<h4>Making the opportunities display match your site</h4>
+
+<p>By default, the embedded opportunities display and supporting
+processing looks like it does on Upteer.  If you want to make it match
+the look and feel of your own site, you can override the default style
+for everything in the display by providing your own css file: </p>
+
+<div class="codediv"><pre>
+&lt;div class="upteerCSSOverride"&gt;http://yoursite.org/css/upteeroverrides.css&lt;/div&gt;
+</pre></div>
+
+<p>Upteer will include this css file last when it generates the
+content display, so you can override anything you see.  If there is
+something you want to change but can't, let us know. </p>
+
+
+
+</div> <!-- doccontentdiv -->
+
+<div id="returnlinkdiv" style="text-align:center; display:none;">
+  <a href="https://www.upteer.com">Return to Upteer</a>
+</div>
+
+<script>
+    if(window.location.href.indexOf("/docs/") > 0) {
+        document.getElementById('returnlinkdiv').style.display = "block"; }
+</script>
+</body>
+</html>
+  

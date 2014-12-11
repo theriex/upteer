@@ -416,6 +416,7 @@ return {
                       "Contact:"]],
                     ["td", {align: "left"},
                      ["div", {id: "contactlistdiv", cla: "refcsvdiv"}]]]],
+                  ["tr", ["td", {colspan: 2}, ["div", {id: "wpsdiv"}]]],
                   ["tr",
                    ["td", {colspan: 2},
                     ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"}]]]]]];
@@ -437,6 +438,7 @@ return {
         app.limitwidth("accdescdiv");
         initAccessKeywords();
         initSkillsKeywords();
+        app.contact.wpsOpportunityDisplay("wpsdiv", curropp);
         app.profile.displayProfileRefs(curropp.contact, 'contactlistdiv');
     },
 
