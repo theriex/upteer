@@ -46,6 +46,9 @@ app.contact = (function () {
                   verb: "Ignore", prog: "Ignoring"},
             alw: {name: "Allowing",
                   verb: "Allow", prog: "Allowing"} },
+        tracksel = [{noun: "Day", adj: "Daily", max: 8, ceiling: 24},
+                    {noun: "Week", adj: "Weekly", max: 20, ceiling: 120},
+                    {noun: "Month", adj: "Monthly", max: 80, ceiling: 350}],
         currwp = null,    //most recently accessed WorkPeriod
 
 
@@ -153,8 +156,24 @@ app.contact = (function () {
     },
 
 
+    trackselHTML = function (disptype, selval) {
+        var html = [], i;
+        selval = selval || "Week";
+        for(i = 0; i < tracksel.length; i += 1) {
+            html.push(
+                ["option", {id: tracksel[i].adj,
+                            selected: jt.toru((tracksel[i].noun === selval ||
+                                               tracksel[i].adj === selval),
+                                              "selected")},
+                 tracksel[i].noun]); }
+        html = ["select", {id: "tracksel"},
+                html];
+        return html;
+    },
+
+
     contactDialogHTML = function (codestr, entry, subj1, subj2) {
-        var html;
+        var html, hp = "", pp = "";
         html = [["div", {id: "contactdlgsubjdiv"},
                  [["div", {id: "contactsubjverbdiv"},
                    subj1],
@@ -163,6 +182,17 @@ app.contact = (function () {
                 emailReleaseCheckboxHTML(codestr),
                 ["div", {id: "contactdlgtxtdiv", cla: "bigtxtdiv"},
                  ["textarea", {id: "contactta", cla: "bigta"}]]];
+        if(codestr === "vol") {
+            hp = "Hours Requested"; pp = "per"; }
+        else if(codestr === "wrk") {
+            hp = "Hours Worked"; pp = "this"; }
+        if(hp) {
+            html.push(["div", {id: "contacthoursdiv"},
+                       [hp + ": ",
+                        ["input", {id: "hoursin", min: 1,
+                                   type: "number", style: "width:3em;"}],
+                        " " + pp + " ",
+                        trackselHTML("noun")]]); }
         return html;
     },
 
@@ -306,6 +336,35 @@ app.contact = (function () {
     },
 
 
+    checkSetContactDataVals = function (data, codestr) {
+        var retval = true, input, errborder = "medium solid red", ts = null;
+        input = jt.byId('contactta');
+        if(input) {
+            data.msgtxt = input.value || "";
+            if(codestr === "vol" && !data.msgtxt) {
+                input.style.border = errborder;
+                retval = false; } }
+        input = jt.byId('tracksel');
+        if(input) {
+            ts = tracksel[input.selectedIndex]
+            data.tracking = ts.adj; }
+        //hours may be zero if "No Show"
+        input = jt.byId('hoursin');
+        if(input) {
+            data.hours = input.value || 0;
+            if(!data.hours && data.status !== "No Show") {
+                input.style.border = errborder;
+                retval = false; }
+            if(data.hours && ts && data.hours > ts.max) {
+                retval = confirm("Are you sure you want to request more than " +
+                                 ts.max + " hours?") && retval; }
+            if(data.hours && ts && data.hours > ts.ceiling) {
+                input.value = ts.ceiling;
+                retval = false; } }
+        return retval;
+    },
+
+
     displayWorkPeriods = function (dispdiv, wps, mode) {
         var i, html = [];
         if(!wps || wps.length === 0) {
@@ -430,15 +489,14 @@ return {
 
 
     contactok: function (codestr) {
-        var msgtxt = "", data;
-        jt.out('dlgbdiv', codes[codestr].prog + "...");
-        if(jt.byId('contactdlgtxtdiv')) {
-            msgtxt = jt.byId('contactdlgtxtdiv').value || ""; }
+        var data;
         data = {code: codestr,
-                msgtxt: msgtxt,
                 profid: jt.instId(app.profile.getCurrentProfile()),
                 oppid: jt.instId(app.opp.getCurrentOpportunity()) || 0,
                 wpid: jt.instId(currwp) || 0};
+        if(!checkSetContactDataVals(data, codestr)) {
+            return; }
+        jt.out('dlgbdiv', codes[codestr].prog + "...");
         data = jt.objdata(data);
         jt.call('POST', "contact?" + app.login.authparams(), data,
                 function (results) {

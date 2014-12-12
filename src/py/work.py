@@ -22,37 +22,25 @@ import opportunity
 #
 # Work hours are filled out by the volunteer (with calc help) based on
 # the specified tracking interval, but they are subject to approval by
-# the volunteer coordinator.  At the longest, things are rectified
-# monthly (can't let things float for too long).  The coordinator has
-# up to 18 days to modify Done work, after that it is automatically
-# marked as Completed.  Completed work cannot be modified.
+# the coordinator.  At the longest, things are rectified monthly
+# (can't let things float for too long).  The coordinator has up to 18
+# days to modify Done work, after that it is automatically marked as
+# Completed.  Completed work cannot be modified.
 # status:
 #   Inquiring (vol): Set on inquiry, 0 hrs
 #   Responded (coord): Optionally set on initial response
 #   Withdrawn (vol): Offer didn't work out, 0 hrs
+#   Canceled (coord): Opportunity didn't work out, 0 hrs
 #   Volunteering (vol): Start date set, hours filled in
 #   Done (vol): Completed but not approved yet.
-#   Canceled (coord): Opportunity didn't work out, 0 hrs
 #   No Show (coord): 0 hrs
 #   Partial (coord): Complete but total hours reduced by coordinator
 #   Modified (coord): Total hours corrected upwards by coordinator
 #   Completed (coord/site): Satisfactory completion, hours as specified
-# The oppname and volname fields are set when the WorkPeriod is
-# initially created, and they are updated if the corresponding
-# Opportunity or Profile name is changed while the WorkPeriod is still
-# open (status inquiring or volunteering).
 #
-# The volnotes field provides the volunteer a place to put things they
-# want to remember relative to the work (e.g. date of timesheet filled
-# out, bring water bottle, where to meet etc).  The volshout field
-# provides the volunteer an optional public place to describe what was
-# rewarding about the work, with the intent of helping to guide
-# others.  The coordnotes field provides the coordinator a place to
-# put things they want to remember relative to the volunteer
-# (e.g. people you know in common, family constraints, work style
-# etc).  The coordshout field allows the coordinator to optionally
-# publicly laud or express gratitude for the volunteer.  Shouts are
-# stored with the work because they are relative in time.
+# The oppname and volname fields are set when the WorkPeriod is
+# initially created.  They are not updated if the Opportunity or
+# Profile name changes after the work is completed.
 #
 
 class WorkPeriod(db.Model):
@@ -181,6 +169,14 @@ def verify_work_period(handler, myprof, opp, wpid):
         return
 
 
+def read_general_wp_values(handler, wp):
+    wp.tracking = handler.request.get("tracking")
+    wp.start = handler.request.get('start')
+    wp.end = handler.request.get('end')
+    if handler.request.get('hours'):
+        wp.hours = intz(handler.request.get('hours'))
+
+
 def contact_volunteer_inquiry(handler, myprof, prof, msgtxt, oppid):
     # Preventing creation of a second inquiry is only checked
     # client-side for now.
@@ -191,6 +187,7 @@ def contact_volunteer_inquiry(handler, myprof, prof, msgtxt, oppid):
     tstamp = nowISO()
     wp = WorkPeriod(volunteer=myprof.key().id(), opportunity=oppid,
                     tracking="Weekly")
+    read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.status = "Inquiring"
     wp.visibility = 2
