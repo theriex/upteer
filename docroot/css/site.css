@@ -28,7 +28,7 @@ body {
   background-attachment: fixed;
   background-color: #feffdd;  /* plumeria yellow */
   /* background: linear-gradient(#fff690, #d9edf8);  plumeria */
-  background: linear-gradient(#d9edf8 60%, #0096ec);  /* ??? */
+  background: linear-gradient(#d9edf8 60%, #0096ec);  /* snorkeling */
 }
 
 img { border:0px; }
@@ -124,9 +124,15 @@ button, .loginbutton { cursor:pointer;
 .matchlinelogo { max-height:20px; max-width:50px; vertical-align:middle; 
   margin:0px auto; }
 
+
 /* contact settings */
 #contactsubjverbdiv { padding:5px 0px 0px 0px; }
 #contactsubjoppdiv { padding:5px 10px; }
+.cbentrydiv { border:1px solid #ccc; border-radius:3px; }
+.cbentrydetaildiv { background-color: #fff; margin:3px 10px; padding: 5px; }
+.cbcontactslab, .cbentrycommlinkspan { font-size: small; }
+.cbdet3div { margin:3px 10px; padding:0px 5px; border-left: medium solid #999;
+  background-color: #eee; }
 
 /* kwentry widget settings */
 .selkwspan { display:inline-block; font-size:small; 

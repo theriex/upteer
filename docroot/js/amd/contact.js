@@ -62,7 +62,10 @@ app.contact = (function () {
         if(!me.book) {
             me.book = []; }
         book = me.book;
-        profid = jt.instId(them);
+        if(typeof them === "string") {
+            profid = them; }
+        else {
+            profid = jt.instId(them); }
         for(i = 0; i < book.length; i += 1) {
             if(book[i][1] === profid) {
                 return book[i]; } }
@@ -305,10 +308,11 @@ app.contact = (function () {
     wpEditFieldHTML = function (wp, mode, field) {
         var html = wp[field];
         if(mode === "myprof" || mode === "coord") {
-            html = ["a", {href: "#changestatus",
-                          onclick: jt.fs("app.contact.wpedit('" +
-                                         jt.instId(wp) + "')")},
-                    html]; }
+            html = [["a", {href: "#changestatus",
+                           onclick: jt.fs("app.contact.wpedit('" +
+                                          jt.instId(wp) + "')")},
+                     html],
+                    " "]; }
         return html;
     },
 
@@ -327,11 +331,12 @@ app.contact = (function () {
                     wp.oppname]; }
         html = ["div", {cla: "wpdescline"},
                 [["span", {cla: "wpnamelink"}, namelink],
-                 " ",
-                 ["span", {cla: "wpstatus"}, 
+                 ["span", {cla: "wpstatlab"}, " status: "],
+                 ["span", {cla: "wpstatus"},
                   wpEditFieldHTML(wp, mode, "status")],
-                 ["span", {cla: "wphours"}, 
-                  wpEditFieldHTML(wp, mode, "hours")]]];
+                 ["span", {cla: "wphours"},
+                  wpEditFieldHTML(wp, mode, "hours")],
+                 ["span", {cla: "wpstatunits"}, " hrs"]]];
         return html;
     },
 
@@ -346,7 +351,7 @@ app.contact = (function () {
                 retval = false; } }
         input = jt.byId('tracksel');
         if(input) {
-            ts = tracksel[input.selectedIndex]
+            ts = tracksel[input.selectedIndex];
             data.tracking = ts.adj; }
         //hours may be zero if "No Show"
         input = jt.byId('hoursin');
@@ -356,8 +361,9 @@ app.contact = (function () {
                 input.style.border = errborder;
                 retval = false; }
             if(data.hours && ts && data.hours > ts.max) {
-                retval = confirm("Are you sure you want to request more than " +
-                                 ts.max + " hours?") && retval; }
+                retval = window.confirm(
+                    "Are you sure you want to request more than " +
+                        ts.max + " hours?") && retval; }
             if(data.hours && ts && data.hours > ts.ceiling) {
                 input.value = ts.ceiling;
                 retval = false; } }
@@ -377,8 +383,62 @@ app.contact = (function () {
                 ["div", {id: "wpslistdiv", cla: "orglistdiv"},
                  html]];
         jt.out(dispdiv, jt.tac2html(html));
-    };
+    },
 
+
+    bookEntryCommLinksHTML = function (profid, comms) {
+        var html = [], i, comm;
+        for(i = 0; i < comms.length; i += 1) {
+            comm = comms[i];
+            if(i > 0) {
+                html.push(", "); }
+            html.push(["a", {href: "#" + comm[1] + comm[0],
+                             onclick: jt.fs("app.contact.togglebookdet('" + 
+                                            profid + "'," + i + ")")},
+                       ["span", {cla: "cbentrycommlinkspan"},
+                        comm[1]]]); }
+        return html;
+    },
+
+
+    bookEntryDispHTML = function (entry) {
+        var html, em = "", profid = entry[1];
+        if(entry[2]) {
+            em = ["a", {href: "mailto:" + entry[2]},
+                  ["img", {cla: "cbemlinkimg", src: "img/email.png"}]]; }
+        html = ["div", {cla: "cbentrydiv"},
+                [["div", {cla: "cbentrysummarydiv"},
+                  [["a", {href: "#view=prof&&profid=" + profid,
+                          onclick: jt.fs("app.contact.bookjump('prof','" +
+                                         profid + "')")},
+                    entry[0]], //name
+                   " ", em, " ",
+                   ["span", {cla: "cbcontactslab"}, "contact: "],
+                   bookEntryCommLinksHTML(profid, entry[3])]],
+                   //ATTENTION: notes link after last comm (disp/edit)
+                 ["div", {cla: "cbentrydetaildiv", id: "cbed" + profid,
+                          style: "display:none;" }, "nothin here"]]];
+        return html;
+    },
+
+
+    commOppWorkLineHTML = function (comm) {
+        var html = [];
+        if(comm.length > 3 && comm[3]) { //oppname
+            html.push(["span", {cla: "cbdopp"},
+                       ["a", {href: "#view=opp&oppid=" + comm[4],
+                              onclick: jt.fs("app.contact.bookjump('opp','" +
+                                             comm[4] + "')")},
+                        comm[3]]]);
+            if(comm.length >= 6 && comm[5]) { //wpid
+                html.push(" - ");
+                html.push(["span", {cla: "cbdwp"},
+                           ["a", {href: "#view=wp&wpid=" + comm[5],
+                                  onclick: jt.fs("app.contact.wpedit('" +
+                                                 comm[5] + "')")},
+                            "tracking"]]); } }
+        return html;
+    };
 
 
     ////////////////////////////////////////
@@ -461,12 +521,18 @@ return {
 
 
     getActionButtons: function (me, them) {
-        var context, buttons = [];
-        buttons.push(
-            ["button", {type: "button", id: "addtobookb",
-                        disabled: jt.toru(findEntry(them), "disabled"),
-                        onclick: jt.fs("app.contact.condlg('a2b')")},
-             "Add To Contact Book"]);
+        var entry, context, buttons = [];
+        entry = findEntry(them);
+        if(entry) {
+            buttons.push(
+                ["button", {type: "button", id: "showbookb",
+                            onclick: jt.fs("app.contact.showbook()")},
+                 "Contact Book"]); }
+        else {
+            buttons.push(
+                ["button", {type: "button", id: "addtobookb",
+                            onclick: jt.fs("app.contact.condlg('a2b')")},
+                 "Add To Contact Book"]); }
         context = contextForContact();
         if(context && context.button) {
             buttons.push(
@@ -511,6 +577,54 @@ return {
                     jt.out('dlgbdiv', "Call failed " + code +
                            ": " + errtxt); }),
                 jt.semaphore("contact.contactok"));
+    },
+
+
+    showbook: function () {
+        //ATTENTION: scroll the book display to the current profile 
+        var book, html = [], i;
+        book = app.profile.getMyProfile().book || [];
+        for(i = 0; i < book.length; i += 1) {
+            html.push(bookEntryDispHTML(book[i])); }
+        if(html.length === 0) {
+            html.push("No contacts yet"); }
+        html = ["div", {id: "contactbookdiv"},
+                html];
+        html = app.layout.dlgwrapHTML("Contact Book", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html));
+    },
+
+
+    bookjump: function (type, id) {
+        app.layout.closeDialog();
+        switch(type) {
+        case "prof": return app.profile.byprofid(id);
+        case "opp": return app.opp.byoppid(id); }
+    },
+
+
+    togglebookdet: function (profid, index) {
+        var entry, comm, div, html;
+        entry = findEntry(profid);
+        comm = entry[3][index];
+        div = jt.byId("cbed" + profid);
+        if(div.style.display === "block") {
+            div.style.display = "none"; }
+        else {
+            html = [["div", {cla: "cbdet1div"},
+                     [["span", {cla: "cbdtstamp"}, 
+                       jt.colloquialDate(comm[0])], " - ",
+                      ["span", {cla: "cbdcode"}, 
+                       comm[1] + " "],
+                      ["span", {cla: "cbdname"}, 
+                       "(" + codes[comm[1]].name + ")"]]],
+                    ["div", {cla: "cbdet2div"},
+                     commOppWorkLineHTML(comm)],
+                    ["div", {cla: "cbdet3div"},
+                     ["div", {cla: "bigtxtdiv"},
+                      jt.linkify(jt.dec(comm[2]))]]];
+            jt.out("cbed" + profid, jt.tac2html(html));
+            div.style.display = "block"; }
     }
 
 

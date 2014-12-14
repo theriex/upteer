@@ -69,6 +69,7 @@ return {
         app.layout.closeDialog();
         switch(menuitem) {
         case 'myprof': return app.profile.display();
+        case 'book': return app.contact.showbook();
         case 'logout': 
             jt.out('noticemenudiv', "");
             jt.out('mainmenudiv', "");
@@ -83,6 +84,10 @@ return {
                  ["a", {href: "#MyProfile",
                         onclick: jt.fs("app.menu.select('myprof')")},
                   "My Profile"]],
+                ["div", {id: "cbmenudiv", cla: "menuitemdiv"},
+                 ["a", {href: "#ContactBook",
+                        onclick: jt.fs("app.menu.select('book')")},
+                  "Contacts"]],
                 ["div", {id: "signoutmenudiv", cla: "menuitemdiv"},
                  ["a", {href: "#SignOut",
                         onclick: jt.fs("app.menu.select('logout')")},
