@@ -141,8 +141,7 @@ return {
     rebuildNotices: function () {
         notices = [];
         app.org.checkForNotices();
-        //ATTENTION: Check for contact requests, volunteering status
-        //updates, site announcements
+        app.contact.checkForNotices();
         app.menu.display();
     },
 

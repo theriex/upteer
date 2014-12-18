@@ -15,37 +15,149 @@ app.contact = (function () {
 
     var //The contact book (profile.book field) is an array of contacts:
         //       [name, profid, email, comms, notes] 
-        //The comms field is an array of communication entries:
+        //If the notes field contains **blocked** then no comms make
+        //it through.  Implement when needed.  The comms field is an
+        //array of communication entries:
         //       [tstamp, code, msgtxt, oppname, oppid, wpid]
         //sorted with the most recent entry first.  The opportunity
-        //and work period refs are defined as needed.  Older entries
+        //and work period refs are defined if needed.  Older entries
         //roll off as they are replaced with newer ones, see work.py
-        //for retentions.  The oppname is redundant and could even be
-        //out of date, but it is stored for ease of display.
-        codes = { 
-            vol: {name: "Volunteering Inquiry", emrel: true,
-                  verb: "Contact", prog: "Contacting"},
-            vli: {name: "Inquired"},        //coordinator book
-            wrk: {name: "Work Completion",  //have email already
-                  verb: "Contact", prog: "Contacting"},
-            wrd: {name: "Completed Work"},  //coordinator book
-            cov: {name: "Co-Volunteer"},
-            a2b: {name: "Contact Book Add",
-                  verb: "Add", prog: "Adding"},
-            b2a: {name: "Contact Note"},
-            sha: {name: "Opportunity Share", emrel: true,
-                  verb: "Contact", prog: "Contacting"},
-            shr: {name: "Received Opportunity"},  //receiver book
-            ema: {name: "Contact Info Request", emrel: true,
-                  verb: "Request", prog: "Requesting"},
-            emc: {name: "Contact Info Receipt"},  //receiver book
-            emr: {name: "Contact Info Release", emrel: true,
-                  verb: "Send", prog: "Sending"},
-            emd: {name: "Contact Info Delivery"}, //receiver book
-            ign: {name: "Ignoring",
-                  verb: "Ignore", prog: "Ignoring"},
-            alw: {name: "Allowing",
-                  verb: "Allow", prog: "Allowing"} },
+        //for retentions.  The oppname is redundant and could even
+        //drift out of date, but it is stored for ease of display.
+        commstates = {
+            vinq: { //volunteer inquiring about volunteering
+                title: "Volunteering Inquiry",
+                dlg: {
+                    subj1: "Inquiring about volunteering for",
+                    subj2: "$OPPNAME",
+                    txtpl: "What motivations and strengths will help you" +
+                        " contribute positively to $OPPNAME?",
+                    hours: "Requested" },
+                actions: [
+                    { verb: "Contact", prog: "Contacting", emrel: true,
+                      actname: "Volunteering Inquiry",
+                      mycomm: { code: "mvi", next: "vwork", txtreq: true },
+                      theircomm: { code: "tvi", next: "inqresp" } }] },
+            vwork: { //volunteer is withdrawing offer or updating work def
+                title: "Work Update",
+                dlg: {
+                    exp1: "Your volunteering work description",
+                    hours: "Ongoing",
+                    start: "Entry" },
+                actions: [
+                    { verb: "Withdraw", prog: "Withdrawing",
+                      actname: "Withdrawn Inquiry",
+                      mycomm: { code: "mvw", next: "" },
+                      theircomm: { code: "tvw", next: "" } },
+                    { verb: "Update", prog: "Updating",
+                      actname: "Work Update",
+                      mycomm: { code: "mwu", next: ""},
+                      theircomm: null },
+                    { verb: "Complete", prog: "Completing",
+                      actname: "Work Completed",
+                      mycomm: { code: "mwd", next: "" },
+                      theircomm: { code: "twd", next: "wrkconf" } }] },
+            inqresp: { //coordinator responding to a volunteering inquiry
+                title: "Inquiry Response",
+                dlg: {
+                    subj1: "$OPPNAME",
+                    txtpl: "What should the volunteer do next?",
+                    hours: "Requested",
+                    start: "Entry" },
+                actions: [
+                    { verb: "Reject", prog: "Rejecting", 
+                      actname: "Inquiry Refused",
+                      mycomm: { code: "mvf", next: "" },
+                      theircomm: { code: "tvf", next: "vwork" } },
+                    { verb: "Respond", prog: "Responding", emrel: true,
+                      actname: "Inquiry Response",
+                      mycomm: { code: "mvy", next: "", txtreq: true },
+                      theircomm: { code: "tvy", next: "vwork" } }] },
+            wrkconf: { //coordinator is confirming completed work
+                title: "Work Completion",
+                dlg: {
+                    subj1: "Work done for $OPPNAME",
+                    txtpl: "Any feedback you want to share with $THEM" +
+                        " about the work they did?",
+                    hours: "Worked",
+                    start: "Entry" },
+                actions: [  //wp status is figured from hours...
+                    { verb: "Confirm", prog: "Confirming",
+                      actname: "Work Completion",
+                      mycomm: { code: "mwc", next: "wrkconf" },
+                      theircomm: { code: "twc", next: "opprev", 
+                                   delay: 7, noprompt: 32 } 
+                    }] },
+            opprev: { //volunteer is reviewing opportunity
+                title: "Opportunity Review",
+                dlg: {
+                    exp1: "Share your experience",
+                    txtpl: "How did this volunteering work enrich you?" +
+                        " What was the impact? Your words may help other" +
+                        " volunteers and groups reading about the work." },
+                actions: [
+                    { verb: "Publish", prog: "Publishing",
+                      actname: "Opportunity Review",
+                      mycomm: { code: "mor", next: "opprev", txtreq: true },
+                      theircomm: { code: "tor", next: "volrev", 
+                                   delay: 7, noprompt: 40 } 
+                    }] },
+            volrev: { //coordinator is reviewing volunteer's contribution
+                title: "Volunteer Contribution Review",
+                dlg: {
+                    exp1: "Recommend $THEM",
+                    txtpl: "What do you want to tell the community about" +
+                        " how this volunteer helped your organization?" },
+                actions: [
+                    { verb: "Publish", prog: "Publishing",
+                      actname: "Volunteer Review",
+                      mycomm: { code: "mvr", next: "volrev", txtreq: true },
+                      theircomm: { code: "tvr", next: "" } }] },
+            oppshare: { //coordinator or friend sharing an opportunity
+                title: "Opportunity Share",
+                dlg: {
+                    subj1: "Interested in volunteering for",
+                    subj2: "$OPPNAME",
+                    txtpl: "Why is $OPPNAME a great match?" },
+                actions: [
+                    { verb: "Contact", prog: "Contacting", emrel: true,
+                      actname: "Opportunity Share",
+                      mycomm: { code: "msh", next: "", txtreq: true },
+                      theircomm: { code: "tsh", next: "" } }] },
+            bookadd: { //anyone adding anyone else to their contact book
+                title: "Contact Book Add",
+                dlg: {
+                    exp1: "Add $THEM to your contact book",
+                    exp2: "$THEM must add you back to request email." },
+                actions: [
+                    { verb: "Add To Contact Book", prog: "Adding",
+                      actname: "Contact Book Add",
+                      mycomm: { code: "mab", next: "" },
+                      theircomm: { code: "tab", next: "" } }] },
+            emreq: { //mutual contact or co-worker requesting email address
+                title: "Contact Information Request",
+                dlg: {
+                    subj1: "Requesting email address",
+                    txtpl: "Why are you requesting their email?" },
+                actions: [
+                    { verb: "Request", prog: "Requesting", emrel: true,
+                      actname: "Contact Info Request",
+                      mycomm: { code: "mci", next: "", txtreq: true },
+                      theircomm: { code: "tci", next: "emresp" } }] },
+            emresp: { //responding to an email request
+                title: "Contact Information Response",
+                dlg: {
+                    subj1: "Response for email address request from",
+                    subj2: "$THEM" },
+                actions: [
+                    { verb: "Ignore", prog: "Ignoring",
+                      actname: "Contact Info Ignore",
+                      mycomm: { code: "mcg", next: "" },
+                      theircomm: null },
+                    { verb: "Release", prog: "Releasing", emrel: true,
+                      actname: "Contact Info Response",
+                      mycomm: { code: "mcr", next: "" },
+                      theircomm: { code: "tcr", next: ""} }] } },
         tracksel = [{noun: "Day", adj: "Daily", max: 8, ceiling: 24},
                     {noun: "Week", adj: "Weekly", max: 20, ceiling: 120},
                     {noun: "Month", adj: "Monthly", max: 80, ceiling: 350}],
@@ -89,11 +201,12 @@ app.contact = (function () {
 
 
     isFriend = function (them) {
-        //mutually listed in contact books, or co-volunteers
-        //logic is equivalent to is_friend in work.py
+        //mutually listed in contact books, or co-volunteers.  The "cov"
+        //comms entry is added automatically by server processing.  The
+        //logic here is equivalent to is_friend in work.py
         var entry = findEntry(them);
-        if(entry && ((mostRecentComm(entry, "a2b") && 
-                      mostRecentComm(entry, "b2a")) ||
+        if(entry && ((mostRecentComm(entry, "mab") && 
+                      mostRecentComm(entry, "tab")) ||
                      mostRecentComm(entry, "cov"))) {
             return true; }
         return false;
@@ -123,38 +236,34 @@ app.contact = (function () {
         opp = app.opp.getCurrentOpportunity();
         //They are the coordinator for the last viewed opportunity.
         if(opp && opp.contact.csvcontains(jt.instId(them)) && !inquiring(opp)) {
-            return { code: "vol", button: codes.vol.name }; }
+            return { name: "vinq", button: "Ask To Volunteer" }; }
         //You are searching for volunteers, or passing an opportunity
         //along to a friend:
         if(opp && (opp.contact.csvcontains(jt.instId(me)) || 
                    isFriend(them))) {
-            return { code: "sha", button: codes.sha.name }; }
+            return { name: "oppshare", button: "Share Opportunity" }; }
         //You are friends and you are requesting contact info
         if(isFriend(them) && !haveContactInfo(them)) {
-            return { code: "ema", button: codes.sha.name }; }
+            return { name: "emreq", button: "Request Email Address" }; }
         //No context to contact them.
         return {};
     },
 
 
-    oppName = function () {
-        var opp, org;
-        opp = app.opp.getCurrentOpportunity();
-        org = app.lcs.getRef("org", opp.organization).org;
-        return org.name + " " + opp.name;
-    },
-
-
-    emailReleaseCheckboxHTML = function (codestr) {
-        var them, html = "";
-        if(codes[codestr].emrel) {
-            them = app.profile.getCurrentProfile();
+    emailReleaseCheckboxHTML = function (csname, entry, commobj) {
+        var cs, emrel = false, i, html = "";
+        cs = commstates[csname];
+        for(i = 0; i < cs.actions.length; i += 1) {
+            if(cs.actions[i].emrel) {
+                emrel = true;
+                break; } }
+        if(emrel) {
             html = [["input", {type: "checkbox", name: "emcb", id: "emcb",
                                cla: "contactcb", value: "releaseMyEmail",
                                checked: "checked", 
                                onchange: jt.fs("app.contact.emcbchg()")}],
                     ["label", {fo: "releaseMyEmail", id: "emcblabel"},
-                     "Give " + them.name + " my email address"]]; }
+                     "Give " + entry[0] + " my email address"]]; }
         return html;
     },
 
@@ -175,111 +284,76 @@ app.contact = (function () {
     },
 
 
-    contactDialogHTML = function (codestr, entry, subj1, subj2) {
-        var html, hp = "", pp = "";
-        html = [["div", {id: "contactdlgsubjdiv"},
-                 [["div", {id: "contactsubjverbdiv"},
-                   subj1],
-                  ["div", {id: "contactsubjoppdiv"},
-                   subj2]]],
-                emailReleaseCheckboxHTML(codestr),
-                ["div", {id: "contactdlgtxtdiv", cla: "bigtxtdiv"},
-                 ["textarea", {id: "contactta", cla: "bigta"}]]];
-        if(codestr === "vol") {
-            hp = "Hours Requested"; pp = "per"; }
-        else if(codestr === "wrk") {
-            hp = "Hours Worked"; pp = "this"; }
-        if(hp) {
-            html.push(["div", {id: "contacthoursdiv"},
-                       [hp + ": ",
+    contactDialogActionButtonsHTML = function (cs) {
+        var html = [], i, bid, codestr;
+        html.push(["button", {type: "button", id: "contactcancelb",
+                              onclick: jt.fs("app.layout.closeDialog()")},
+                   "Cancel"]);
+        for(i = 0; i < cs.actions.length; i += 1) {
+            bid = jt.canonize(cs.actions[i].verb);
+            if(i === cs.actions.length - 1) {
+                bid = "dlgdefaultbutton"; } 
+            codestr = cs.actions[i].mycomm.code;
+            html.push(["button", {type: "button", id: bid,
+                                  onclick: jt.fs("app.contact.contactok('" +
+                                                 codestr + "')")},
+                       cs.actions[i].verb]); }
+        return html;
+    },
+
+
+    replaceDollarRefs = function (text, entry, commobj) {
+        var opp, org;
+        text = text.replace("$THEM", entry[0]);
+        if(text.indexOf("$OPPNAME") >= 0) {
+            //the refs were faulted in when the dialog was displayed
+            opp = app.lcs.getRef("opp", commobj.oppid).opp;
+            org = app.lcs.getRef("org", opp.organization).org;
+            text = text.replace("$OPPNAME", org.name + " " + opp.name); }
+        return text;
+    },
+
+
+    displayContactDialog = function (csname, entry, commobj) {
+        var html = [], cs;
+        cs = commstates[csname];
+        if(cs.dlg.exp1) {
+            html.push(["div", {id: "condlgexp1div"}, 
+                       replaceDollarRefs(cs.dlg.exp1, entry, commobj)]); }
+        if(cs.dlg.exp2) {
+            html.push(["div", {id: "condlgexp2div"}, 
+                       replaceDollarRefs(cs.dlg.exp2, entry, commobj)]); }
+        if(cs.dlg.subj1) {
+            html.push(["div", {id: "condlgsubj1div"}, 
+                       replaceDollarRefs(cs.dlg.subj1, entry, commobj)]); }
+        if(cs.dlg.subj2) {
+            html.push(["div", {id: "condlgsubj2div"}, 
+                       replaceDollarRefs(cs.dlg.subj2, entry, commobj)]); }
+        html.push(emailReleaseCheckboxHTML(csname, entry, commobj));
+        if(cs.dlg.txtpl) {
+            html.push(["div", {id: "condlgtxtdiv", cla: "bigtxtdiv"},
+                       ["textarea", {id: "condlgta", cla: "bigta"}]]); }
+        if(cs.dlg.start) {
+            html.push(["div", {id: "condlgstartdiv"},
+                       ["input", {id: "startin", type: "date"}]]); }
+        if(cs.dlg.hours) {
+            html.push(["div", {id: "condlghoursdiv"},
+                       [(cs.dlg.hours === "Requested" ? "Requesting " : ""),
                         ["input", {id: "hoursin", min: 1,
                                    type: "number", style: "width:3em;"}],
-                        " " + pp + " ",
+                        " hours per ",
                         trackselHTML("noun")]]); }
-        return html;
-    },
-
-
-    addToContactBookDlgHTML = function (entry) {
-        var html;
-        html = [["p", "Adding " + entry[0] + " to your contact book."],
-                ["p", "To request contact details, " + entry[0] + 
-                 " must add you to their contact book, or you have " +
-                 "volunteered together."]];
-        return html;
-    },
-
-
-    contactInfoRequestDlgHTML = function (entry) {
-        var html;
-        html = [["div", {id: "contactdlgsubjdiv"},
-                 [["div", {id: "contactsubjverbdiv"},
-                   "Requesting your email address"],
-                  ["div", {id: "contactsubjoppdiv"},
-                   ""]]],
-                emailReleaseCheckboxHTML("ema"),
-                ["div", {id: "contactdlgtxtdiv", cla: "bigtxtdiv"},
-                 ["textarea", {id: "contactta", cla: "bigta"}]]];
-        return html;
-    },
-
-
-    ignoreAllCommsDlgHTML = function (entry) {
-        var html;
-        html = [["p", "Are you sure you want to ignore all contact from  " + 
-                 entry[0] + "?"],
-                ["p", entry[0] + " will not see that you have elected to permanently ignore all communications from them."]];
-        return html;
-    },
-
-
-    displayContactDialog = function (codestr, entry) {
-        var placeholder = "", html;
-        switch(codestr) {
-        case "vol": 
-            placeholder = "What motivations and strengths will help you contribute positively to " + oppName() + "?";
-            html = contactDialogHTML(
-                codestr, entry, "Inquiring about volunteering for", oppName());
-            break;
-        case "wrk": 
-            placeholder = "Any feedback you want to share with " + entry[0] + " about the work you did?";
-            html = contactDialogHTML(
-                codestr, entry, "Volunteer work completed for", oppName());
-            break;
-        //case "cov": server side update only
-        case "a2b":
-            html = addToContactBookDlgHTML(entry);
-            break;
-        //case b2a: server side update only
-        case "sha": 
-            placeholder = "Why is " + entry[0] + " a great match?";
-            html = contactDialogHTML(
-                codestr, entry, "Interested in volunteering for", oppName());
-            break;
-        case "ema": 
-            placeholder = "Why are you requesting their email?";
-            html = contactInfoRequestDlgHTML(entry);
-            break;
-        case "ign": 
-            html = ignoreAllCommsDlgHTML(entry);
-            break; }
-        html = ["div", {id: "contactdlgcontentdiv"},
+        html = ["div", {id: "condlgcontentdiv"},
                 [html,
-                 ["div", {cla: "formbuttonsdiv", id: "dlgbdiv"},
-                  [["button", {type: "button", id: "contactcancel",
-                               onclick: jt.fs("app.layout.closeDialog()")},
-                    "Cancel"],
-                   ["button", {type: "button", id: "contactokb",
-                               onclick: jt.fs("app.contact.contactok('" +
-                                              codestr + "')")},
-                    codes[codestr].verb]]]]];
-        html = app.layout.dlgwrapHTML(codes[codestr].verb + " " + entry[0], 
-                                      html);
+                 ["div", {id: "dlgerrmsgdiv"}],
+                 ["div", {id: "dlgbdiv", cla: "formbuttonsdiv"},
+                  contactDialogActionButtonsHTML(cs)]]];
+        html = app.layout.dlgwrapHTML(cs.title, html);
         app.layout.openDialog({y:90}, jt.tac2html(html), null,
                               function () {
-                                  jt.byId('contactokb').focus(); });
-        if(jt.byId('contactta')) {
-            app.initTextArea("contactta", "", placeholder); }
+                                  jt.byId('dlgdefaultbutton').focus(); });
+        if(jt.byId('condlgta')) {
+            app.initTextArea("condlgta", "", cs.dlg.txtpl); }
     },
 
 
@@ -341,14 +415,43 @@ app.contact = (function () {
     },
 
 
+    actionForCode = function (code) {
+        var name, actions, i;
+        for(name in commstates) {
+            if(commstates.hasOwnProperty(name)) {
+                actions = commstates[name].actions;
+                for(i = 0; i < actions.length; i += 1) {
+                    if(actions[i].mycomm && 
+                       actions[i].mycomm.code === code) {
+                        return actions[i]; }
+                    if(actions[i].theircomm &&
+                       actions[i].theircomm.code === code) {
+                        return actions[i]; } } } }
+        return null;
+    },
+
+
+    codeDefinition = function (code) {
+        var action;
+        action = actionForCode(code);
+        if(action) {
+            if(action.mycomm.code === code) {
+                return action.mycomm; }
+            if(action.theircomm.code === code) {
+                return action.theircomm; } }
+        return null;
+    },
+
+
     checkSetContactDataVals = function (data, codestr) {
-        var retval = true, input, errborder = "medium solid red", ts = null;
-        input = jt.byId('contactta');
-        if(input) {
-            data.msgtxt = input.value || "";
-            if(codestr === "vol" && !data.msgtxt) {
-                input.style.border = errborder;
-                retval = false; } }
+        var retval = true, cdef, input, ts = null,
+            errborder = "medium solid red";
+        cdef = codeDefinition(codestr);
+        //verify text area content
+        input = jt.byId('condlgta');
+        if(input && cdef.txtreq && !input.value) {
+            input.style.border = errborder;
+            retval = false; }
         input = jt.byId('tracksel');
         if(input) {
             ts = tracksel[input.selectedIndex];
@@ -367,6 +470,10 @@ app.contact = (function () {
             if(data.hours && ts && data.hours > ts.ceiling) {
                 input.value = ts.ceiling;
                 retval = false; } }
+        //start date may or may not be provided
+        input = jt.byId('startin');
+        if(input) {
+            data.start = new Date(input.value).toISOString(); }
         return retval;
     },
 
@@ -438,6 +545,52 @@ app.contact = (function () {
                                                  comm[5] + "')")},
                             "tracking"]]); } }
         return html;
+    },
+
+
+    entryObject = function (entry) {
+        var obj = { name: "", profid: "", email: "", comms: [], notes: "" };
+        if(entry) {
+            obj.name = entry[0];
+            obj.profid = entry[1];
+            if(entry.length >= 3) {
+                obj.email = entry[2]; }
+            if(entry.length >= 4) {
+                obj.comms = entry[3]; }
+            if(entry.length >= 5) {
+                obj.notes = entry[4]; } }
+        return obj;
+    },
+
+
+    commObject = function (comm) {
+        var obj = { tstamp: "1970-01-01T00:00:00Z", code: "", msgtxt: "",
+                    oppname: "", oppid: "", wpid: "" };
+        if(comm) {
+            obj.tstamp = comm[0];
+            obj.code = comm[1];
+            if(comm.length >= 3) {
+                obj.msgtxt = comm[2] || ""; }
+            if(comm.length >= 5) {
+                obj.oppname = comm[3] || "";
+                obj.oppid = comm[4] || ""; }
+            if(comm.length >= 6) {
+                obj.wpid = comm[5]; } }
+        return obj;
+    },
+
+
+    actedOn = function (commstatename, commobj, comms, index) {
+        var commstate, i, action, j;
+        commstate = commstates[commstatename];
+        for(i = 0; i < commstate.actions.length; i += 1) {
+            action = commstate.actions[i];
+            for(j = index - 1; j >= 0; j -= 1) {
+                if(action.mycomm && action.mycomm.next === comms[j]) {
+                    return true; }
+                if(action.theircomm && action.theircomm.next === comms[j]) {
+                    return true; } } }
+        return false;
     };
 
 
@@ -501,14 +654,23 @@ return {
     },
 
 
-    condlg: function (code) {
-        var me, them, book, profid, entry = null, i;
+    condlg: function (csname, profid, commindex) {
+        var me, book, them, entry = null, i, commobj = null, 
+            oppref = null, orgid = "", orgref = null;
+        //verify book entry, faulting in profile if needed
         me = app.profile.getMyProfile();
-        them = app.profile.getCurrentProfile();
         if(!me.book) {
             me.book = []; }
         book = me.book;
-        profid = jt.instId(them);
+        if(!profid) {
+            them = app.profile.getCurrentProfile();
+            profid = jt.instId(them); }
+        else {
+            them = app.lcs.getRef("prof", profid);
+            if(them.status === "not cached") {
+                return app.lcs.getFull("prof", profid, function (profref) {
+                    app.contact.condlg(csname, profid, commindex); }); }
+            them = them.prof; }
         for(i = 0; i < book.length; i += 1) {
             if(book[i][1] === profid) {
                 entry = book[i];
@@ -516,7 +678,24 @@ return {
         if(!entry) {
             entry = [them.name, profid, "", []]; }
         entry[0] = them.name;  //they might have changed their name...
-        displayContactDialog(code, entry);
+        //verify opportunity, faulting in as needed
+        commobj = commObject(commindex >= 0 ? entry[3][commindex] : null);
+        if(!commindex || commindex === -1) {
+            commobj.oppid = jt.instId(app.opp.getCurrentOpportunity()); }
+        if(commobj.oppid) {
+            oppref = app.lcs.getRef("opp", commobj.oppid);
+            if(oppref.status === "not cached") {
+                return app.lcs.getFull("opp", commobj.oppid, function (x) {
+                    app.contact.condlg(csname, profid, commindex); }); } }
+        if(oppref && oppref.opp) {
+            orgid = oppref.opp.organization;
+            orgref = app.lcs.getRef("org", orgid);
+            if(orgref.status === "not cached") {
+                return app.lcs.getFull("org", orgid, function (x) {
+                    app.contact.condlg(csname, profid, commindex); }); } }
+        //commobj.wpid should already be available from when the user
+        //first logged in and displayed their profile
+        displayContactDialog(csname, entry, commobj);
     },
 
 
@@ -531,38 +710,40 @@ return {
         else {
             buttons.push(
                 ["button", {type: "button", id: "addtobookb",
-                            onclick: jt.fs("app.contact.condlg('a2b')")},
+                            onclick: jt.fs("app.contact.condlg('bookadd')")},
                  "Add To Contact Book"]); }
         context = contextForContact();
         if(context && context.button) {
             buttons.push(
                 ["button", {type: "button", id: "contactb",
                             onclick: jt.fs("app.contact.condlg('" + 
-                                           context.code + "')")},
+                                           context.name + "')")},
                  context.button]); }
         return buttons;
     },
 
 
     emcbchg: function () {
+        //NB: This assumes that only the last defined button has email toggle.
         var cb = jt.byId("emcb");
         if(cb) {
             if(cb.checked) {
-                jt.byId('contactokb').disabled = false; }
+                jt.byId('dlgdefaultbutton').disabled = false; }
             else {
-                jt.byId('contactokb').disabled = true; } }
+                jt.byId('dlgdefaultbutton').disabled = true; } }
     },
 
 
     contactok: function (codestr) {
-        var data;
+        var data, actdef;
         data = {code: codestr,
                 profid: jt.instId(app.profile.getCurrentProfile()),
                 oppid: jt.instId(app.opp.getCurrentOpportunity()) || 0,
                 wpid: jt.instId(currwp) || 0};
         if(!checkSetContactDataVals(data, codestr)) {
             return; }
-        jt.out('dlgbdiv', codes[codestr].prog + "...");
+        actdef = actionForCode(codestr);
+        jt.out('dlgbdiv', actdef.prog + "...");
         data = jt.objdata(data);
         jt.call('POST', "contact?" + app.login.authparams(), data,
                 function (results) {
@@ -574,6 +755,7 @@ return {
                         jt.instId(app.profile.getCurrentProfile())); },
                 app.failf(function (code, errtxt) {
                     //don't overwrite content in case they want to copy it
+                    //ATTENTION: display error separately, replace buttons
                     jt.out('dlgbdiv', "Call failed " + code +
                            ": " + errtxt); }),
                 jt.semaphore("contact.contactok"));
@@ -604,9 +786,10 @@ return {
 
 
     togglebookdet: function (profid, index) {
-        var entry, comm, div, html;
+        var entry, comm, action, div, html;
         entry = findEntry(profid);
         comm = entry[3][index];
+        action = actionForCode(comm[0]);
         div = jt.byId("cbed" + profid);
         if(div.style.display === "block") {
             div.style.display = "none"; }
@@ -617,7 +800,7 @@ return {
                       ["span", {cla: "cbdcode"}, 
                        comm[1] + " "],
                       ["span", {cla: "cbdname"}, 
-                       "(" + codes[comm[1]].name + ")"]]],
+                       "(" + action.name + ")"]]],
                     ["div", {cla: "cbdet2div"},
                      commOppWorkLineHTML(comm)],
                     ["div", {cla: "cbdet3div"},
@@ -625,6 +808,24 @@ return {
                       jt.linkify(jt.dec(comm[2]))]]];
             jt.out("cbed" + profid, jt.tac2html(html));
             div.style.display = "block"; }
+    },
+
+
+    checkForNotices: function () {
+        var book, i, eobj, comms, j, cobj, cdef;
+        book = app.profile.getMyProfile().book || [];
+        for(i = 0; i < book.length; i += 1) {
+            eobj = entryObject(book[i]);
+            comms = eobj.comms;
+            for(j = 0; j < comms.length; j += 1) {
+                cobj = commObject(comms[j]);
+                cdef = codeDefinition(cobj.code);
+                if(cdef && !actedOn(cdef.next, cobj, comms, j)) {
+                    app.menu.createNotice({
+                        noticetype: cdef.name,
+                        noticeprof: eobj.profid,
+                        noticefunc: "app.contact.condlg('" + cdef.next +
+                            "','" + eobj.profid + "'," + j + ")"}); } } }
     }
 
 

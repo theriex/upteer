@@ -133,6 +133,7 @@ button, .loginbutton { cursor:pointer;
 .cbcontactslab, .cbentrycommlinkspan { font-size: small; }
 .cbdet3div { margin:3px 10px; padding:0px 5px; border-left: medium solid #999;
   background-color: #eee; }
+.cbemlinkimg { max-height:36px; vertical-align:middle; }
 
 /* kwentry widget settings */
 .selkwspan { display:inline-block; font-size:small; 
