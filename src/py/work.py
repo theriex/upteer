@@ -52,6 +52,7 @@ class WorkPeriod(db.Model):
     volname = db.StringProperty(indexed=False)      # volunteer.name
     start = db.StringProperty()           # ISO date
     end = db.StringProperty()             # ISO date
+    done = db.StringProperty()            # ISO date
     status = db.StringProperty()          # Volunteering, Completed etc
     visibility = db.IntegerProperty()     # 1: vol, 2: vol/coord, 3: world
     hours = db.IntegerProperty()          # Total hours volunteered
@@ -68,7 +69,7 @@ def book_for_profile(prof):
 
 def write_profile_book(prof, book):
     prof.book = json.dumps(book)
-    logging.info("write_profile_book: " + prof.book);
+    logging.info("write_profile_book: " + prof.book)
     prof.put()
 
 
@@ -163,7 +164,7 @@ def verify_opp(handler, prof, oppid):
     return opp
 
 
-def verify_work_period(handler, myprof, opp, wpid):
+def verify_work_period(handler, prof, opp, wpid):
     wp = WorkPeriod.get_by_id(wpid)
     if not wp:
         handler.error(412)  # Precondition Failed
@@ -173,11 +174,28 @@ def verify_work_period(handler, myprof, opp, wpid):
         handler.error(412)  # Precondition Failed
         handler.response.out.write("WorkPeriod does not match opportunity")
         return
-    # TODO: a coordinator has update rights in some phases...
-    if wp.volunteer != myprof.key().id():
+    isvol = wp.volunteer == prof.key().id()
+    iscoord = is_opp_contact(prof, opp)
+    if not isvol and not iscoord:
         handler.error(403)  # Forbidden
-        handler.response.out.write("Can only complete your own WorkPeriod")
+        handler.response.out.write("Not volunteer or coordinator.")
         return
+    if isvol:
+        if wp.status == "Inquiring" or wp.status == "Responded" or\
+                wp.status == "Volunteering":
+            return wp
+    if iscoord:
+        if wp.status == "Inquiring":
+            return wp
+        if wp.status == "Done" or wp.status == "No Show" or\
+                wp.status == "Partial" or wp.status == "Modified" or\
+                wp.status == "Completed":
+            daymok = dt2ISO(datetime.datetime.utcnow() - datetime.timedelta(15))
+            if wp.done and daymok < wp.done:
+                return wp
+    handler.error(403)  # Forbidden
+    handler.response.out.write("WorkPeriod status " + wp.status +
+                               " may not be modified")
 
 
 def read_general_wp_values(handler, wp):
@@ -190,6 +208,10 @@ def read_general_wp_values(handler, wp):
 
 def get_contact_receiver(handler):
     profid = intz(handler.request.get('profid'))
+    if not profid:
+        handler.error(412)  # Precondition Failed
+        handler.response.out.write("No receiver profid given")
+        return
     prof = profile.Profile.get_by_id(profid)
     if not prof:
         handler.error(412)  # Precondition Failed
@@ -237,7 +259,7 @@ def contact_inquiry_withdrawal(handler, myprof):
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
-    wp = verify_work_period(handler, prof, opp, wpid)
+    wp = verify_work_period(handler, myprof, opp, wpid)
     if not wp:
         return
     tstamp = nowISO()
@@ -261,7 +283,7 @@ def contact_work_update(handler, myprof):
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
-    wp = verify_work_period(handler, prof, opp, wpid)
+    wp = verify_work_period(handler, myprof, opp, wpid)
     if not wp:
         return
     if wp.status != "Inquiring" and wp.status != "Responded" and\
@@ -289,11 +311,12 @@ def contact_work_done(handler, myprof):
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
-    wp = verify_work_period(handler, prof, opp, wpid)
+    wp = verify_work_period(handler, myprof, opp, wpid)
     if not wp:
-        return;
+        return
     tstamp = nowISO()
     wp.modified = tstamp
+    wp.done = tstamp
     wp.status = "Done"
     wp.visibility = 3
     wp.put()
@@ -316,7 +339,7 @@ def contact_inquiry_refusal(handler, myprof):
     wpid = intz(handler.request.get('wpid'))
     wp = verify_work_period(handler, prof, opp, wpid)
     if not wp:
-        return;
+        return
     tstamp = nowISO()
     wp.modified = tstamp
     # leave wp.status as it was. They can withdraw, or auto-withdraw does it
@@ -339,7 +362,7 @@ def contact_inquiry_response(handler, myprof):
     wpid = intz(handler.request.get('wpid'))
     wp = verify_work_period(handler, prof, opp, wpid)
     if not wp:
-        return;
+        return
     tstamp = nowISO()
     wp.modified = tstamp
     wp.status = "Responded"
@@ -374,7 +397,7 @@ def contact_work_complete(handler, myprof):
     wpid = intz(handler.request.get('wpid'))
     wp = verify_work_period(handler, prof, opp, wpid)
     if not wp:
-        return;
+        return
     tstamp = nowISO()
     wp.modified = tstamp
     wp.status = "Complete"
@@ -397,9 +420,9 @@ def contact_opportunity_review(handler, myprof):
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
-    wp = verify_work_period(handler, prof, opp, wpid)
+    wp = verify_work_period(handler, myprof, opp, wpid)
     if not wp:
-        return;
+        return
     tstamp = nowISO()
     wp.modified = tstamp
     wp.status = "Complete"
@@ -425,7 +448,7 @@ def contact_volunteer_review(handler, myprof):
     wpid = intz(handler.request.get('wpid'))
     wp = verify_work_period(handler, prof, opp, wpid)
     if not wp:
-        return;
+        return
     tstamp = nowISO()
     wp.modified = tstamp
     wp.status = "Complete"
@@ -522,6 +545,7 @@ def contact_remove_entry(handler, myprof):
 
 class ContactHandler(webapp2.RequestHandler):
     def post(self):
+        # TODO: remove this block after initial testing completed
         if not self.request.url.startswith('http://localhost'):
             self.error(412)  # Precondition Failed
             self.response.out.write("contact not implemented yet")

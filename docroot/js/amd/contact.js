@@ -163,7 +163,7 @@ app.contact = (function () {
         tracksel = [{noun: "Day", adj: "Daily", max: 8, ceiling: 24},
                     {noun: "Week", adj: "Weekly", max: 20, ceiling: 120},
                     {noun: "Month", adj: "Monthly", max: 80, ceiling: 350}],
-        currwp = null,    //most recently accessed WorkPeriod
+        dlgstate = { profid: "", oppid: "", wpid: "" },
 
 
     ////////////////////////////////////////
@@ -330,8 +330,16 @@ app.contact = (function () {
     },
 
 
+    setDialogState = function (profid, oppid, wpid) {
+        dlgstate.profid = profid || "";
+        dlgstate.oppid = oppid || "";
+        dlgstate.wpid = wpid || "";
+    },
+
+
     displayContactDialog = function (csname, entry, commobj) {
         var html = [], cs, wp, dval;
+        setDialogState(entry[1], commobj.oppid, commobj.wpid);
         cs = commstates[csname];
         wp = findWorkPeriod(commobj.wpid);
         if(cs.dlg.exp1) {
@@ -354,12 +362,12 @@ app.contact = (function () {
             html.push(["div", {id: "condlghoursdiv"},
                        [(cs.dlg.hours === "Requested" ? "Requesting " : ""),
                         ["input", {id: "hoursin", min: 1, 
-                                   value: wp && wp.hours || "",
+                                   value: (wp && wp.hours) || "",
                                    type: "number", style: "width:3em;"}],
                         " hours per ",
-                        trackselHTML("noun", wp && wp.tracking || null)]]); }
+                        trackselHTML("noun", (wp && wp.tracking) || null)]]); }
         if(cs.dlg.start) {
-            dval = wp && wp.start || (new Date().toISOString()).slice(0, 10);
+            dval = (wp && wp.start) || (new Date().toISOString()).slice(0, 10);
             html.push(["div", {id: "condlgstartdiv"},
                        [["label", {fo: "startin", id: "condlgstartlabel"},
                          "Start"],
@@ -473,10 +481,11 @@ app.contact = (function () {
         cdef = codeDefinition(codestr);
         //verify text area content
         input = jt.byId('condlgta');
-        if(input && cdef.txtreq && !input.value) {
-            input.style.border = errborder;
-            retval = false; }
-        data.msgtxt = input.value;
+        if(input) {
+            if(cdef.txtreq && !input.value) {
+                input.style.border = errborder;
+                retval = false; }
+            data.msgtxt = input.value; }
         input = jt.byId('tracksel');
         if(input) {
             ts = tracksel[input.selectedIndex];
@@ -781,9 +790,9 @@ return {
     contactok: function (codestr) {
         var data, actdef, buttonhtml;
         data = {code: codestr,
-                profid: jt.instId(app.profile.getCurrentProfile()),
-                oppid: jt.instId(app.opp.getCurrentOpportunity()) || 0,
-                wpid: jt.instId(currwp) || 0};
+                profid: dlgstate.profid,
+                oppid: dlgstate.oppid,
+                wpid: dlgstate.wpid};
         if(!checkSetContactDataVals(data, codestr)) {
             return; }
         actdef = actionForCode(codestr);
