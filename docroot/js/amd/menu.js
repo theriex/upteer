@@ -38,7 +38,7 @@ app.menu = (function () {
                 app.lcs.getFull("prof", notices[i].noticeprof, 
                                 app.menu.profload); } }
         if(notices.length > 0) {
-            html = ["a", {href: "noticesmenu",
+            html = ["a", {href: "#noticesmenu",
                           onclick: jt.fs("app.menu.noticesmenu()")},
                     "Hey!"]; }
         jt.out('noticemenudiv', jt.tac2html(html));

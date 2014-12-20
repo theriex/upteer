@@ -36,12 +36,14 @@ app.contact = (function () {
                 actions: [
                     { verb: "Contact", prog: "Contacting", emrel: true,
                       actname: "Volunteering Inquiry",
-                      mycomm: { code: "mvi", next: "vwork", txtreq: true },
+                      mycomm: { code: "mvi", next: "vwork", txtreq: true,
+                                delay: 2},
                       theircomm: { code: "tvi", next: "inqresp" } }] },
             vwork: { //volunteer is withdrawing offer or updating work def
                 title: "Work Update",
                 dlg: {
-                    exp1: "Your volunteering work description",
+                    exp1: "Updating your volunteering work description for",
+                    subj2: "$OPPNAME",
                     hours: "Ongoing",
                     start: "Entry" },
                 actions: [
@@ -236,12 +238,14 @@ app.contact = (function () {
         opp = app.opp.getCurrentOpportunity();
         //They are the coordinator for the last viewed opportunity.
         if(opp && opp.contact.csvcontains(jt.instId(them)) && !inquiring(opp)) {
-            return { name: "vinq", button: "Ask To Volunteer" }; }
+            return { name: "vinq", button: "Ask To Volunteer",
+                     oppname: opp.name }; }
         //You are searching for volunteers, or passing an opportunity
         //along to a friend:
         if(opp && (opp.contact.csvcontains(jt.instId(me)) || 
                    isFriend(them))) {
-            return { name: "oppshare", button: "Share Opportunity" }; }
+            return { name: "oppshare", button: "Share Opportunity",
+                     oppname: opp.name }; }
         //You are friends and you are requesting contact info
         if(isFriend(them) && !haveContactInfo(them)) {
             return { name: "emreq", button: "Request Email Address" }; }
@@ -314,9 +318,22 @@ app.contact = (function () {
     },
 
 
+    //The WorkPeriods are loaded when the user first logs in and views
+    //their profile so they should always be available.
+    findWorkPeriod = function (wpid) {
+        var profref, i;
+        profref = app.lcs.getRef("prof", jt.instId(app.profile.getMyProfile()));
+        for(i = 0; i < profref.wps.length; i += 1) {
+            if(jt.instId(profref.wps[i]) === wpid) {
+                return profref.wps[i]; } }
+        return null;
+    },
+
+
     displayContactDialog = function (csname, entry, commobj) {
-        var html = [], cs;
+        var html = [], cs, wp, dval;
         cs = commstates[csname];
+        wp = findWorkPeriod(commobj.wpid);
         if(cs.dlg.exp1) {
             html.push(["div", {id: "condlgexp1div"}, 
                        replaceDollarRefs(cs.dlg.exp1, entry, commobj)]); }
@@ -333,16 +350,22 @@ app.contact = (function () {
         if(cs.dlg.txtpl) {
             html.push(["div", {id: "condlgtxtdiv", cla: "bigtxtdiv"},
                        ["textarea", {id: "condlgta", cla: "bigta"}]]); }
-        if(cs.dlg.start) {
-            html.push(["div", {id: "condlgstartdiv"},
-                       ["input", {id: "startin", type: "date"}]]); }
         if(cs.dlg.hours) {
             html.push(["div", {id: "condlghoursdiv"},
                        [(cs.dlg.hours === "Requested" ? "Requesting " : ""),
-                        ["input", {id: "hoursin", min: 1,
+                        ["input", {id: "hoursin", min: 1, 
+                                   value: wp && wp.hours || "",
                                    type: "number", style: "width:3em;"}],
                         " hours per ",
-                        trackselHTML("noun")]]); }
+                        trackselHTML("noun", wp && wp.tracking || null)]]); }
+        if(cs.dlg.start) {
+            dval = wp && wp.start || (new Date().toISOString()).slice(0, 10);
+            html.push(["div", {id: "condlgstartdiv"},
+                       [["label", {fo: "startin", id: "condlgstartlabel"},
+                         "Start"],
+                        " ",
+                        ["input", {id: "startin", type: "date",
+                                   value: dval}]]]); }
         html = ["div", {id: "condlgcontentdiv"},
                 [html,
                  ["div", {id: "dlgerrmsgdiv"}],
@@ -353,7 +376,8 @@ app.contact = (function () {
                               function () {
                                   jt.byId('dlgdefaultbutton').focus(); });
         if(jt.byId('condlgta')) {
-            app.initTextArea("condlgta", "", cs.dlg.txtpl); }
+            app.initTextArea("condlgta", "", replaceDollarRefs(
+                cs.dlg.txtpl, entry, commobj)); }
     },
 
 
@@ -452,6 +476,7 @@ app.contact = (function () {
         if(input && cdef.txtreq && !input.value) {
             input.style.border = errborder;
             retval = false; }
+        data.msgtxt = input.value;
         input = jt.byId('tracksel');
         if(input) {
             ts = tracksel[input.selectedIndex];
@@ -531,19 +556,19 @@ app.contact = (function () {
 
     commOppWorkLineHTML = function (comm) {
         var html = [];
-        if(comm.length > 3 && comm[3]) { //oppname
+        if(comm.length > 3 && comm[3]) { //have oppname
             html.push(["span", {cla: "cbdopp"},
                        ["a", {href: "#view=opp&oppid=" + comm[4],
                               onclick: jt.fs("app.contact.bookjump('opp','" +
                                              comm[4] + "')")},
                         comm[3]]]);
-            if(comm.length >= 6 && comm[5]) { //wpid
-                html.push(" - ");
+            if(comm.length >= 6 && comm[5]) { //have wpid
+                html.push(" ");
                 html.push(["span", {cla: "cbdwp"},
-                           ["a", {href: "#view=wp&wpid=" + comm[5],
-                                  onclick: jt.fs("app.contact.wpedit('" +
-                                                 comm[5] + "')")},
-                            "tracking"]]); } }
+                           ["button", {type: "button", id: "wpeditb",
+                                       onclick: jt.fs("app.contact.wpedit('" +
+                                                      comm[5] + "')")},
+                            "Update Work"]]); } }
         return html;
     },
 
@@ -580,9 +605,15 @@ app.contact = (function () {
     },
 
 
-    actedOn = function (commstatename, commobj, comms, index) {
-        var commstate, i, action, j;
-        commstate = commstates[commstatename];
+    actedOn = function (cdef, commobj, comms, index) {
+        var delay, commstate, i, action, j;
+        if(cdef.delay) {
+            delay = jt.ISOString2Day(commobj.tstamp).getTime();
+            delay += cdef.delay * 24 * 60 * 60 * 1000;
+            delay = new Date(delay).toISOString();
+            if(delay > new Date().toISOString()) {
+                return true; } }
+        commstate = commstates[cdef.next];
         for(i = 0; i < commstate.actions.length; i += 1) {
             action = commstate.actions[i];
             for(j = index - 1; j >= 0; j -= 1) {
@@ -600,11 +631,17 @@ app.contact = (function () {
 return {
 
     wpedit: function (wpid) {
-        //bring up the dialog allowing for changing the stat, hours
-        //and other detail fields.  These should be arranged
-        //vertically with explanations of what can be done for each.
-        //validation and cancel/save.
-        jt.err("wpedit not implemented yet");
+        var book, i, entry, j, cobj, cdef;
+        book = app.profile.getMyProfile().book;
+        for(i = 0; i < book.length; i += 1) {
+            entry = entryObject(book[i]);
+            for(j = 0; j < entry.comms.length; j += 1) {
+                cobj = commObject(entry.comms[j]);
+                if(cobj.wpid === wpid) {
+                    cdef = codeDefinition(cobj.code);
+                    return app.contact.condlg(cdef.next, entry.profid, j); } } }
+        jt.err("No communication regarding wpid " + wpid + " was found." +
+               " \nPlease contact support.");
     },
 
 
@@ -680,7 +717,7 @@ return {
         entry[0] = them.name;  //they might have changed their name...
         //verify opportunity, faulting in as needed
         commobj = commObject(commindex >= 0 ? entry[3][commindex] : null);
-        if(!commindex || commindex === -1) {
+        if(commindex === undefined || commindex === -1) {
             commobj.oppid = jt.instId(app.opp.getCurrentOpportunity()); }
         if(commobj.oppid) {
             oppref = app.lcs.getRef("opp", commobj.oppid);
@@ -704,21 +741,28 @@ return {
         entry = findEntry(them);
         if(entry) {
             buttons.push(
-                ["button", {type: "button", id: "showbookb",
-                            onclick: jt.fs("app.contact.showbook()")},
-                 "Contact Book"]); }
+                ["div", {cla: "buttonwithsubtext"},
+                 [["button", {type: "button", id: "showbookb",
+                              onclick: jt.fs("app.contact.showbook()")},
+                   "Contact Book"],
+                  ["div", {cla: "buttonsubtext"}, "&nbsp;"]]]); }
         else {
             buttons.push(
-                ["button", {type: "button", id: "addtobookb",
-                            onclick: jt.fs("app.contact.condlg('bookadd')")},
-                 "Add To Contact Book"]); }
+                ["div", {cla: "buttonwithsubtext"},
+                 [["button", {type: "button", id: "addtobookb",
+                              onclick: jt.fs("app.contact.condlg('bookadd')")},
+                   "Add To Contact Book"],
+                  ["div", {cla: "buttonsubtext"}, "&nbsp;"]]]); }
         context = contextForContact();
         if(context && context.button) {
             buttons.push(
-                ["button", {type: "button", id: "contactb",
-                            onclick: jt.fs("app.contact.condlg('" + 
-                                           context.name + "')")},
-                 context.button]); }
+                ["div", {cla: "buttonwithsubtext"},
+                 [["button", {type: "button", id: "contactb",
+                              onclick: jt.fs("app.contact.condlg('" + 
+                                             context.name + "')")},
+                   context.button],
+                  ["div", {cla: "buttonsubtext"},
+                   context.oppname ? "(" + context.oppname + ")" : ""]]]); }
         return buttons;
     },
 
@@ -735,7 +779,7 @@ return {
 
 
     contactok: function (codestr) {
-        var data, actdef;
+        var data, actdef, buttonhtml;
         data = {code: codestr,
                 profid: jt.instId(app.profile.getCurrentProfile()),
                 oppid: jt.instId(app.opp.getCurrentOpportunity()) || 0,
@@ -743,7 +787,9 @@ return {
         if(!checkSetContactDataVals(data, codestr)) {
             return; }
         actdef = actionForCode(codestr);
+        buttonhtml = jt.byId('dlgbdiv').innerHTML;
         jt.out('dlgbdiv', actdef.prog + "...");
+        jt.out('dlgerrmsgdiv', "");
         data = jt.objdata(data);
         jt.call('POST', "contact?" + app.login.authparams(), data,
                 function (results) {
@@ -751,13 +797,11 @@ return {
                         app.lcs.put("prof", results[0]).prof);
                     noteUpdatedWorkPeriod(results);
                     app.layout.closeDialog();
-                    app.profile.byprofid(
-                        jt.instId(app.profile.getCurrentProfile())); },
-                app.failf(function (code, errtxt) {
-                    //don't overwrite content in case they want to copy it
-                    //ATTENTION: display error separately, replace buttons
-                    jt.out('dlgbdiv', "Call failed " + code +
-                           ": " + errtxt); }),
+                    app.contact.showbook(); },
+                function (code, errtxt) {
+                    jt.out('dlgerrmsgdiv', actdef.prog + " call failed " + 
+                           code + ": " + errtxt);
+                    jt.out('dlgbdiv', buttonhtml); },
                 jt.semaphore("contact.contactok"));
     },
 
@@ -789,7 +833,7 @@ return {
         var entry, comm, action, div, html;
         entry = findEntry(profid);
         comm = entry[3][index];
-        action = actionForCode(comm[0]);
+        action = actionForCode(comm[1]);
         div = jt.byId("cbed" + profid);
         if(div.style.display === "block") {
             div.style.display = "none"; }
@@ -800,7 +844,7 @@ return {
                       ["span", {cla: "cbdcode"}, 
                        comm[1] + " "],
                       ["span", {cla: "cbdname"}, 
-                       "(" + action.name + ")"]]],
+                       "(" + action.actname + ")"]]],
                     ["div", {cla: "cbdet2div"},
                      commOppWorkLineHTML(comm)],
                     ["div", {cla: "cbdet3div"},
@@ -812,7 +856,7 @@ return {
 
 
     checkForNotices: function () {
-        var book, i, eobj, comms, j, cobj, cdef;
+        var book, i, eobj, comms, j, cobj, cdef, actdef;
         book = app.profile.getMyProfile().book || [];
         for(i = 0; i < book.length; i += 1) {
             eobj = entryObject(book[i]);
@@ -820,9 +864,10 @@ return {
             for(j = 0; j < comms.length; j += 1) {
                 cobj = commObject(comms[j]);
                 cdef = codeDefinition(cobj.code);
-                if(cdef && !actedOn(cdef.next, cobj, comms, j)) {
+                actdef = actionForCode(cobj.code);
+                if(cdef && !actedOn(cdef, cobj, comms, j)) {
                     app.menu.createNotice({
-                        noticetype: cdef.name,
+                        noticetype: actdef.actname,
                         noticeprof: eobj.profid,
                         noticefunc: "app.contact.condlg('" + cdef.next +
                             "','" + eobj.profid + "'," + j + ")"}); } } }

@@ -189,11 +189,11 @@ def read_general_wp_values(handler, wp):
 
 
 def get_contact_receiver(handler):
-    profid = intz(self.request.get('profid'))
+    profid = intz(handler.request.get('profid'))
     prof = profile.Profile.get_by_id(profid)
     if not prof:
-        self.error(412)  # Precondition Failed
-        self.response.out.write("Receiver profile " + profid + " not found")
+        handler.error(412)  # Precondition Failed
+        handler.response.out.write("Receiver profile " + profid + " not found")
         return
     return prof
 
@@ -210,7 +210,7 @@ def contact_volunteer_inquiry(handler, myprof):
         return
     org = organization.Organization.get_by_id(opp.organization)
     tstamp = nowISO()
-    msgtxt = self.request.get('msgtxt')
+    msgtxt = handler.request.get('msgtxt')
     wp = WorkPeriod(volunteer=myprof.key().id(), opportunity=oppid,
                     tracking="Weekly")
     read_general_wp_values(handler, wp)
@@ -222,9 +222,9 @@ def contact_volunteer_inquiry(handler, myprof):
     wp.put()
     wpid = wp.key().id()
     prepend_comm(handler, myprof, prof, 
-                 [tstamp, 'mvi', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mvi', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'tvi', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'tvi', msgtxt, wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -246,9 +246,9 @@ def contact_inquiry_withdrawal(handler, myprof):
     wp.visibility = 1
     wp.put()
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mvw', "", opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mvw', "", wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'tvw', "", opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'tvw', "", wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -265,9 +265,9 @@ def contact_work_update(handler, myprof):
     if not wp:
         return
     if wp.status != "Inquiring" and wp.status != "Responded" and\
-            wp.status != "Volunteering"):
-        self.error(412)  # Precondition Failed
-        self.response.out.write("Work Period status " + wp.status +\
+            wp.status != "Volunteering":
+        handler.error(412)  # Precondition Failed
+        handler.response.out.write("Work Period status " + wp.status +\
                                     " may not be updated.")
         return
     tstamp = nowISO()
@@ -276,7 +276,7 @@ def contact_work_update(handler, myprof):
     wp.visibility = 2
     wp.put()
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mvu', "", opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mvu', "", wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
     
 
@@ -299,9 +299,9 @@ def contact_work_done(handler, myprof):
     wp.put()
     msgtxt = handler.request.get('msgtxt') or ""
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mwd', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mwd', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'twd', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'twd', msgtxt, wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -313,8 +313,8 @@ def contact_inquiry_refusal(handler, myprof):
     opp = verify_opp(handler, prof, oppid)
     if not opp:
         return
-    wpid = intz(handler.request.get('wpid')
-    wp = verify_work_period(handler, prof, opp, wpid))
+    wpid = intz(handler.request.get('wpid'))
+    wp = verify_work_period(handler, prof, opp, wpid)
     if not wp:
         return;
     tstamp = nowISO()
@@ -322,9 +322,9 @@ def contact_inquiry_refusal(handler, myprof):
     # leave wp.status as it was. They can withdraw, or auto-withdraw does it
     wp.put()
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mvf', "", opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mvf', "", wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'tvf', "", opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'tvf', "", wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -336,8 +336,8 @@ def contact_inquiry_response(handler, myprof):
     opp = verify_opp(handler, prof, oppid)
     if not opp:
         return
-    wpid = intz(handler.request.get('wpid')
-    wp = verify_work_period(handler, prof, opp, wpid))
+    wpid = intz(handler.request.get('wpid'))
+    wp = verify_work_period(handler, prof, opp, wpid)
     if not wp:
         return;
     tstamp = nowISO()
@@ -347,9 +347,9 @@ def contact_inquiry_response(handler, myprof):
     wp.put()
     msgtxt = handler.request.get('msgtxt') or ""
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mvy', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mvy', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'tvy', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'tvy', msgtxt, wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -382,9 +382,9 @@ def contact_work_complete(handler, myprof):
     wp.put()
     msgtxt = handler.request.get('msgtxt') or ""
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mwc', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mwc', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'twc', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'twc', msgtxt, wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -408,9 +408,9 @@ def contact_opportunity_review(handler, myprof):
     wp.coordshout = msgtxt
     wp.put()
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mor', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mor', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'tor', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'tor', msgtxt, wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -434,9 +434,9 @@ def contact_volunteer_review(handler, myprof):
     wp.volshout = msgtxt
     wp.put()
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mvr', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'mvr', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'tvr', msgtxt, opp.name, str(oppid), str(wpid)])
+                 [tstamp, 'tvr', msgtxt, wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -451,12 +451,14 @@ def contact_share_opportunity(handler, myprof):
         handler.error(403)  # Forbidden
         handler.response.out.write("Must be a coordinator or friend to share.")
         return
+    org = organization.Organization.get_by_id(opp.organization)
+    oppname = org.name + " " + opp.name
     tstamp = nowISO()
     msgtxt = handler.request.get('msgtxt') or ""
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'msh', msgtxt, opp.name, str(oppid)])
+                 [tstamp, 'msh', msgtxt, oppname, str(oppid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'tsh', msgtxt, opp.name, str(oppid)])
+                 [tstamp, 'tsh', msgtxt, oppname, str(oppid)])
     returnJSON(handler.response, [ myprof ])
     
 
@@ -500,7 +502,7 @@ def contact_respond_email(handler, myprof):
     returnJSON(handler.response, [ myprof ])
     
 
-def contact_remove_entry(self, myprof):
+def contact_remove_entry(handler, myprof):
     # completely remove the entry for the given profile from the contact book
     prof = get_contact_receiver(handler)
     if not prof:

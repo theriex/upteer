@@ -126,14 +126,18 @@ button, .loginbutton { cursor:pointer;
 
 
 /* contact settings */
-#contactsubjverbdiv { padding:5px 0px 0px 0px; }
-#contactsubjoppdiv { padding:5px 10px; }
+#condlgsubj1div, #condlgexp1div, #condlgexp2div { padding:5px 0px 0px 0px; }
+#condlgsubj2div { padding:5px 10px; }
 .cbentrydiv { border:1px solid #ccc; border-radius:3px; }
 .cbentrydetaildiv { background-color: #fff; margin:3px 10px; padding: 5px; }
 .cbcontactslab, .cbentrycommlinkspan { font-size: small; }
 .cbdet3div { margin:3px 10px; padding:0px 5px; border-left: medium solid #999;
   background-color: #eee; }
 .cbemlinkimg { max-height:36px; vertical-align:middle; }
+#dlgerrmsgdiv { margin-top:20px; max-height:100px; overflow:scroll; }
+.buttonwithsubtext { display:inline-block; }
+.buttonsubtext { font-size:small; }
+
 
 /* kwentry widget settings */
 .selkwspan { display:inline-block; font-size:small; 
