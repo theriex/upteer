@@ -389,28 +389,6 @@ app.contact = (function () {
     },
 
 
-    noteUpdatedWorkPeriod = function (results) {
-        var wp, wpid, profref, found = false, i;
-        if(results.length <= 1) {
-            return; }  //no WorkPeriod to note
-        wp = results[1];
-        wpid = jt.instId(wp);
-        profref = app.lcs.getRef("prof", jt.instId(app.profile.getMyProfile()));
-        if(!profref.wps) {
-            profref.wps = []; }
-        for(i = 0; !found && i < profref.wps.length; i += 1) {
-            if(jt.instId(profref.wps[i]) === wpid) {
-                profref.wps[i] = wp;
-                found = true; } }
-        if(!found) {
-            profref.wps.unshift(wp); }
-        profref.wps.sort(function (a, b) {
-            if(a.modified > b.modified) { return -1; }
-            if(a.modified < b.modified) { return 1; }
-            return 0; });
-    },
-
-
     wpEditFieldHTML = function (wp, mode, field) {
         var html = wp[field];
         if(mode === "myprof" || mode === "coord") {
@@ -435,7 +413,7 @@ app.contact = (function () {
                               onclick: jt.fs("app.opp.byoppid('" + 
                                              wp.opportunity + "')")},
                     wp.oppname]; }
-        html = ["div", {cla: "wpdescline"},
+        html = ["div", {cla: "wpdescline", id: "wpdldiv" + jt.instId(wp)},
                 [["span", {cla: "wpnamelink"}, namelink],
                  ["span", {cla: "wpstatlab"}, " status: "],
                  ["span", {cla: "wpstatus"},
@@ -444,6 +422,33 @@ app.contact = (function () {
                   wpEditFieldHTML(wp, mode, "hours")],
                  ["span", {cla: "wpstatunits"}, " hrs"]]];
         return html;
+    },
+
+
+    noteUpdatedWorkPeriod = function (results) {
+        var wp, wpid, profref, found = false, i, mode, html;
+        if(results.length <= 1) {
+            return; }  //no WorkPeriod to note
+        wp = results[1];
+        wpid = jt.instId(wp);
+        profref = app.lcs.getRef("prof", jt.instId(app.profile.getMyProfile()));
+        if(!profref.wps) {
+            profref.wps = []; }
+        for(i = 0; !found && i < profref.wps.length; i += 1) {
+            if(jt.instId(profref.wps[i]) === wpid) {
+                profref.wps[i] = wp;
+                found = true; } }
+        if(!found) {
+            profref.wps.unshift(wp); }
+        profref.wps.sort(function (a, b) {
+            if(a.modified > b.modified) { return -1; }
+            if(a.modified < b.modified) { return 1; }
+            return 0; });
+        if(jt.byId("wpdldiv" + wpid)) {  //is displayed on screen
+            mode = jt.byId("wpsoppdiv") ? "coord" : "myprof";
+            html = workPeriodHTML(wp, mode);
+            html = html[2];  //strip outer div, re-use existing
+            jt.out("wpdldiv" + wpid, jt.tac2html(html)); }
     },
 
 
