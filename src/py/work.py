@@ -51,7 +51,6 @@ class WorkPeriod(db.Model):
     oppname = db.StringProperty(indexed=False)      # orgname + " " + oppname
     volname = db.StringProperty(indexed=False)      # volunteer.name
     start = db.StringProperty()           # ISO date
-    end = db.StringProperty()             # ISO date
     done = db.StringProperty()            # ISO date
     status = db.StringProperty()          # Volunteering, Completed etc
     visibility = db.IntegerProperty()     # 1: vol, 2: vol/coord, 3: world
@@ -201,7 +200,6 @@ def verify_work_period(handler, prof, opp, wpid):
 def read_general_wp_values(handler, wp):
     wp.tracking = handler.request.get("tracking")
     wp.start = handler.request.get('start')
-    wp.end = handler.request.get('end')
     if handler.request.get('hours'):
         wp.hours = intz(handler.request.get('hours'))
 
@@ -298,7 +296,7 @@ def contact_work_update(handler, myprof):
     wp.visibility = 2
     wp.put()
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mvu', "", wp.oppname, str(oppid), str(wpid)])
+                 [tstamp, 'mwu', "", wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
     
 
@@ -558,7 +556,7 @@ class ContactHandler(webapp2.RequestHandler):
             return contact_volunteer_inquiry(self, myprof)
         if code == 'mvw':
             return contact_inquiry_withdrawal(self, myprof)
-        if code == 'mvu':
+        if code == 'mwu':
             return contact_work_update(self, myprof)
         if code == 'mwd':
             return contact_work_done(self, myprof)

@@ -118,10 +118,10 @@ button, .loginbutton { cursor:pointer;
 #matchtitlediv { padding:20px; }
 .matchskillsdiv { padding:0px 0px 20px 0px; }
 .matchcountspan { display:inline-block; font-size:small; width:20px; }
-.matchnamespan { font-size:medium; }
+.matchnamespan { font-size:large; }
 .matchlogospan { display:inline-block; width:50px; padding:0px 5px 0px 10px; 
   text-align:center; }
-.matchlinelogo { max-height:20px; max-width:50px; vertical-align:middle; 
+.matchlinelogo { max-height:24px; max-width:50px; vertical-align:middle; 
   margin:0px auto; }
 
 
@@ -131,10 +131,11 @@ button, .loginbutton { cursor:pointer;
 .cbentrydiv { border:1px solid #ccc; border-radius:3px; }
 .cbentrydetaildiv { background-color: #fff; margin:3px 10px; padding: 5px; }
 .cbcontactslab, .cbentrycommlinkspan { font-size: small; }
-.cbdet3div { margin:3px 10px; padding:0px 5px; border-left: medium solid #999;
+.cbdet2div { margin:3px 10px; padding:0px 5px; border-left: medium solid #999;
   background-color: #eee; }
 .cbemlinkimg { max-height:36px; vertical-align:middle; }
-#dlgerrmsgdiv { margin-top:20px; max-height:100px; overflow:scroll; }
+#descactcontdiv { margin-top:20px; }
+#dlgerrmsgdiv { max-height:100px; overflow:scroll; }
 .buttonwithsubtext { display:inline-block; }
 .buttonsubtext { font-size:small; }
 
