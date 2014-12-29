@@ -37,6 +37,8 @@ button, .loginbutton { cursor:pointer;
   margin:0px 10px; padding:5px; font-size: medium; color:#000033;
   border-radius:15px; border:2px solid #75e1dd; 
   background: radial-gradient(#e0fffa 75%, #a1f1c8); }
+.disabledbutton { color:#cccccc; border:2px solid #a1c3c2; 
+  background:transparent; }
 
 /*
  ************************************************************

@@ -32,7 +32,11 @@ app.lcs = (function () {
                 fetchparamf: function (id) {
                     return "oppid=" + id; },
                 putprep: function (oppobj) {
-                    app.opp.deserializeFields(oppobj); } } },
+                    app.opp.deserializeFields(oppobj); } },
+        wp:   { refs: {},
+                fetchend: "wpbyid",
+                fetchparamf: function (id) {
+                    return "wpid=" + id; } } },
 
 
     ////////////////////////////////////////

@@ -620,6 +620,21 @@ class FetchWork(webapp2.RequestHandler):
         returnJSON(self.response, wps)
 
 
+class WorkPeriodById(webapp2.RequestHandler):
+    def get(self):
+        wpid = self.request.get('wpid')
+        wp = WorkPeriod.get_by_id(intz(wpid))
+        if not wp:
+            self.error(404)  # Not Found
+            self.response.out.write("No WorkPeriod found with id: " + wpid)
+            return
+        # WorkPeriod data is not considered sensitive enough to warrant 
+        # authorization overhead when retrieving by id.  If that changes
+        # then authorize or filter before returning...
+        returnJSON(self.response, [ wp ])
+
+
 app = webapp2.WSGIApplication([('/contact', ContactHandler),
-                               ('/fetchwork', FetchWork)
+                               ('/fetchwork', FetchWork),
+                               ('/wpbyid', WorkPeriodById)
                                ], debug=True)

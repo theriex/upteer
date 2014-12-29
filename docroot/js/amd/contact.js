@@ -68,12 +68,11 @@ app.contact = (function () {
                       theircomm: { code: "twd", next: "wrkconf" } }] },
             inqresp: { //coordinator responding to a volunteering inquiry
                 title: "Inquiry Response",
-                optdescr: "You can reject a volunteer for any reason, but if you can provide any guidance that is much appreciated. If you respond, please be clear about what the volunteer should do next. All communications about the work is directly between you and the volunteer. ",
+                optdescr: "You can reject a volunteer for any reason, but any guidance you can provide is much appreciated. If you respond, please be clear about what the volunteer should do next. If more steps are needed before starting work, ask the volunteer to contact you directly by email.",
                 dlg: {
                     subj1: "$OPPNAME",
                     txtpl: "What should the volunteer do next?",
-                    hours: "Requested",
-                    start: "Entry" },
+                    hours: "Requested" },
                 actions: [
                     { verb: "Reject", prog: "Rejecting", 
                       actname: "Inquiry Refused",
@@ -336,14 +335,29 @@ app.contact = (function () {
     },
 
 
-    //The WorkPeriods are loaded when the user first logs in and views
-    //their profile so they should always be available.
+    verifyWorkPeriodLoaded = function (wpid) {
+        app.lcs.getFull("wp", wpid, function (wpref) {
+            jt.log("verifyWorkPeriodLoaded " + wpid); });
+    },
+
+
+    //The assumption is that the WorkPeriod has already been loaded.
+    //Either with the profile, with the opportunity, or with the
+    //contact notice.  Not having it available is basically an error.
     findWorkPeriod = function (wpid) {
-        var profref, i;
-        profref = app.lcs.getRef("prof", jt.instId(app.profile.getMyProfile()));
-        for(i = 0; i < profref.wps.length; i += 1) {
-            if(jt.instId(profref.wps[i]) === wpid) {
-                return profref.wps[i]; } }
+        var wpref;
+        if(!wpid) {
+            jt.log("WARNING: findWorkPeriod called with no wpid");
+            return null; }
+        wpref = app.lcs.getRef("wp", wpid);
+        if(wpref.wp) {
+            return wpref.wp; }
+        if(wpref.status === "not cached") {
+            jt.log("ERROR: findWorkPeriod wpid " + wpid + " not cached.");
+            app.lcs.getFull("wp", wpid, function (x) {
+                jt.log("findWorkPeriod fetched wpid " + wpid); }); }
+        else {
+            jt.log("ERROR: findWorkPeriod wpid " + wpid + " not found."); }
         return null;
     },
 
@@ -371,10 +385,11 @@ app.contact = (function () {
 
 
     displayContactDialog = function (csname, entry, commobj) {
-        var html = [], cs, wp, dval;
+        var html = [], cs, wp = null, dval;
         setDialogState(entry[1], commobj.oppid, commobj.wpid);
         cs = commstates[csname || "nostate"];
-        wp = findWorkPeriod(commobj.wpid);
+        if(commobj.wpid) {
+            wp = findWorkPeriod(commobj.wpid); }
         if(cs.dlg.exp1) {
             html.push(["div", {id: "condlgexp1div"}, 
                        replaceDollarRefs(cs.dlg.exp1, entry, commobj)]); }
@@ -764,6 +779,7 @@ return {
             jt.call('GET', url, null,
                     function (wps) {
                         profref.wps = wps;
+                        app.lcs.putAll("wp", wps);
                         app.contact.wpsProfileDisplay(dispdiv, prof); },
                     app.failf(function (code, errtxt) {
                         jt.out(dispdiv, "fetchwork for profile failed " + 
@@ -787,6 +803,7 @@ return {
             jt.call('GET', url, null,
                     function (wps) {
                         oppref.wps = wps;
+                        app.lcs.putAll("wp", wps);
                         app.contact.wpsOpportunityDisplay(dispdiv, opp); },
                     app.failf(function (code, errtxt) {
                         jt.out(dispdiv, "fetchwork for opportunity failed " +
@@ -878,12 +895,16 @@ return {
 
     emcbchg: function () {
         //NB: This assumes that only the last defined button has email toggle.
-        var cb = jt.byId("emcb");
+        var cb, button;
+        cb = jt.byId("emcb");
         if(cb) {
+            button = jt.byId('dlgdefaultbutton');
             if(cb.checked) {
-                jt.byId('dlgdefaultbutton').disabled = false; }
+                button.className = "buttonwithsubtext";
+                button.disabled = false; }
             else {
-                jt.byId('dlgdefaultbutton').disabled = true; } }
+                button.className = "buttonwithsubtext disabledbutton";
+                button.disabled = true; } }
     },
 
 
@@ -992,6 +1013,7 @@ return {
                 cdef = codeDefinition(cobj.code);
                 actdef = actionForCode(cobj.code);
                 if(cdef && !actedOn(cdef, cobj, comms, j)) {
+                    verifyWorkPeriodLoaded(cobj.wpid);
                     app.menu.createNotice({
                         noticetype: actdef.actname,
                         noticeprof: eobj.profid,

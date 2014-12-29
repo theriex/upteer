@@ -152,6 +152,11 @@ handlers:
 - url: /fetchwork.*
   script: src.py.work.app
 
+## Fetch WorkPeriod instance by id
+## GET params: wpid, authparams
+- url: /wpbyid.*
+  script: src.py.work.app
+
 
 ######################################################################
 # General endpoints
