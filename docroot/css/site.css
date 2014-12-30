@@ -130,6 +130,7 @@ button, .loginbutton { cursor:pointer;
 /* contact settings */
 #condlgsubj1div, #condlgexp1div, #condlgexp2div { padding:5px 0px 0px 0px; }
 #condlgsubj2div { padding:5px 10px; }
+#condlgcommtxtdiv { padding:5px 10px 10px 10px; }
 .cbentrydiv { border:1px solid #ccc; border-radius:3px; }
 .cbentrydetaildiv { background-color: #fff; margin:3px 10px; padding: 5px; }
 .cbcontactslab, .cbentrycommlinkspan { font-size: small; }

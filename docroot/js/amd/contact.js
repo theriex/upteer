@@ -35,22 +35,52 @@ app.contact = (function () {
                 optdescr: "Contacting a coordinator is the first step in volunteering, and your offer to help out is deeply appreciated! To help smooth the process, please describe why you are a good match for what is needed, and allow a few days for people to get back to you.",
                 dlg: {
                     subj1: "Inquiring about volunteering for",
-                    subj2: "$OPPNAME",
+                    subj2: "$OPPNAME - $THEM",
                     txtpl: "What motivations and strengths will help you" +
                         " contribute positively to $OPPNAME?",
                     hours: "Requested" },
                 actions: [
                     { verb: "Contact", prog: "Contacting", emrel: true,
                       actname: "Volunteering Inquiry",
-                      mycomm: { code: "mvi", next: "vwork", txtreq: true,
+                      mycomm: { code: "mvi", next: "vstart", txtreq: true,
                                 delay: 3},
                       theircomm: { code: "tvi", next: "inqresp" } }] },
+            vrej: { //volunteering offer was rejected
+                title: "Withdraw Offer",
+                optdescr: "Sometimes an opportunity doesn't work out. You can always retry later after doing something else.",
+                dlg: {
+                    subj1: "Withdraw offer for",
+                    subj2: "$OPPNAME - $THEM",
+                    commtxt: true },
+                actions: [
+                    { verb: "Withdraw", prog: "Withdrawing",
+                      actname: "Withdrawn Inquiry",
+                      mycomm: { code: "mvw", next: "" },
+                      theircomm: { code: "tvw", next: "" } }] },
+            vstart: {
+                title: "Start Work",
+                optdescr: "After asking about volunteering, you should hear back from the coordinator within a week. Use the email link to contact them directly if there are details to be worked out before starting, or if you have more questions. After you have been in touch, you can either withdraw your offer or go to work. When you know what day you are starting, fill in the day you are starting and click the start button to begin tracking your hours.",
+                dlg: {
+                    exp1: "Withdraw offer or start work for",
+                    subj2: "$OPPNAME - $THEM",
+                    commtxt: true,
+                    hours: "Ongoing",
+                    start: "Entry" },
+                actions: [
+                    { verb: "Withdraw", prog: "Withdrawing",
+                      actname: "Withdrawn Inquiry",
+                      mycomm: { code: "mvw", next: "" },
+                      theircomm: { code: "tvw", next: "" } },
+                    { verb: "Start", prog: "Starting",
+                      actname: "Start Work",
+                      mycomm: { code: "mwu", next: "vwork"},
+                      theircomm: null }] },
             vwork: { //volunteer is withdrawing offer or updating work def
                 title: "Work Update",
-                optdescr: "After asking about volunteering, you should hear back from the coordinator within a week. Once you hear back, you can either withdraw your offer or go to work. When you know what day you are starting, update your start day to track your hours. After completing work, you can re-inquire to volunteer again.",
+                optdescr: "After volunteering for this work period, complete it to track your hours. You can re-inquire to volunteer again if this is an ongoing opportunity.",
                 dlg: {
                     exp1: "Updating your volunteering work description for",
-                    subj2: "$OPPNAME",
+                    subj2: "$OPPNAME - $THEM",
                     hours: "Ongoing",
                     start: "Entry" },
                 actions: [
@@ -59,8 +89,8 @@ app.contact = (function () {
                       mycomm: { code: "mvw", next: "" },
                       theircomm: { code: "tvw", next: "" } },
                     { verb: "Update", prog: "Updating",
-                      actname: "Work Update",
-                      mycomm: { code: "mwu", next: ""},
+                      actname: "Update Work",
+                      mycomm: { code: "mwu", next: "vwork"},
                       theircomm: null },
                     { verb: "Complete", prog: "Completing",
                       actname: "Work Completed",
@@ -70,24 +100,25 @@ app.contact = (function () {
                 title: "Inquiry Response",
                 optdescr: "You can reject a volunteer for any reason, but any guidance you can provide is much appreciated. If you respond, please be clear about what the volunteer should do next. If more steps are needed before starting work, ask the volunteer to contact you directly by email.",
                 dlg: {
-                    subj1: "$OPPNAME",
-                    txtpl: "What should the volunteer do next?",
+                    subj1: "$OPPNAME - $THEM",
+                    commtxt: true,
+                    txtpl: "What should $THEIRNAME do next?",
                     hours: "Requested" },
                 actions: [
                     { verb: "Reject", prog: "Rejecting", 
                       actname: "Inquiry Refused",
                       mycomm: { code: "mvf", next: "" },
-                      theircomm: { code: "tvf", next: "vwork" } },
+                      theircomm: { code: "tvf", next: "vrej" } },
                     { verb: "Respond", prog: "Responding", emrel: true,
                       actname: "Inquiry Response",
                       mycomm: { code: "mvy", next: "", txtreq: true },
-                      theircomm: { code: "tvy", next: "vwork" } }] },
+                      theircomm: { code: "tvy", next: "vstart" } }] },
             wrkconf: { //coordinator is confirming completed work
                 title: "Work Completion",
                 optdescr: "Please confirm the volunteer hours are correct, adjusting as needed to accurately reflect the time they contributed. The volunteer will submit a new inquiry to track additional time if this is an ongoing opportunity.",
                 dlg: {
                     subj1: "Work done for $OPPNAME",
-                    txtpl: "Any feedback you want to share with $THEM" +
+                    txtpl: "Any feedback you want to share with $THEIRNAME" +
                         " about the work they did?",
                     hours: "Worked",
                     start: "Entry" },
@@ -117,7 +148,7 @@ app.contact = (function () {
                 title: "Volunteer Contribution Review",
                 optdescr: "If you want, you can write a brief public statement describing how this volunteer stepped up to accomplish a task, and/or the impact they had. Reviewing work is one of the best ways to appreciate and encourage volunteering.",
                 dlg: {
-                    exp1: "Recommend $THEM",
+                    exp1: "Recommend $THEIRNAME",
                     txtpl: "What do you want to tell the community about" +
                         " how this volunteer helped your organization?" },
                 actions: [
@@ -141,8 +172,8 @@ app.contact = (function () {
                 title: "Contact Book Add",
                 optdescr: "If you add someone to your contact book, and they add you back, then you can request their email address. Your contact book is a place to keep track of people you know or might like to meet.",
                 dlg: {
-                    exp1: "Add $THEM to your contact book",
-                    exp2: "$THEM must add you back to request email." },
+                    exp1: "Add $THEIRNAME to your contact book",
+                    exp2: "$THEIRNAME must add you back to request email." },
                 actions: [
                     { verb: "Add To Contact Book", prog: "Adding",
                       actname: "Contact Book Add",
@@ -324,8 +355,16 @@ app.contact = (function () {
 
 
     replaceDollarRefs = function (text, entry, commobj) {
-        var opp, org;
-        text = text.replace("$THEM", entry[0]);
+        var opp, org, html;
+        text = text.replace("$THEIRNAME", entry[0]);
+        if(text.indexOf("$THEM") >= 0) {
+            html = entry[0];
+            if(entry[2]) {
+                html = [entry[0] + " ",
+                        ["a", {href: "mailto:" + entry[2]},
+                         ["img", {cla: "cbemlinkimg", 
+                                  src: "img/email.png"}]]]; }
+            text = text.replace("$THEM", jt.tac2html(html)); }
         if(text.indexOf("$OPPNAME") >= 0) {
             //the refs were faulted in when the dialog was displayed
             opp = app.lcs.getRef("opp", commobj.oppid).opp;
@@ -402,6 +441,9 @@ app.contact = (function () {
         if(cs.dlg.subj2) {
             html.push(["div", {id: "condlgsubj2div"}, 
                        replaceDollarRefs(cs.dlg.subj2, entry, commobj)]); }
+        if(cs.dlg.commtxt) {
+            html.push(["div", {id: "condlgcommtxtdiv", cla: "bigtxtdiv"},
+                       jt.linkify(jt.dec(commobj.msgtxt))]); }
         html.push(emailReleaseCheckboxHTML(csname, entry, commobj));
         if(cs.dlg.txtpl) {
             html.push(["div", {id: "condlgtxtdiv", cla: "bigtxtdiv"},
@@ -415,7 +457,8 @@ app.contact = (function () {
                         " hours per ",
                         trackselHTML("noun", (wp && wp.tracking) || null)]]); }
         if(cs.dlg.start) {
-            dval = (wp && wp.start) || (new Date().toISOString()).slice(0, 10);
+            dval = (wp && wp.start) || new Date().toISOString();
+            dval = dval.slice(0, 10);
             html.push(["div", {id: "condlgstartdiv"},
                        [["label", {fo: "startin", id: "condlgstartlabel"},
                          "Start"],
@@ -487,6 +530,7 @@ app.contact = (function () {
         if(results.length <= 1) {
             return; }  //no WorkPeriod to note
         wp = results[1];
+        app.lcs.put("wp", wp);
         wpid = jt.instId(wp);
         profref = app.lcs.getRef("prof", jt.instId(app.profile.getMyProfile()));
         if(!profref.wps) {
@@ -566,7 +610,12 @@ app.contact = (function () {
         //start date may or may not be provided
         input = jt.byId('startin');
         if(input) {
-            data.start = new Date(input.value).toISOString(); }
+            try {
+                data.start = new Date(input.value).toISOString();
+            } catch (e) {
+                input.style.border = errborder;
+                retval = false;
+            } }
         return retval;
     },
 
@@ -655,8 +704,10 @@ app.contact = (function () {
     },
 
 
-    commWorkUpdateButtonHTML = function (comm) {
+    commWorkUpdateButtonHTML = function (comm, csname) {
         var html = "";
+        if(!csname) {
+            return ""; }
         if(comm.length >= 6 && comm[5] && wpIsEditable(comm[5])) { 
             html = ["span", {cla: "cbdwp"},
                     ["button", {type: "button", id: "wpeditb",
@@ -722,28 +773,50 @@ app.contact = (function () {
     },
 
 
+    inActions = function (commstatename, codestr) {
+        var cs, i, action;
+        cs = commstates[commstatename || "nostate"];
+        for(i = 0; i < cs.actions.length; i += 1) {
+            action = cs.actions[i];
+            if(action.mycomm && action.mycomm.code === codestr) {
+                return true; }
+            if(action.theircomm && action.theircomm.code === codestr) {
+                return true; } }
+        return false;
+    },
+
+
     actedOn = function (cdef, commobj, comms, index) {
-        var delay, commstate, i, action, j, wp;
+        var delay, wp, commstate, i, action, j, resp;
+        //if there is a delay that hasn't been met yet
         if(cdef.delay) {
             delay = jt.ISOString2Day(commobj.tstamp).getTime();
             delay += cdef.delay * 24 * 60 * 60 * 1000;
             delay = new Date(delay).toISOString();
             if(delay > new Date().toISOString()) {
                 return true; } }
+        //if the work is currently ongoing
         if(commobj.wpid) {
             wp = findWorkPeriod(commobj.wpid);
             if(wp && ongoingWork(wp)) {
                 return true; } }
+        //if there are no further actions
         commstate = commstates[cdef.next || "nostate"];
         if(!commstate || !commstate.actions || !commstate.actions.length) {
             return true; }
+        //if the reciprocal action was taken or it was canceled
         for(i = 0; i < commstate.actions.length; i += 1) {
             action = commstate.actions[i];
             for(j = index - 1; j >= 0; j -= 1) {
-                if(action.mycomm && action.mycomm.next === comms[j]) {
-                    return true; }
-                if(action.theircomm && action.theircomm.next === comms[j]) {
-                    return true; } } }
+                resp = commObject(comms[j]);
+                if(action.mycomm) {
+                    if(inActions(cdef.next, resp.code) ||
+                       inActions(action.mycomm.next, resp.code)) {
+                        return true; } }
+                if(action.theircomm) {
+                    if(inActions(cdef.next, resp.code) ||
+                       inActions(action.theircomm.next, resp.code)) {
+                        return true; } } } }
         return false;
     };
 
@@ -927,11 +1000,13 @@ return {
                     app.profile.setMyProfile(
                         app.lcs.put("prof", results[0]).prof);
                     noteUpdatedWorkPeriod(results);
+                    app.menu.rebuildNotices();
+                    app.profile.display();
                     app.layout.closeDialog();
                     app.contact.showbook(bookprofid); },
                 function (code, errtxt) {
-                    jt.out('dlgerrmsgdiv', actdef.prog + " call failed " + 
-                           code + ": " + errtxt);
+                    jt.out('dlgerrmsgdiv', actdef.prog + " (" + codestr + 
+                           ") call failed " + code + ": " + errtxt);
                     jt.out('dlgbdiv', buttonhtml); },
                 jt.semaphore("contact.contactok"));
     },
@@ -948,7 +1023,8 @@ return {
                 html];
         html = app.layout.dlgwrapHTML("Contact Book", html);
         app.layout.openDialog({y:90}, jt.tac2html(html));
-        app.contact.togglebookdet(profid, 0);
+        if(profid) {
+            app.contact.togglebookdet(profid, 0); }
     },
 
 
@@ -963,6 +1039,9 @@ return {
     togglebookdet: function (profid, index) {
         var entry, comm, action, div, html;
         entry = findEntry(profid);
+        if(!entry) {
+            jt.log("togglebookdet did not find profid " + profid);
+            return; }
         comm = entry[3][index];
         action = actionForCode(comm[1]);
         div = jt.byId("cbed" + profid);
@@ -986,7 +1065,7 @@ return {
                                         "What Happens Next?", 
                                         action.mycomm.next),
                     ["div", {cla: "formbuttonsdiv"},
-                     commWorkUpdateButtonHTML(comm)]];
+                     commWorkUpdateButtonHTML(comm, action.mycomm.next)]];
             jt.out("cbed" + profid, jt.tac2html(html));
             div.style.display = "block"; }
     },

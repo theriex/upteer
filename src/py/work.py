@@ -114,7 +114,7 @@ def prepend_comm(handler, owner, prof, comm):
         entry = [prof.name, str(prof.key().id()), "", [], ""]
         book.append(entry)
     code = comm[1]
-    if code in ['tvi', 'msh', 'tci', 'tcr']:
+    if code in ['tvi', 'tvy', 'msh', 'tci', 'tcr']:
         entry[2] = prof.email
     # "Here's a ~!@#$%^&*()_ \"difficult\" msgtxt value? Or, not..."
     comm[2] = safeURIEncode(comm[2])
@@ -291,6 +291,7 @@ def contact_work_update(handler, myprof):
                                     " may not be updated.")
         return
     tstamp = nowISO()
+    read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.status = "Volunteering"
     wp.visibility = 2
@@ -313,6 +314,7 @@ def contact_work_done(handler, myprof):
     if not wp:
         return
     tstamp = nowISO()
+    read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.done = tstamp
     wp.status = "Done"
@@ -331,7 +333,7 @@ def contact_inquiry_refusal(handler, myprof):
     if not prof:
         return
     oppid = intz(handler.request.get('oppid'))
-    opp = verify_opp(handler, prof, oppid)
+    opp = verify_opp(handler, myprof, oppid)
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
@@ -339,13 +341,15 @@ def contact_inquiry_refusal(handler, myprof):
     if not wp:
         return
     tstamp = nowISO()
+    read_general_wp_values(handler, wp)
     wp.modified = tstamp
     # leave wp.status as it was. They can withdraw, or auto-withdraw does it
     wp.put()
+    msgtxt = handler.request.get('msgtxt') or ""
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mvf', "", wp.oppname, str(oppid), str(wpid)])
+                 [tstamp, 'mvf', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
-                 [tstamp, 'tvf', "", wp.oppname, str(oppid), str(wpid)])
+                 [tstamp, 'tvf', msgtxt, wp.oppname, str(oppid), str(wpid)])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -354,7 +358,7 @@ def contact_inquiry_response(handler, myprof):
     if not prof:
         return
     oppid = intz(handler.request.get('oppid'))
-    opp = verify_opp(handler, prof, oppid)
+    opp = verify_opp(handler, myprof, oppid)
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
@@ -362,6 +366,7 @@ def contact_inquiry_response(handler, myprof):
     if not wp:
         return
     tstamp = nowISO()
+    read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.status = "Responded"
     wp.visibility = 2
@@ -397,6 +402,7 @@ def contact_work_complete(handler, myprof):
     if not wp:
         return
     tstamp = nowISO()
+    read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.status = "Complete"
     wp.visibility = 3
@@ -422,6 +428,7 @@ def contact_opportunity_review(handler, myprof):
     if not wp:
         return
     tstamp = nowISO()
+    read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.status = "Complete"
     wp.visibility = 3
@@ -448,6 +455,7 @@ def contact_volunteer_review(handler, myprof):
     if not wp:
         return
     tstamp = nowISO()
+    read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.status = "Complete"
     wp.visibility = 3
