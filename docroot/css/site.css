@@ -35,8 +35,7 @@ img { border:0px; }
 
 button, .loginbutton { cursor:pointer; 
   margin:0px 10px; padding:5px; font-size: medium; color:#000033;
-  border-radius:15px; border:2px solid #75e1dd; 
-  background: radial-gradient(#e0fffa 75%, #a1f1c8); }
+  background: linear-gradient(#d2fbf5 20%, #a6e3da); }
 .disabledbutton { color:#cccccc; border:2px solid #a1c3c2; 
   background:transparent; }
 
@@ -146,7 +145,7 @@ button, .loginbutton { cursor:pointer;
 
 /* kwentry widget settings */
 .selkwspan { display:inline-block; font-size:small; 
-  padding:0px 4px 3px 3px;
+  padding:0px 4px 3px 3px; cursor:default;
   }
 .selkwdelspan { display:inline-block; font-size:medium; 
   padding:0px 4px 0px 0px; cursor:pointer;
