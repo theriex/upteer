@@ -333,6 +333,7 @@ app.profile = (function () {
                     else if(edit) {
                         editProfile(); }
                     else {
+                        app.match.reset();
                         readProfile(myprof); } },
                 app.failf(function (code, errtxt) {
                     jt.out('profstatdiv', "Save failed " + code + 

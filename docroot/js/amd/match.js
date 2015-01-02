@@ -212,6 +212,16 @@ return {
     },
 
 
+    reset: function () {
+        findtype = "";
+        nodes = null;
+        skillkw = null;
+        canonskills = null;
+        matchacc = null;
+        matches = null;
+    },
+
+
     redisplayMatchLinks: function (ref) {
         displayMatches();
     },
