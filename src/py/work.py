@@ -34,8 +34,6 @@ import opportunity
 #   Volunteering (vol): Start date set, hours filled in
 #   Done (vol): Completed but not approved yet.
 #   No Show (coord): 0 hrs
-#   Partial (coord): Complete but total hours reduced by coordinator
-#   Modified (coord): Total hours corrected upwards by coordinator
 #   Completed (coord/site): Satisfactory completion, hours as specified
 #
 # The oppname and volname fields are set when the WorkPeriod is
@@ -93,6 +91,7 @@ def retention_filter(comms):
                    'mor': 3, 'tor': 3,   # opportunity review
                    'mvr': 3, 'tvr': 3,   # volunteer review
                    'msh': 5, 'tsh': 20,  # opportunity share
+                   'msd': 3,             # opportunity share dismiss
                    'mab': 1, 'tab': 1,   # contact book add
                    'mci': 1, 'tci': 1,   # email address request
                    'mcg': 1,             # email address refusal
@@ -114,7 +113,7 @@ def prepend_comm(handler, owner, prof, comm):
         entry = [prof.name, str(prof.key().id()), "", [], ""]
         book.append(entry)
     code = comm[1]
-    if code in ['tvi', 'tvy', 'msh', 'tci', 'tcr']:
+    if code in ['tvi', 'tvy', 'tsh', 'tci', 'tcr']:
         entry[2] = prof.email
     # "Here's a ~!@#$%^&*()_ \"difficult\" msgtxt value? Or, not..."
     comm[2] = safeURIEncode(comm[2])
@@ -137,8 +136,8 @@ def is_friend(myprof, prof):
     # The logic here is equivalent to isFriend in contact.js
     book = book_for_profile(myprof)
     entry = find_book_entry(book, prof)
-    if entry and ((most_recent_comm(entry, "a2b") and
-                   most_recent_comm(entry, "b2a")) or
+    if entry and ((most_recent_comm(entry, "mab") and
+                   most_recent_comm(entry, "tab")) or
                   most_recent_comm(entry, "cov")):
         return True
     return False
@@ -150,11 +149,18 @@ def is_opp_contact(prof, opp):
     return False
 
 
-def verify_opp(handler, prof, oppid):
+def find_opp(handler, oppid):
     opp = opportunity.Opportunity.get_by_id(oppid)
     if not opp:
         handler.error(412)  # Precondition Failed
         handler.response.out.write("Opportunity " + oppid + " not found")
+        return
+    return opp
+
+
+def verify_opp(handler, prof, oppid):
+    opp = find_opp(handler, oppid)
+    if not opp:
         return
     if not is_opp_contact(prof, opp):
         handler.error(412)  # Precondition Failed
@@ -163,7 +169,7 @@ def verify_opp(handler, prof, oppid):
     return opp
 
 
-def verify_work_period(handler, prof, opp, wpid):
+def find_work_period(handler, prof, opp, wpid):
     wp = WorkPeriod.get_by_id(wpid)
     if not wp:
         handler.error(412)  # Precondition Failed
@@ -179,22 +185,33 @@ def verify_work_period(handler, prof, opp, wpid):
         handler.error(403)  # Forbidden
         handler.response.out.write("Not volunteer or coordinator.")
         return
-    if isvol:
+    return wp
+
+
+def verify_work_period(handler, prof, opp, wpid):
+    wp = find_work_period(handler, wpid)
+    if not wp:
+        return
+    errmsg = "WorkPeriod status " + wp.status + " may not be modified"
+    if wp.volunteer == prof.key().id():
         if wp.status == "Inquiring" or wp.status == "Responded" or\
                 wp.status == "Volunteering":
             return wp
-    if iscoord:
+    if is_opp_contact(prof, opp):
         if wp.status == "Inquiring":
             return wp
         if wp.status == "Done" or wp.status == "No Show" or\
-                wp.status == "Partial" or wp.status == "Modified" or\
                 wp.status == "Completed":
+            if not wp.done:  # verify completion date set
+                wp.done = dt2ISO(datetime.datetime.utcnow())
             daymok = dt2ISO(datetime.datetime.utcnow() - datetime.timedelta(15))
             if wp.done and daymok < wp.done:
                 return wp
+            else:
+                errmsg = "WorkPeriod status " + wp.status +\
+                    " may no longer be modified"
     handler.error(403)  # Forbidden
-    handler.response.out.write("WorkPeriod status " + wp.status +
-                               " may not be modified")
+    handler.response.out.write(errmsg)
 
 
 def read_general_wp_values(handler, wp):
@@ -384,8 +401,8 @@ def contact_add_to_book(handler, myprof):
     if not prof:
         return
     tstamp = nowISO()
-    prepend_comm(handler, myprof, prof, [tstamp, 'mab'])
-    prepend_comm(handler, prof, myprof, [tstamp, 'tab'])
+    prepend_comm(handler, myprof, prof, [tstamp, 'mab', ""])
+    prepend_comm(handler, prof, myprof, [tstamp, 'tab', ""])
     returnJSON(handler.response, [ myprof ])
 
 
@@ -394,17 +411,19 @@ def contact_work_complete(handler, myprof):
     if not prof:
         return
     oppid = intz(handler.request.get('oppid'))
-    opp = verify_opp(handler, prof, oppid)
+    opp = verify_opp(handler, myprof, oppid)
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
-    wp = verify_work_period(handler, prof, opp, wpid)
+    wp = verify_work_period(handler, myprof, opp, wpid)
     if not wp:
         return
     tstamp = nowISO()
     read_general_wp_values(handler, wp)
     wp.modified = tstamp
-    wp.status = "Complete"
+    wp.status = "Completed"
+    if not wp.hours:
+        wp.status = "No Show"
     wp.visibility = 3
     wp.put()
     msgtxt = handler.request.get('msgtxt') or ""
@@ -424,14 +443,11 @@ def contact_opportunity_review(handler, myprof):
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
-    wp = verify_work_period(handler, myprof, opp, wpid)
+    wp = find_work_period(handler, myprof, opp, wpid)
     if not wp:
         return
     tstamp = nowISO()
-    read_general_wp_values(handler, wp)
     wp.modified = tstamp
-    wp.status = "Complete"
-    wp.visibility = 3
     msgtxt = handler.request.get('msgtxt') or ""
     wp.coordshout = msgtxt
     wp.put()
@@ -447,18 +463,15 @@ def contact_volunteer_review(handler, myprof):
     if not prof:
         return
     oppid = intz(handler.request.get('oppid'))
-    opp = verify_opp(handler, prof, oppid)
+    opp = verify_opp(handler, myprof, oppid)
     if not opp:
         return
     wpid = intz(handler.request.get('wpid'))
-    wp = verify_work_period(handler, prof, opp, wpid)
+    wp = find_work_period(handler, prof, opp, wpid)
     if not wp:
         return
     tstamp = nowISO()
-    read_general_wp_values(handler, wp)
     wp.modified = tstamp
-    wp.status = "Complete"
-    wp.visibility = 3
     msgtxt = handler.request.get('msgtxt') or ""
     wp.volshout = msgtxt
     wp.put()
@@ -472,11 +485,14 @@ def contact_volunteer_review(handler, myprof):
 def contact_share_opportunity(handler, myprof):
     # Preventing repeated sharing of the same opportunity with the
     # same person is only checked client side for now.
+    prof = get_contact_receiver(handler)
+    if not prof:
+        return
     oppid = intz(handler.request.get('oppid'))
-    opp = verify_opp(handler, prof, oppid)
+    opp = find_opp(handler, oppid)
     if not opp:
         return
-    if not (is_opp_contact(prof, opp) or is_friend(myprof, prof)):
+    if not is_opp_contact(myprof, opp) and not is_friend(myprof, prof):
         handler.error(403)  # Forbidden
         handler.response.out.write("Must be a coordinator or friend to share.")
         return
@@ -490,6 +506,16 @@ def contact_share_opportunity(handler, myprof):
                  [tstamp, 'tsh', msgtxt, oppname, str(oppid)])
     returnJSON(handler.response, [ myprof ])
     
+
+def contact_dismiss_share(handler, myprof):
+    prof = get_contact_receiver(handler)
+    if not prof:
+        return
+    tstamp = nowISO()
+    prepend_comm(handler, myprof, prof,
+                 [tstamp, 'msd', ""])
+    returnJSON(handler.response, [ myprof ])
+
 
 def contact_request_email(handler, myprof):
     prof = get_contact_receiver(handler)
@@ -551,11 +577,6 @@ def contact_remove_entry(handler, myprof):
 
 class ContactHandler(webapp2.RequestHandler):
     def post(self):
-        # TODO: remove this block after initial testing completed
-        if not self.request.url.startswith('http://localhost'):
-            self.error(412)  # Precondition Failed
-            self.response.out.write("contact not implemented yet")
-            return
         myprof = profile.authprof(self)
         if not myprof:
             return
@@ -582,12 +603,14 @@ class ContactHandler(webapp2.RequestHandler):
             return contact_volunteer_review(self, myprof)
         if code == 'msh':
             return contact_share_opportunity(self, myprof)
+        if code == 'msd':
+            return contact_dismiss_share(self, myprof)
         if code == 'mci':
             return contact_request_email(self, myprof)
         if code == 'mcg':
             return contact_ignore_email(self, myprof)
         if code == 'mcr':
-            return contact_respond_email(self, myprof, prof)
+            return contact_respond_email(self, myprof)
         if code == 'rme':  # extension message for book cleanup if needed
             return contact_remove_entry(self, myprof, prof)
         if code == 'nop':  # loopback test for debugging

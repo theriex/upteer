@@ -72,6 +72,9 @@ return {
     getFull: function (type, id, callback, debugmsg) {
         var ref, url;
         id = idify(id);
+        if(!id) {
+            jt.log("No ID specified, so nothing to retrieve");
+            return; }
         ref = app.lcs.getRef(type, id);
         if(ref && ref.status !== "not cached") {
             if(debugmsg) {
