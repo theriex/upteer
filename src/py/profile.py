@@ -17,6 +17,7 @@ class Profile(db.Model):
     email = db.StringProperty(required=True)    # lowercase
     zipcode = db.StringProperty(required=True)  # 5 numbers (+4 not used)
     modified = db.StringProperty()              # ISO date
+    accessed = db.StringProperty()              # ISO date
     name = db.StringProperty()                  # displayed on site
     status = db.StringProperty()                # Available/Busy/Inactive
     profpic = db.BlobProperty()
@@ -83,6 +84,8 @@ class MyProfile(webapp2.RequestHandler):
         result = []
         prof = authprof(self)
         if prof:
+            prof.accessed = nowISO()
+            prof.put()
             result = [ prof ]
         returnJSON(self.response, result)
 

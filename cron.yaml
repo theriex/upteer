@@ -1,0 +1,5 @@
+cron:
+- description: stats
+  url: /daystats
+  schedule: every day 00:01
+  timezone: Pacific/Honolulu

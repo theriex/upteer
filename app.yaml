@@ -159,6 +159,16 @@ handlers:
 
 
 ######################################################################
+# Stats
+
+## Compute the daily stats
+## cron access only
+- url: /daystats.*
+  script: src.py.stat.app
+  login: admin
+
+
+######################################################################
 # General endpoints
 
 ## Trap anything ending with a slash and send it to index.html since
