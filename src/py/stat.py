@@ -5,6 +5,7 @@ import logging
 from login import *
 import profile
 import opportunity
+import work
 
 class StatPoint(db.Model):
     day = db.StringProperty(required=True)  # ISO date start of day
@@ -17,7 +18,11 @@ def update_daily_counts(stat):
     pcnt = gql.count(read_policy=db.EVENTUAL_CONSISTENCY)
     gql = opportunity.Opportunity.gql("WHERE status = 'Open'")
     ocnt = gql.count(read_policy=db.EVENTUAL_CONSISTENCY)
-    stat.daily = "logins:" + str(pcnt) + ",opportunities:" + str(ocnt)
+    gql = work.WorkPeriod.gql("WHERE status = 'Volunteering'")
+    vcnt = gql.count(read_policy=db.EVENTUAL_CONSISTENCY)
+    stat.daily = "logins:" + str(pcnt) +\
+        ",opportunities:" + str(ocnt) +\
+        ",volunteering:" + str(vcnt)
 
 
 class ComputeDailyStats(webapp2.RequestHandler):
