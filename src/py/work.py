@@ -189,7 +189,7 @@ def find_work_period(handler, prof, opp, wpid):
 
 
 def verify_work_period(handler, prof, opp, wpid):
-    wp = find_work_period(handler, wpid)
+    wp = find_work_period(handler, wpid, opp, wpid)
     if not wp:
         return
     errmsg = "WorkPeriod status " + wp.status + " may not be modified"
