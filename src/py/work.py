@@ -8,6 +8,7 @@ from login import *
 import profile
 import organization
 import opportunity
+import stat
 
 # The intent of a WorkPeriod is to facilitate the contact process,
 # track hours being volunteered, and make it cool to see all the work
@@ -262,6 +263,7 @@ def contact_volunteer_inquiry(handler, myprof):
                  [tstamp, 'mvi', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tvi', msgtxt, wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mvi', 'tvi'])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -286,6 +288,7 @@ def contact_inquiry_withdrawal(handler, myprof):
                  [tstamp, 'mvw', "", wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tvw', "", wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mvw', 'tvw'])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -315,6 +318,7 @@ def contact_work_update(handler, myprof):
     wp.put()
     prepend_comm(handler, myprof, prof,
                  [tstamp, 'mwu', "", wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mvu'])
     returnJSON(handler.response, [ myprof, wp ])
     
 
@@ -342,6 +346,7 @@ def contact_work_done(handler, myprof):
                  [tstamp, 'mwd', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'twd', msgtxt, wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mwd', 'twd'])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -367,6 +372,7 @@ def contact_inquiry_refusal(handler, myprof):
                  [tstamp, 'mvf', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tvf', msgtxt, wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mvf', 'tvf'])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -393,6 +399,7 @@ def contact_inquiry_response(handler, myprof):
                  [tstamp, 'mvy', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tvy', msgtxt, wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mvy', 'tvy'])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -403,6 +410,7 @@ def contact_add_to_book(handler, myprof):
     tstamp = nowISO()
     prepend_comm(handler, myprof, prof, [tstamp, 'mab', ""])
     prepend_comm(handler, prof, myprof, [tstamp, 'tab', ""])
+    stat.bump_comm_count(['mab', 'tab'])
     returnJSON(handler.response, [ myprof ])
 
 
@@ -431,6 +439,7 @@ def contact_work_complete(handler, myprof):
                  [tstamp, 'mwc', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'twc', msgtxt, wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mwc', 'twc'])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -455,6 +464,7 @@ def contact_opportunity_review(handler, myprof):
                  [tstamp, 'mor', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tor', msgtxt, wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mor', 'tor'])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -479,6 +489,7 @@ def contact_volunteer_review(handler, myprof):
                  [tstamp, 'mvr', msgtxt, wp.oppname, str(oppid), str(wpid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tvr', msgtxt, wp.oppname, str(oppid), str(wpid)])
+    stat.bump_comm_count(['mvr', 'tvr'])
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -504,6 +515,7 @@ def contact_share_opportunity(handler, myprof):
                  [tstamp, 'msh', msgtxt, oppname, str(oppid)])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tsh', msgtxt, oppname, str(oppid)])
+    stat.bump_comm_count(['msh', 'tsh'])
     returnJSON(handler.response, [ myprof ])
     
 
@@ -514,6 +526,7 @@ def contact_dismiss_share(handler, myprof):
     tstamp = nowISO()
     prepend_comm(handler, myprof, prof,
                  [tstamp, 'msd', ""])
+    stat.bump_comm_count(['msd'])
     returnJSON(handler.response, [ myprof ])
 
 
@@ -531,6 +544,7 @@ def contact_request_email(handler, myprof):
                  [tstamp, 'mci', msgtxt])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tci', msgtxt])
+    stat.bump_comm_count(['mci', 'tci'])
     returnJSON(handler.response, [ myprof ])
 
 
@@ -540,7 +554,8 @@ def contact_ignore_email(handler, myprof):
         return
     tstamp = nowISO()
     prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mcr', ""])
+                 [tstamp, 'mcg', ""])
+    stat.bump_comm_count(['mcg'])
     returnJSON(handler.response, [ myprof ])
 
 
@@ -554,6 +569,7 @@ def contact_respond_email(handler, myprof):
                  [tstamp, 'mcr', msgtxt])
     prepend_comm(handler, prof, myprof,
                  [tstamp, 'tcr', msgtxt])
+    stat.bump_comm_count(['mcr', 'tcr'])
     returnJSON(handler.response, [ myprof ])
     
 

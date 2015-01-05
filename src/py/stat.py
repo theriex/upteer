@@ -13,6 +13,42 @@ class StatPoint(db.Model):
     comms = db.TextProperty()               # code:count CSV
 
 
+def get_stat_record(daystr):
+    stat = None
+    gql = StatPoint.gql("WHERE day=:1 LIMIT 1", daystr)
+    stats = gql.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=10)
+    if len(stats) > 0:
+        stat = stats[0]
+    else:
+        stat = StatPoint(day=daystr)
+        stat.comms = ""
+    return stat
+
+
+# Numerous calls to this function in quick succession could
+# potentially cause some updates to be lost due to database lag.  Not
+# critical, but important to not skew logical pairs of comms which is
+# why this takes more than one code at once.
+def bump_comm_count(codes):
+    today = nowISO()[0:10] + "T00:00:00Z"
+    stat = get_stat_record(today)
+    for code in codes:
+        ccs = csv_list(stat.comms)
+        updated = False
+        for cc in ccs:
+            if cc.startswith(code):
+                count = int(cc[4:])
+                cc = code + ":" + str(count)
+                updated = True
+                break
+        stat.comms = ",".join(ccs)
+        if not updated:
+            if stat.comms:
+                stat.comms += ","
+            stat.comms += code + ":1"
+    stat.put()
+
+
 def update_daily_counts(stat):
     gql = profile.Profile.gql("WHERE accessed > :1", stat.day)
     pcnt = gql.count(read_policy=db.EVENTUAL_CONSISTENCY)
@@ -29,14 +65,7 @@ class ComputeDailyStats(webapp2.RequestHandler):
     def get(self):
         yesterday = dt2ISO(datetime.datetime.utcnow() - datetime.timedelta(1))
         yesterday = yesterday[0:10] + "T00:00:00Z"
-        stat = None
-        gql = StatPoint.gql("WHERE day=:1 LIMIT 1", yesterday)
-        stats = gql.fetch(1, read_policy=db.EVENTUAL_CONSISTENCY, deadline=10)
-        if len(stats) > 0:
-            stat = stats[0]
-        else:
-            stat = StatPoint(day=yesterday)
-            stat.comms = ""
+        get_stat_record(yesterday)
         update_daily_counts(stat)
         msg = "ComputeDailyStats updated stats for " + stat.day[0:10] +\
             ". daily: " + stat.daily +\
