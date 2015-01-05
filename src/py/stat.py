@@ -65,7 +65,7 @@ class ComputeDailyStats(webapp2.RequestHandler):
     def get(self):
         yesterday = dt2ISO(datetime.datetime.utcnow() - datetime.timedelta(1))
         yesterday = yesterday[0:10] + "T00:00:00Z"
-        get_stat_record(yesterday)
+        stat = get_stat_record(yesterday)
         update_daily_counts(stat)
         stat.put()
         msg = "ComputeDailyStats updated stats for " + stat.day[0:10] +\
