@@ -67,6 +67,7 @@ class ComputeDailyStats(webapp2.RequestHandler):
         yesterday = yesterday[0:10] + "T00:00:00Z"
         get_stat_record(yesterday)
         update_daily_counts(stat)
+        stat.put()
         msg = "ComputeDailyStats updated stats for " + stat.day[0:10] +\
             ". daily: " + stat.daily +\
             " comms: " + stat.comms
