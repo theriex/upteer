@@ -162,10 +162,15 @@ handlers:
 # Stats
 
 ## Compute the daily stats
-## cron access only
+## GET cron access only
 - url: /daystats.*
   script: src.py.stat.app
   login: admin
+
+## Fetch daily stats
+## GET
+- url: /fetchdaystats.*
+  script: src.py.stat.app
 
 
 ######################################################################

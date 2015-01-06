@@ -74,6 +74,8 @@ def newtoken(email, password):
     key = pwd2key(password)
     token = ":" + str(int(round(time.time()))) + ":" + asciienc(email)
     token = token.rjust(32, 'X')
+    if len(token) > 32:
+        token = token.rjust(64, 'X')
     token = AES.new(key, AES.MODE_CBC).encrypt(token)
     token = base64.b64encode(token)
     # make token url safe

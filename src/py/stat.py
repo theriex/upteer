@@ -76,6 +76,16 @@ class ComputeDailyStats(webapp2.RequestHandler):
             self.response.out.write(msg)
 
 
-app = webapp2.WSGIApplication([('/daystats', ComputeDailyStats)
+class FetchDailyStats(webapp2.RequestHandler):
+    def get(self):
+        cutoff = dt2ISO(datetime.datetime.utcnow() - datetime.timedelta(200))
+        cutoff = cutoff[0:10] + "T00:00:00Z"
+        gql = StatPoint.gql("WHERE day >= :1", cutoff)
+        stats = gql.fetch(200, read_policy=db.EVENTUAL_CONSISTENCY, deadline=10)
+        returnJSON(self.response, stats)
+
+
+app = webapp2.WSGIApplication([('/daystats', ComputeDailyStats),
+                               ('/fetchdaystats', FetchDailyStats)
                                ], debug=True)
 
