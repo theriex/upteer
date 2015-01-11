@@ -188,7 +188,7 @@ return {
         dlgdiv.style.top = String(coords.y) + "px";
         dlgdiv.style.width = (coords.w || Math.round(app.winw * 0.7)) + "px";
         if(app.winw < 500) {
-            dlgdiv.style.width = Math.round(app.winw * 0.9) + "px"; }
+            dlgdiv.style.width = (Math.round(app.winw * 0.9) - 30) + "px"; }
         if(!app.escapefuncstack) {
             app.escapefuncstack = []; }
         app.escapefuncstack.push(app.onescapefunc);
