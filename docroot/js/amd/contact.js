@@ -675,17 +675,36 @@ app.contact = (function () {
     },
 
 
+    commEntryLink = function (profid, comms, index) {
+        var html, comm;
+        comm = comms[index];
+        html = ["a", {href: "#" + comm[1] + comm[0],
+                      onclick: jt.fs("app.contact.togglebookdet('" + 
+                                     profid + "'," + index + ")")},
+                ["span", {cla: "cbentrycommlinkspan"},
+                 actionForCode(comm[1]).actname]];
+        return html;
+    },
+
+
     bookEntryCommLinksHTML = function (profid, comms) {
-        var html = [], i, comm;
-        for(i = 0; i < comms.length; i += 1) {
-            comm = comms[i];
-            if(i > 0) {
+        var html = [], i;
+        for(i = 1; i < comms.length; i += 1) {
+            if(i > 1) {
                 html.push(", "); }
-            html.push(["a", {href: "#" + comm[1] + comm[0],
-                             onclick: jt.fs("app.contact.togglebookdet('" + 
-                                            profid + "'," + i + ")")},
-                       ["span", {cla: "cbentrycommlinkspan"},
-                        comm[1]]]); }
+            html.push(commEntryLink(profid, comms, i)); }
+        if(comms.length > 1) {
+            html = [["div", {cla: "cbentrycommdettogglediv", 
+                             id: "cbm" + profid},
+                     ["a", {href: "#showdetails",
+                            onclick: jt.fs("app.contact.commdet('" + profid + 
+                                           "')")},
+                      "&nbsp;&nbsp;+" + String(comms.length - 1) + "..."]],
+                    ["div", {cla: "cbentrycommdetdiv", id: "cbcd" + profid},
+                     html]]; }
+        if(comms.length > 0) {
+            html = [commEntryLink(profid, comms, 0),
+                    html]; }
         return html;
     },
 
@@ -1083,6 +1102,12 @@ return {
     },
 
 
+    commdet: function (profid) {
+        jt.out("cbm" + profid, ",&nbsp;");
+        jt.byId("cbcd" + profid).style.display = "inline-block";
+    },
+
+
     togglebookdet: function (profid, index) {
         var entry, comm, action, nextstate, div, html;
         entry = findEntry(profid);
@@ -1099,6 +1124,11 @@ return {
         if(div.style.display === "block" && jt.byId("cbdet" + profid + index)) {
             div.style.display = "none"; }
         else {
+            html = "";
+            if(!actedOn(codeDefinition(comm[1]), commObject(comm), 
+                        entry[3], index)) {
+                html = commWorkUpdateButtonHTML(profid, index, comm, 
+                                                nextstate); }
             //ATTENTION: scroll the book display profile to top of div
             html = [["div", {cla: "cbdet1div", id: "cbdet" + profid + index},
                      [["span", {cla: "cbdtstamp"}, 
@@ -1116,7 +1146,7 @@ return {
                                         "What Happens Next?", 
                                         nextstate),
                     ["div", {cla: "formbuttonsdiv"},
-                     commWorkUpdateButtonHTML(profid, index, comm, nextstate)]];
+                     html]];
             jt.out("cbed" + profid, jt.tac2html(html));
             div.style.display = "block"; }
     },
