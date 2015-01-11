@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en" itemscope="itemscope" itemtype="http://schema.org/WebPage">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="robots" content="noodp" />
+  <meta name="description" content="Upteer statistical charts" />
+  <title>Upteer Stats</title>
+<style>
+
+body { font: 10px sans-serif; }
+div { padding:10px; }
+.titletxt { font-size:x-large; font-weight:bold; }
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.line {
+  fill: none;
+}
+
+.statlabel { padding-left:10px;}
+.statlab2 { font-style:italic; padding-left:4px; }
+.statval { font-weight:bold; padding-left:2px; }
+.statvalkey { padding-left:2px; }
+
+</style>
+</head>
+<body>
+
+<div id="dailystatsdiv">
+  <div id="dailykeysdiv"><p>Loading d3...</p></div>
+  <div id="dailychartdiv"></div>
+</div>
+
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="../js/jtmin.js"></script>
+<script src="../js/amd/actstat.js"></script>
+<script>
+  actstat.display();
+</script>
+
+</body>
+</html>
