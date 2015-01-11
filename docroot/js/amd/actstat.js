@@ -58,10 +58,12 @@ var actstat = (function () {
 
 
     makeSeriesDef = function (sname) {
-        var scolor;
+        var scolor, dashstr = "1, 0";
         scolor = colors[sercoloridx % colors.length];
         sercoloridx += 1;
-        return { name: sname, width: "2px", dashes: "1, 0", 
+        if(sname === "opportunities" || sname === "volunteering") {
+            dashstr = "3, 3"; }
+        return { name: sname, width: "2px", dashes: dashstr, 
                  color: scolor, total: 0, min: 0, max: 0,
                  title: "See stat.py for key defs" };
     },
