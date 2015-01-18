@@ -9,6 +9,7 @@ import profile
 import organization
 import opportunity
 import stat
+from google.appengine.api import mail
 
 # The intent of a WorkPeriod is to facilitate the contact process,
 # track hours being volunteered, and make it cool to see all the work
@@ -681,7 +682,19 @@ class WorkPeriodById(webapp2.RequestHandler):
         returnJSON(self.response, [ wp ])
 
 
+class MailTest(webapp2.RequestHandler):
+    def get(self):
+        tstamp = nowISO()
+        mail.send_mail(
+            sender="Upteer Administrator <admin@upteer.com>",
+            to="theriex@gmail.com",
+            subject="mailtest call",
+            body="Server time is " + tstamp)
+        self.response.out.write("Mail sent " + tstamp)
+
+
 app = webapp2.WSGIApplication([('/contact', ContactHandler),
                                ('/fetchwork', FetchWork),
+                               ('/mailtest', MailTest),
                                ('/wpbyid', WorkPeriodById)
                                ], debug=True)

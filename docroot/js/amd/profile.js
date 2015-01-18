@@ -161,16 +161,81 @@ app.profile = (function () {
     },
 
 
+    requiredFieldError = function (prof) {
+        if(!prof.name) {
+            return "Please give your name"; }
+        if(!prof.email) {
+            return "An email address is required"; }
+        if(!prof.zipcode) {
+            return "Region matching needs a zipcode to work"; }
+        return "";
+    },
+
+
+    isValidProfile = function (prof) {
+        var i;
+        for(i = 0; i < statusvals.length; i += 1) {
+            if(prof.status === statusvals[i]) {
+                return true; } }
+        return false;
+    },
+
+
+    statHTML = function (prof) {
+        if(prof.status === "No Pic") {
+            return ["a", {href: "#pic", 
+                          onclick: jt.fs("app.profile.explainPic()")},
+                    "Pending"]; }
+        if(prof.status === "Pending") {
+            return ["a", {href: "#verify",
+                          onclick: jt.fs("app.profile.explainVerify()")},
+                    "Pending"]; }
+        return prof.status;
+    },
+
+
+    profStatSelRowCellsHTML = function (prof) {
+        var options = [], i, html = [];
+        if(requiredFieldError(prof)) {
+            return ""; }
+        if(isValidProfile(prof)) {
+            for(i = 0; i < statusvals.length; i += 1) {
+                options.push(
+                    ["option", {id: "statval" + (+i),
+                         selected: jt.toru((prof.status === statusvals[i]), 
+                                           "selected")},
+                     statusvals[i]]); }
+            html = [["td", {align: "right"},
+                     ["label", {fo: "statussel", cla: "formlabel"},
+                      "Status"]],
+                    ["td", {align: "left"},
+                     ["select", {id: "statussel"},
+                      options]]];
+            return html; }
+        if(prof.status === "Pending") {
+            html = [["td", {align: "right"},
+                     ["label", {fo: "valemb", cla: "formlabel"},
+                      "Status"]],
+                    ["td", {align: "left"},
+                     ["Pending&nbsp;",
+                      ["button", {type: "button", id: "valemb",
+                                  onclick: jt.fs("app.profile.save('resend')")},
+                       "Resend Validation Email"]]]];
+            return html; }
+        //some other interim value, display as read-only
+        html = [["td", {align: "right"},
+                 ["label", {fo: "statusval", cla: "formlabel"},
+                  "Status"]],
+                ["td", {align: "left"},
+                 statHTML(prof)]];
+        return html;
+    },
+
+
     //ATTENTION: allow for changing email after initial profile setup.
     editProfile = function () {
-        var html, prof = myprof, options = [], i;
+        var html, prof = myprof;
         verifyProfileFieldValues(prof);
-        for(i = 0; i < statusvals.length; i += 1) {
-            options.push(
-                ["option", {id: "statval" + (+i),
-                            selected: jt.toru((prof.status === statusvals[i]), 
-                                              "selected")},
-                 statusvals[i]]); }
         html = ["div", {id: "profdiv"},
                 [["div", {id: "profstatdiv", cla: "formstatdiv"}, 
                   "&nbsp;"],
@@ -187,9 +252,8 @@ app.profile = (function () {
                       ["input", {type: "text", id: "namein", name: "namein",
                                  value: prof.name || "",
                                  size: 20, placeholder: "Your Name"}]]]],
-                   ["tr",
-                    [//pic html extends into here
-                     ["td", {align: "right"},
+                   ["tr", //pic html extends into here
+                    [["td", {align: "right"},
                       ["label", {fo: "emailin", cla: "formlabel"},
                        "Email"]],
                      ["td", {align: "left"},
@@ -197,23 +261,16 @@ app.profile = (function () {
                                  size: 20, value: app.login.getAuthName(),
                                  placeholder: app.login.getAuthName(),
                                  disabled: "disabled"}]]]],
-                   ["tr",
-                    [//pic html extends into here
-                     ["td", {align: "right"},
+                   ["tr", //pic html extends into here
+                    [["td", {align: "right"},
                       ["label", {fo: "zipin", cla: "formlabel"},
                        "Zipcode"]],
                      ["td", {align: "left"},
                       ["input", {type: "text", id: "zipin", name: "zipin",
                                  value: prof.zipcode || "",
                                  size: 8, placeholder: "99999"}]]]],
-                   ["tr",
-                    [//pic html extends into here
-                     ["td", {align: "right"},
-                      ["label", {fo: "statussel", cla: "formlabel"},
-                       "Status"]],
-                     ["td", {align: "left"},
-                      ["select", {id: "statussel"},
-                       options]]]],
+                   ["tr", //pic html extends into here
+                    profStatSelRowCellsHTML(prof)],
                    ["tr",
                     ["td", {colspan: 3},
                      ["div", {id: "aboutdiv", cla: "bigtxtdiv"},
@@ -258,15 +315,6 @@ app.profile = (function () {
     },
 
 
-    statHTML = function (prof) {
-        if(prof.status === "No Pic") {
-            return ["a", {href: "#pic", 
-                          onclick: jt.fs("app.profile.explainPic()")},
-                    "Pending"]; }
-        return prof.status;
-    },
-
-
     readProfile = function (prof) {
         var html;
         verifyProfileFieldValues(prof);
@@ -308,24 +356,26 @@ app.profile = (function () {
         skillKeywordsDisplay(prof);
         app.contact.wpsProfileDisplay("wpsprofdiv", prof);
         app.menu.display();
+        if(prof.status === "Pending" && !requiredFieldError(prof)) {
+            jt.out('profstatdiv', "Profile activation link sent to " + 
+                   prof.email); }
     },
 
 
     saveProfile = function (edit) {
-        var data,  prof = myprof;
-        if(!prof.name) {
-            jt.out('profstatdiv', "Please give your name");
-            return; }
-        if(!prof.email) {
-            jt.out('profstatdiv', "An email address is required");
-            return; }
-        if(!prof.zipcode) {
-            jt.out('profstatdiv', "Region matching needs a zipcode to work");
+        var data,  prof = myprof, err;
+        err = requiredFieldError(prof);
+        if(err) {
+            jt.out('profstatdiv', err);
             return; }
         data = jt.objdata(prof);
+        if(edit === "resend") {
+            data += "&side=sendprofverify";
+            edit = ""; }
         jt.call('POST', "saveprof?" + app.login.authparams(), data,
                 function (saveprofs) {
                     myprof = saveprofs[0];
+                    app.lcs.put("prof", myprof);
                     if(edit === "picupld") {
                         displayUploadPicForm(myprof); }
                     else if(edit === "addorg") {
@@ -419,12 +469,34 @@ return {
 
     explainPic: function () {
         var html;
+        if(!jt.byId("picplaceholderdiv")) {
+            //if you upload a pic without clicking save, the "Pending" link
+            //may be outdated.
+            return app.profile.explainVerify(); }
         html = [["p", "Please upload a pic.  People need to be able to recognize you when coordinating opportunities."],
                 ["div", {cla: "dlgbuttonsdiv"},
                  ["button", {type: "button", id: "okbutton",
                              onclick: jt.fs("app.layout.closeDialog()")},
                   "OK"]]];
         html = app.layout.dlgwrapHTML("Missing Picture", html);
+        app.layout.openDialog({y:90}, jt.tac2html(html), null,
+                              function () {
+                                  jt.byId('okbutton').focus(); });
+    },
+
+
+    explainVerify: function () {
+        var msg, html;
+        msg = "A profile activation link has been sent to ";
+        if(jt.byId('profsaveb')) {
+            msg = "After saving, a profile activation link will be sent to "; }
+        msg += myprof.email + ". Click that link to return the activation code and activate your profile.";
+        html = [["p", msg],
+                ["div", {cla: "dlgbuttonsdiv"},
+                 ["button", {type: "button", id: "okbutton",
+                             onclick: jt.fs("app.layout.closeDialog()")},
+                  "OK"]]];
+        html = app.layout.dlgwrapHTML("Profile Activation", html);
         app.layout.openDialog({y:90}, jt.tac2html(html), null,
                               function () {
                                   jt.byId('okbutton').focus(); });

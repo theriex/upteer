@@ -6,6 +6,8 @@ import logging
 from login import *
 import organization
 import match
+import string
+import random
 
 
 # The email address is verified by confirmation.  Before that the
@@ -24,7 +26,6 @@ class Profile(db.Model):
     about = db.TextProperty()
     skills = db.TextProperty()                  # skill keywords CSV
     lifestat = db.TextProperty()                # life status keywords CSV
-    mailverify = db.StringProperty()            # ISO date
     orgs = db.TextProperty()                    # CSV of org IDs
     book = db.TextProperty()                    # Contact book JSON
 
@@ -34,11 +35,14 @@ def set_profile_fields(req, prof):
     prof.email = prof.email.lower()
     prof.zipcode = req.get('zipcode') or ""
     prof.name = req.get('name') or ""
-    prof.status = req.get('status') or "Available"
+    if prof.status in ["Available", "Busy", "Inactive"]:
+        reqstat = req.get('status') or prof.status
+        if reqstat in ["Available", "Busy", "Inactive"]:
+            prof.status = reqstat;
     if not prof.profpic:
         prof.status = "No Pic"
-    elif prof.status == "No Pic":
-        prof.status = "Available"
+    if prof.status == "No Pic" and prof.profpic:
+        prof.status = ""  # initialized by confirm_profile
     prof.about = req.get('about') or ""
     prof.skills = req.get('skills') or ""
     prof.lifestat = req.get('lifestat') or ""
@@ -60,6 +64,47 @@ def verify_profile_fields(handler, prof):
         handler.response.out.write("Listing too many volunteering skills.")
         return False
     return True
+
+
+def is_known_profile_status(statval):
+    if statval == "No Pic" or statval in ["Available", "Busy", "Inactive"]:
+        return True
+    if statval.startswith("Pending"):
+        elements = csv_list(statval)
+        if len(elements) >= 4:
+            return True
+    return False
+
+
+def confirm_profile(handler, prof):
+    if prof.status in ["Available", "Busy", "Inactive"]:
+        return True
+    side = handler.request.get('side')
+    if not is_known_profile_status(prof.status):
+        prof.status = ""  # Unknown value. Re-initialize.
+    if not prof.status:   # either re-initialized or never set
+        side = "sendprofverify"
+    if side == "sendprofverify":
+        stat = prof.status or "Pending,0,1970-01-01T00:00:00Z,"
+        statelems = csv_list(stat)
+        count = int(statelems[1]) + 1
+        code = statelems[3]
+        if not code:
+            chars = string.ascii_letters + string.digits
+            code = "".join(random.choice(chars) for _ in range(30))
+        prof.status = ",".join(["Pending", str(count), nowISO(), code])
+        profid = prof.key().id()
+        url = "https://www.upteer.com/verprof?profid=" +\
+            str(prof.key().id()) + "&code=" + code
+        logging.info("Profile verification " + prof.email + " (" + 
+                     prof.name + ") url: " + url)
+        if not handler.request.url.startswith('http://localhost'):
+            mailtxt = "Aloha " + prof.name + ",\n\nPlease click this link to confirm your email address and activate your profile:\n\n" + url + "\n\nMahalo for joining Upteer!\n\n"
+            mail.send_mail(
+                sender="Upteer Administrator <admin@upteer.com>",
+                to=prof.email,
+                subject="Upteer profile activation",
+                body=mailtxt)
 
 
 def authprof(handler):
@@ -86,6 +131,8 @@ class MyProfile(webapp2.RequestHandler):
         if prof:
             prof.accessed = nowISO()
             prof.put()
+            if prof.status and prof.status.startswith("Pending"):
+                prof.status = "Pending"  # do not send auth code to client
             result = [ prof ]
         returnJSON(self.response, result)
 
@@ -98,20 +145,23 @@ class SaveProfile(webapp2.RequestHandler):
             prof = Profile(email=self.request.get('email'),
                            zipcode=self.request.get('zipcode'))
         else:
-            profid = prof.key().id();
+            profid = prof.key().id()
         prevorgs = prof.orgs or ""
         prevskills = prof.skills or ""
         set_profile_fields(self.request, prof)
         if not verify_profile_fields(self, prof):
             return
-        organization.note_resignations(profid, prevorgs, prof.orgs);
-        prof.put();
+        organization.note_resignations(profid, prevorgs, prof.orgs)
+        confirm_profile(self, prof)
+        prof.put()
         profid = prof.key().id()
         mode = "Clear"
         if prof.status == "Available" or prof.status == "Busy":
             mode = "Update"
         match.update_match_nodes("profile", profid, 
                                  prevskills, prof.skills, mode)
+        if prof.status and prof.status.startswith("Pending"):
+            prof.status = "Pending"  # do not send auth code to client
         returnJSON(self.response, [ prof ])
 
 
@@ -126,7 +176,8 @@ class ProfileById(webapp2.RequestHandler):
             return
         # strip all non-public information
         prof.email = "removed"
-        prof.mailverify = ""
+        if not prof.status in ["Available", "Busy", "Inactive"]:
+            prof.status = "Pending"
         returnJSON(self.response, [ prof ])
 
 
@@ -162,7 +213,7 @@ class UploadProfPic(webapp2.RequestHandler):
             profile.profpic = images.resize(profile.profpic, 160, 160)
             profile.modified = nowISO()
             if profile.status == "No Pic":
-                profile.status = "Available"
+                profile.status = ""
             profile.put()
         except Exception as e:
             self.error(400)
@@ -188,11 +239,31 @@ class GetProfPic(webapp2.RequestHandler):
         self.response.out.write(img)
 
 
+class VerifyProfile(webapp2.RequestHandler):
+    def get(self):
+        profid = self.request.get('profid')
+        prof = Profile.get_by_id(intz(profid))
+        if not prof:
+            self.error(404)
+            self.response.out.write("Profile " + str(profid) + " not found.")
+            return
+        reqcode = self.request.get('code')
+        authcode = csv_list(prof.status)[3]
+        if reqcode != authcode:
+            self.error(403)  # Forbidden
+            self.response.out.write("Code " + reqcode + " does not match.")
+            return
+        prof.status = "Available"
+        prof.put()
+        self.response.headers['Content-Type'] = 'text/html'
+        self.response.out.write("<!DOCTYPE html>\n<html>\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n<title>Upteer Account Validation</title>\n</head>\n<body>\n<p>Your profile has been verified!</p><p><a href=\"../\"><h2>Return to Upteer site</h2></a></p>\n</body></html>")
+
 
 app = webapp2.WSGIApplication([('/myprofile', MyProfile),
                                ('/saveprof', SaveProfile),
                                ('/profbyid', ProfileById),
                                ('/profpicupload', UploadProfPic),
-                               ('/profpic', GetProfPic)
+                               ('/profpic', GetProfPic),
+                               ('/verprof', VerifyProfile)
                                ], debug=True)
 

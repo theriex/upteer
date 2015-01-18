@@ -86,6 +86,11 @@ handlers:
 - url: /profpic.*
   script: src.py.profile.app
 
+## Verify profile
+## GET params: profid, code
+- url: /verprof.*
+  script: src.py.profile.app
+
 
 ######################################################################
 ##        Organization access
@@ -155,6 +160,11 @@ handlers:
 ## Fetch WorkPeriod instance by id
 ## GET params: wpid, authparams
 - url: /wpbyid.*
+  script: src.py.work.app
+
+## Mail send test
+## GET params: none
+- url: /mailtest.*
   script: src.py.work.app
 
 
