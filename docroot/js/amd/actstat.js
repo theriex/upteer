@@ -45,7 +45,7 @@ var actstat = (function () {
 
     dataValue = function (datum, accessor) {
         if(typeof accessor === "string") {
-            return datum[accessor]; }
+            return datum[accessor] || 0; }
         return seriesValue(accessor, datum);
     },
 
@@ -57,28 +57,32 @@ var actstat = (function () {
     },
 
 
-    makeSeriesDef = function (sname) {
-        var scolor, dashstr = "1, 0";
+    makeSeriesDef = function (sname, dname) {
+        var scolor, dashstr;
         scolor = colors[sercoloridx % colors.length];
         sercoloridx += 1;
+        dashstr = "1, 0";
         if(sname === "opportunities" || sname === "volunteering") {
             dashstr = "3, 3"; }
-        return { name: sname, width: "2px", dashes: dashstr, 
-                 color: scolor, total: 0, min: 0, max: 0,
+        return { name: sname, datafield: dname, 
+                 width: "2px", dashes: dashstr, color: scolor, 
+                 total: 0, min: 0, max: 0,
                  title: "See stat.py for key defs" };
     },
 
 
     makeDailySeries = function () {
-        var series = [], i, field, ser, j, datum;
+        var series = [], i, field, rawfn, ser, j, datum, value;
         for(i = 0; i < sernames.length; i += 1) {
+            rawfn = sernames[i];
             field = sertrans[i];
-            ser = makeSeriesDef(field);
+            ser = makeSeriesDef(field, rawfn);
             for(j = 0; j < data.length; j += 1) {
                 datum = data[j];
-                ser.min = Math.min(ser.min, datum[field]);
-                ser.max = Math.max(ser.max, datum[field]);
-                ser.total += datum[field]; }
+                value = datum[field] || datum[rawfn] || 0;
+                ser.min = Math.min(ser.min, value);
+                ser.max = Math.max(ser.max, value);
+                ser.total += value; }
             series.push(ser); }
         return series;
     },
@@ -170,7 +174,7 @@ var actstat = (function () {
                 .attr("stroke", sdef.color)
                 .attr("stroke-width", sdef.width)
                 .attr("stroke-dasharray", sdef.dashes)
-                .attr("d", makeLine(sdef.name)); });
+                .attr("d", makeLine(sdef.datafield)); });
     },
 
 
