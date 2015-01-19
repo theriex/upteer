@@ -100,6 +100,7 @@ button, .loginbutton { cursor:pointer;
   font-family:"Verdana", "Arial", "Helvetica", sans-serif;
 }
 .tdnarrow { width:5%; padding:0px 5px 0px 0px; }
+#emcblabel { font-size:small; padding-left:5px; }
 
 /* org view settings */
 .orglistdiv { font-size:small; padding:5px 0px 5px 20px; }

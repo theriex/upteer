@@ -24,6 +24,7 @@ class Profile(db.Model):
     status = db.StringProperty()                # Available/Busy/Inactive
     profpic = db.BlobProperty()
     about = db.TextProperty()
+    settings = db.TextProperty()                # ad hoc JSON fields
     skills = db.TextProperty()                  # skill keywords CSV
     lifestat = db.TextProperty()                # life status keywords CSV
     orgs = db.TextProperty()                    # CSV of org IDs
@@ -44,6 +45,7 @@ def set_profile_fields(req, prof):
     if prof.status == "No Pic" and prof.profpic:
         prof.status = ""  # initialized by confirm_profile
     prof.about = req.get('about') or ""
+    prof.settings = req.get('settings') or ""
     prof.skills = req.get('skills') or ""
     prof.lifestat = req.get('lifestat') or ""
     prof.orgs = req.get('orgs') or ""
@@ -176,6 +178,7 @@ class ProfileById(webapp2.RequestHandler):
             return
         # strip all non-public information
         prof.email = "removed"
+        prof.settings = ""
         if not prof.status in ["Available", "Busy", "Inactive"]:
             prof.status = "Pending"
         returnJSON(self.response, [ prof ])

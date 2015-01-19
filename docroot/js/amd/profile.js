@@ -232,6 +232,38 @@ app.profile = (function () {
     },
 
 
+    verifySettings = function (prof) {
+        if(!prof.settings) {
+            prof.settings = { }; }
+        if(prof.settings.emailNotify === undefined) {
+            prof.settings.emailNotify = true; }
+    },
+
+
+    hasSetting = function (prof, setting) {
+        verifySettings(prof);
+        return prof.settings[setting];
+    },
+
+
+    emailNoticeForwardingRowHTML = function (prof) {
+        var html;
+        if(!isValidProfile(prof)) {
+            return ""; }
+        html = ["tr",
+                ["td", {colspan: 3},
+                 ["div", {id: "emailnotifydiv", cla: "emailnotifydiv"},
+                  [["input", {type: "checkbox", name: "emcb", id: "emcb",
+                              cla: "notifycb", value: "emailNotices",
+                              checked: jt.toru(hasSetting(prof, "emailNotify"),
+                                               "checked"),
+                              onchange: jt.fs("app.profile.emcbchg()")}],
+                   ["label", {fo: "emailNotices", id: "emcblabel"},
+                    "Forward site communications to my email"]]]]];
+        return html;
+    },
+
+
     //ATTENTION: allow for changing email after initial profile setup.
     editProfile = function () {
         var html, prof = myprof;
@@ -275,6 +307,7 @@ app.profile = (function () {
                     ["td", {colspan: 3},
                      ["div", {id: "aboutdiv", cla: "bigtxtdiv"},
                       ["textarea", {id: "abouttxt", cla: "bigta"}]]]],
+                   emailNoticeForwardingRowHTML(prof),
                    ["tr", ["td", {colspan: 3}, ["div", {id: "lifestatdiv"}]]],
                    ["tr", ["td", {colspan: 3}, ["div", {id: "skillsdiv"}]]],
                    ["tr", ["td", {colspan: 3}, ["div", {id: "voluntdiv"}]]],
@@ -368,10 +401,12 @@ app.profile = (function () {
         if(err) {
             jt.out('profstatdiv', err);
             return; }
+        app.profile.serializeFields(prof);
         data = jt.objdata(prof);
         if(edit === "resend") {
             data += "&side=sendprofverify";
             edit = ""; }
+        app.profile.deserializeFields(prof);  //in case save fails
         jt.call('POST', "saveprof?" + app.login.authparams(), data,
                 function (saveprofs) {
                     myprof = saveprofs[0];
@@ -418,7 +453,9 @@ return {
             saveneeded = true;
             myprof.orgs = myprof.orgs.csvappend(orgid); }
         if(saveneeded) {
+            app.profile.serializeFields(myprof);
             data = jt.objdata(myprof);
+            app.profile.deserializeFields(myprof);
             jt.call('POST', "saveprof?" + app.login.authparams(), data,
                     function (profs) {
                         myprof = profs[0];
@@ -469,7 +506,7 @@ return {
 
     explainPic: function () {
         var html;
-        if(!jt.byId("picplaceholderdiv")) {
+        if(jt.byId('profsaveb') && !jt.byId('picplaceholderdiv')) {
             //if you upload a pic without clicking save, the "Pending" link
             //may be outdated.
             return app.profile.explainVerify(); }
@@ -579,15 +616,18 @@ return {
 
 
     serializeFields: function (prof) {
-        //the contact book is not updated when saving the profile, so it
-        //is not necessary to serialize profile.book when saving.
+        //the contact book is not updated when saving the profile, but it
+        //is serialized here for call data passthrough.
         if(typeof prof.book === 'object') {
             prof.book = JSON.stringify(prof.book); }
+        if(typeof prof.settings === 'object') {
+            prof.settings = JSON.stringify(prof.settings); }
     },
 
 
     deserializeFields: function (prof) {
         app.lcs.reconstituteJSONObjectField("book", prof);
+        app.lcs.reconstituteJSONObjectField("settings", prof);
     },
 
 
@@ -599,6 +639,16 @@ return {
         if(myprof.status === "Inactive") {
             errtxt = "Activate your profile to find volunteer opportunities"; }
         jt.out('profstatdiv', errtxt);
+    },
+
+
+    emcbchg: function () {
+        var cb = jt.byId("emcb");
+        verifySettings(myprof);
+        if(cb && cb.checked) {
+            myprof.settings.emailNotify = true; }
+        else {
+            myprof.settings.emailNotify = false; }
     }
 
 };  //end of returned functions

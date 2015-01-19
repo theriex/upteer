@@ -10,6 +10,7 @@ import organization
 import opportunity
 import stat
 from google.appengine.api import mail
+import re
 
 # The intent of a WorkPeriod is to facilitate the contact process,
 # track hours being volunteered, and make it cool to see all the work
@@ -108,6 +109,36 @@ def retention_filter(comms):
     return fcs
 
 
+def forward_notice_to_email(handler, prof, comm, fromname):
+    mcs = { 'tvi': "Volunteering Inquiry", 
+            'twd': "Work Done", 
+            # 'tvf': nothing to do next so no sense in sending email
+            'tvy': "Inquiry Response", 
+            'twc': "Work Completed", 
+            'tor': "Opportunity Review",   # helpful to know when it happens
+            'tvr': "Volunteering Review",  # helpful to know when it happens
+            'tsh': "Opportunity Share",
+            'tci': "Email Address Request", 
+            'tcr': "Email Address Response" }
+    code = comm[1]
+    if not code in mcs:
+        return
+    if prof.settings and re.search(r'emailNotify..false', prof.settings):
+        return
+    logging.info("email_notice " + code + " sent to " + prof.email)
+    if handler.request.url.startswith('http://localhost'):
+        return
+    maintxt = urllib.unquote(comm[2]).rstrip()
+    if len(comm) > 3 and comm[3]:
+        maintxt = comm[3].rstrip() + "\n\n" + maintxt
+    closetxt = "\n\n" + fromname + "\n" + "Respond at https://www.upteer.com"
+    mail.send_mail(
+        sender="Upteer Administrator <admin@upteer.com>",
+        to=prof.email,
+        subject=mcs[code],
+        body=maintxt + closetxt)
+
+
 def prepend_comm(handler, owner, prof, comm):
     book = book_for_profile(owner)
     entry = find_book_entry(book, prof)
@@ -115,6 +146,7 @@ def prepend_comm(handler, owner, prof, comm):
         entry = [prof.name, str(prof.key().id()), "", [], ""]
         book.append(entry)
     code = comm[1]
+    # Release email address of sender if required
     if code in ['tvi', 'tvy', 'tsh', 'tci', 'tcr']:
         entry[2] = prof.email
     # "Here's a ~!@#$%^&*()_ \"difficult\" msgtxt value? Or, not..."
@@ -123,6 +155,7 @@ def prepend_comm(handler, owner, prof, comm):
     comms.insert(0, comm)
     entry[3] = retention_filter(comms)
     write_profile_book(owner, book)
+    forward_notice_to_email(handler, owner, comm, prof.name)
 
 
 def most_recent_comm(entry, codestr):
