@@ -54,14 +54,14 @@ var app = {},  //Global container for application level funcs and values
                         "js/amd/lcs", "js/amd/menu", "js/amd/opp",
                         "js/amd/match", "js/amd/contact" ];
         jtminjsDecorateWithUtilities(jt);
-        if(href.indexOf("http:") === 0 && href.indexOf("upteer.com") >= 0) {
-            jt.out('logindiv', "Redirecting to secure server...");
-            window.location.href = "https:" + href.slice(5);
-            return; }
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {
             href = href.slice(0, href.indexOf("?")); }
+        if(href.indexOf("http:") === 0 && href.indexOf("upteer.com") >= 0) {
+            jt.out('logindiv', "Redirecting to secure server...");
+            window.location.href = "https:" + href.slice(5);
+            return; }
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
         jt.loadAppModules(app, modules, href, app.init2, "?v=150118");
