@@ -192,6 +192,8 @@ var actstat = (function () {
             if(a.day < b.day) { return -1; }
             if(a.day > b.day) { return 1; }
             return 0; });
+        while(data.length > 0 && !data[data.length - 1].daily) {
+            data = data.slice(0, data.length - 1); }
         data.forEach(function (stat) {
             var i, sname;
             stat.day = new Date(stat.day);
