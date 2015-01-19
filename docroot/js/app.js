@@ -37,33 +37,6 @@ var app = {},  //Global container for application level funcs and values
     };
 
 
-    app.redirectToSecureServer = function (params) {
-        var href, state;
-        state = {};
-        if(history && history.state) {
-            state = history.state; }
-        href = app.secsvr + "#returnto=" + jt.enc(app.mainsvr) + 
-            "&logout=true";
-        if(state && state.view === "profile" && state.profid) {
-            href += "&reqprof=" + state.profid; }
-        href += "&" + jt.objdata(params);
-        jt.out('contentfill', "Redirecting to secure server...");
-        window.location.href = href;
-    };
-
-
-    app.redirectIfNeeded = function () {
-        var href = window.location.href;
-        if(href.indexOf(app.mainsvr) >= 0 &&
-           href.indexOf("authtoken=") < 0 &&
-           href.indexOf("at=") < 0 &&
-           href.indexOf("AltAuth") < 0 &&
-           (!jt.cookie(app.authcookname))) {
-            app.redirectToSecureServer(jt.parseParams());
-            return true; }
-    };
-
-
     //post module load initialization
     app.init2 = function () {
         app.amdtimer.load.end = new Date();
@@ -80,11 +53,15 @@ var app = {},  //Global container for application level funcs and values
                         "js/amd/profile", "js/amd/kwentry", "js/amd/org",
                         "js/amd/lcs", "js/amd/menu", "js/amd/opp",
                         "js/amd/match", "js/amd/contact" ];
+        jtminjsDecorateWithUtilities(jt);
+        if(href.indexOf("http:") === 0 && href.indexOf("upteer.com") >= 0) {
+            jt.out('logindiv', "Redirecting to secure server...");
+            window.location.href = "https:" + href.slice(5);
+            return; }
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {
             href = href.slice(0, href.indexOf("?")); }
-        jtminjsDecorateWithUtilities(jt);
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
         jt.loadAppModules(app, modules, href, app.init2, "?v=150118");
