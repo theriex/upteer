@@ -175,6 +175,7 @@ handlers:
 ## GET cron access only
 - url: /daystats.*
   script: src.py.stat.app
+  login: admin
 
 ## Fetch daily stats
 ## GET
