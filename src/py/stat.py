@@ -63,19 +63,42 @@ def update_daily_counts(stat):
 
 
 def send_mail_notice(devsys, profid, subj, text):
-    prof = profile.Profile.get_by_id(profid)
-    if not prof:
-        logging.error("stat.py send_mail_notice profid " + str(profid) +
-                      " not found. subj: " + subj + ", text: " + text)
-        return
-    logging.info("Mailed " + prof.email + " (" + prof.name + "): " + subj + 
-                 " |>" + text)
+    email = ""
+    emfull = ""
+    if "@" in str(profid):
+        email = profid
+        emfull = email
+    else:
+        prof = profile.Profile.get_by_id(int(profid))
+        if not prof:
+            logging.error("stat.py send_mail_notice profid " + str(profid) +
+                          " not found. subj: " + subj + ", text: " + text)
+            return
+        email = prof.email
+        emfull = prof.email + " (" + prof.name + ")"
+    logging.info("Mailed " + emfull + ": " + subj + " |>" + text)
     if not devsys:
         mail.send_mail(
                 sender="Upteer Administrator <admin@upteer.com>",
                 to=prof.email,
                 subject=subj,
                 body=text)
+
+
+def replace_text_and_email_recipients(devsys, subj, msg, dolldict, ridcsv):
+    for dollarkey in dolldict.iterkeys():
+        msg = msg.replace(dollarkey, dolldict[dollarkey])
+    recipients = csv_list(str(ridcsv))
+    for recipient in recipients:
+        send_mail_notice(devsys, recipient, subj, msg)
+
+
+def notify_opp_contacts(subj, msg, opp):
+    siteurl = "https://www.upteer.com"
+    oppurl = siteurl + "?view=opp&oppid=" + str(opp.key().id())
+    msg = msg.replace("$SITEURL", siteurl)
+    msg = msg.replace("$OPPNAME", opp.name)
+    msg = msg.replace("$OPPURL", oppurl)
 
 
 def expire_opportunities(devsys, daysback):
@@ -86,6 +109,7 @@ def expire_opportunities(devsys, daysback):
         # logging.info(opp.name + " modified: " + modified)
         if modified <= daysback['28days']:
             opp.status = "Closed"
+            # not updating modified, leaving for the record
             opp.put()
             match.update_match_nodes("opportunity", opp.key().id(), 
                                      opp.skills, opp.skills, "Clear")
@@ -96,19 +120,87 @@ def expire_opportunities(devsys, daysback):
             msg = "$OPPNAME will expire in three days. If this opportunity is still open, please update it: $OPPURL"
         elif modified == daysback['21days']:
             msg = "To avoid having volunteers find old opportunities that are not longer valid, any opportunity that has not been touched in four weeks is automatically expired. $OPPNAME will expire in one week, so now would be a great time to verify the description is up to date. Any edit resets the expiration clock."
-        if msg: # notify the opp contacts
-            msg = msg.replace("$OPPNAME", opp.name)
-            msg = msg.replace("$OPPURL", "https://www.upteer.com?")
-            contacts = csv_list(opp.contact)
-            for contact in contacts:
-                send_mail_notice(devsys, int(contact), 
-                                 opp.name + " expiration", msg)
+        if msg:
+            siteurl = "https://www.upteer.com"
+            oppurl = siteurl + "?view=opp&oppid=" + str(opp.key().id())
+            dolldict = { '$OPPNAME': opp.name,
+                         '$OPPURL': oppurl }
+            replace_text_and_email_recipients(devsys, 
+                                              opp.name + " expiration",
+                                              msg, dolldict, opp.contact)
     logging.info("stat.py expire_opportunities completed")
 
 
-def auto_withdraw_inquiries():
-    logging.info("stat.py auto_withdraw_inquiries not implemented yet")
-    # letting an inquiry expire is not good. Follow up to avoid in future
+def expire_inquiries(devsys, daysback):
+    gql = work.WorkPeriod.gql("WHERE status = 'Inquiring'")
+    for wp in gql.run(read_policy=db.EVENTUAL_CONSISTENCY):
+        cmsg = ""
+        vmsg = ""
+        amsg = ""
+        modified = wp.modified[0:10] + "T00:00:00Z"
+        if modified <= daysback['12days']:
+            wp.status = "Expired"
+            # not updating modified, leaving for the record
+            wp.put()
+            cmsg = "The volunteering inquiry from $VOLNAME for $OPPNAME has expired. The inquiry had been outstanding for 12 days which is a long time to wait to hear back. If you are not looking for volunteers, please switch the opportunity to inactive or close it. If you are not interested in a particular volunteer, you can refuse their inquiry. If there is anything else we can do to improve the communication process, please let us know by replying to this message."
+            vmsg = "Your inquiry for $OPPNAME has expired. Not getting a response back is hard, the Upteer crew is doing what they can to prevent dropped communications like this. You can create a new inquiry if you want to volunteer again, either with this group or another one."
+            amsg = cmsg
+        elif modified == daysback['11days']:
+            cmsg = "The volunteering inquiry from $VOLNAME for $OPPNAME has been outstanding for 11 days and will automatically expire tomorrow. If you are not looking for help, refusing the inquiry and providing a short message why might be appreciated: $VOLURL"
+        elif modified == daysback['7days']:
+            cmsg = "A volunteering inquiry for $OPPNAME has been outstanding for a week now and $VOLNAME would probably appreciate either a response (if they might be able to help out) or a refusal (if you don't need their help): $VOLURL"
+            vmsg = "Your inquiry for $OPPNAME has been outstanding for a week now. Upteer has sent a reminder message to the contact to try and move things along. Meanwhile if you've heard back from them by email directly, please update the work status so things get tracked properly: $SITEURL"
+        if cmsg or vmsg:
+            opp = opportunity.Opportunity.get_by_id(wp.opportunity)
+            if not opp:
+                logging.error("expire_inquiries bad oppid " + wp.opportunity)
+                continue
+            siteurl = "https://www.upteer.com"
+            volurl = siteurl + "?view=profile&profid=" + str(wp.volunteer)
+            dolldict = { '$VOLNAME': wp.volname,
+                         '$OPPNAME': wp.oppname,
+                         '$VOLURL': volurl,
+                         '$SITEURL': siteurl }
+            subj = "Outstanding volunteer inquiry"
+            if cmsg:
+                replace_text_and_email_recipients(devsys, subj, cmsg, dolldict,
+                                                  opp.contact)
+            if vmsg:
+                replace_text_and_email_recipients(devsys, subj, vmsg, dolldict,
+                                                  wp.volunteer)
+            if amsg:
+                replace_text_and_email_recipients(devsys, subj, amsg, dolldict,
+                                                  "admin@upteer.com")
+    logging.info("stat.py expire_inquiries completed")
+
+
+def drop_responses(devsys, daysback):
+    gql = work.WorkPeriod.gql("WHERE status = 'Responded'")
+    for wp in gql.run(read_policy=db.EVENTUAL_CONSISTENCY):
+        vmsg = ""
+        modified = wp.modified[0:10] + "T00:00:00Z"
+        logging.info("Inquiry response " + str(wp.oppname) + " by " + str(wp.volname) +  " modified: " + modified)
+        if modified <= daysback['12days']:
+            wp.status = "Dropped"
+            # not updating modified, leaving for the record
+            wp.put()
+            vmsg = "Your volunteering inquiry for $OPPNAME has been dropped. It had been 12 days since you received a response and you did not withdraw your offer or start work."
+        elif modified == daysback['11days']:
+            vmsg = "Your volunteering inquiry for $OPPNAME will be dropped tomorrow. Please withdraw your offer or note when you are starting work: $SITEURL"
+        elif modified == daysback['7days']:
+            vmsg = "It has been a week since you received a response about volunteering for $OPPNAME. If you are volunteering, please fill in a start date when you will begin work, you can change the date later if needed.  If you are not volunteering, please withdraw your offer so things are tracked properly: $SITEURL"
+        if vmsg:
+            opp = opportunity.Opportunity.get_by_id(wp.opportunity)
+            if not opp:
+                logging.error("drop_responses bad oppid " + wp.opportunity)
+                continue
+            siteurl = "https://www.upteer.com"
+            dolldict = { '$OPPNAME': wp.oppname,
+                         '$SITEURL': siteurl }
+            subj = "Outstanding inquiry response"
+            replace_text_and_email_recipients(devsys, subj, vmsg, dolldict,
+                                              wp.volunteer)
+    logging.info("stat.py drop_responses completed")
 
 
 def auto_done_work():
@@ -130,20 +222,18 @@ def expirations_and_monitoring(devsys):
                  '2days': dt2ISO(today - datetime.timedelta(2)),
                  '3days': dt2ISO(today - datetime.timedelta(3)),
                  '7days': dt2ISO(today - datetime.timedelta(7)),
+                 '11days': dt2ISO(today - datetime.timedelta(11)),
+                 '12days': dt2ISO(today - datetime.timedelta(12)),
                  '21days': dt2ISO(today - datetime.timedelta(21)),
                  '25days': dt2ISO(today - datetime.timedelta(25)),
                  '27days': dt2ISO(today - datetime.timedelta(27)),
                  '28days': dt2ISO(today - datetime.timedelta(28)) }
-    # logging.info("      1day: " + daysback['1day'])
-    # logging.info("     2days: " + daysback['2days'])
-    # logging.info("     3days: " + daysback['3days'])
-    # logging.info("     7days: " + daysback['7days'])
-    # logging.info("    21days: " + daysback['21days'])
-    # logging.info("    25days: " + daysback['25days'])
-    # logging.info("    27days: " + daysback['27days'])
-    # logging.info("    28days: " + daysback['28days'])
+    for dkey in sorted(daysback.iterkeys(), 
+                       key=(lambda x: int(re.search(r'\d+', x).group()))):
+        logging.info('{:>12}'.format(dkey) + ": " + daysback[dkey])
     expire_opportunities(devsys, daysback)
-    auto_withdraw_inquiries()
+    expire_inquiries(devsys, daysback)
+    drop_responses(devsys, daysback)
     auto_done_work()
     auto_complete_work()
     note_covolunteers()

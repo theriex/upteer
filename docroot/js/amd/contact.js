@@ -57,6 +57,22 @@ app.contact = (function () {
                       actname: "Withdrawn Inquiry",
                       mycomm: { code: "mvw", next: "" },
                       theircomm: { code: "tvw", next: "" } }] },
+            expinq: {
+                title: "Expired Inquiry",
+                optdescr: "After asking about volunteering, there was no response from the coordinator and no work was recorded.",
+                dlg: {
+                    exp1: "Expired inquiry for",
+                    subj2: "$OPPLINK - $THEM",
+                    commtxt: true },
+                actions: [] },
+            dropinq: {
+                title: "Dropped Inquiry",
+                optdescr: "After asking about volunteering and receiving a response back, no work was started.",
+                dlg: {
+                    exp1: "Dropped inquiry for",
+                    subj2: "$OPPLINK - $THEM",
+                    commtxt: true },
+                actions: [] },
             vstart: {
                 title: "Start Work",
                 optdescr: "After asking about volunteering, you should hear back from the coordinator within a week. Use the email link to contact them directly if there are details to be worked out before starting, or if you have more questions. After you have been in touch, you can either withdraw your offer or go to work. When you know what day you are starting, fill in the Start field and click the Start button to begin tracking your hours.",
@@ -462,12 +478,23 @@ app.contact = (function () {
     },
 
 
+    overrideCSNameFromWP = function (csname, wp) {
+        if(wp) {
+            if(wp.status === "Expired") {
+                csname = "expinq"; }
+            else if(wp.status === "Dropped") {
+                csname = "dropinq"; } }
+        return csname;
+    },
+
+
     displayContactDialog = function (csname, entry, commobj) {
         var html = [], cs, wp = null, dval;
         setDialogState(entry[1], commobj.oppid, commobj.wpid);
-        cs = commstates[csname || "nostate"];
         if(commobj.wpid) {
-            wp = findWorkPeriod(commobj.wpid); }
+            wp = findWorkPeriod(commobj.wpid);
+            csname = overrideCSNameFromWP(csname, wp); }
+        cs = commstates[csname || "nostate"];
         if(cs.dlg.exp1) {
             html.push(["div", {id: "condlgexp1div"}, 
                        replaceDollarRefs(cs.dlg.exp1, entry, commobj)]); }
@@ -847,10 +874,58 @@ app.contact = (function () {
     },
 
 
-    actedOn = function (cdef, commobj, comms, index) {
-        var delay, wp, commstate, i, action, j, resp;
+    findCommByCode = function (code, comms, index) {
+        var i, comm;
+        for(i = index; i >= 0; i -= 1) {
+            comm = comms[i];
+            if(comm[1] === code) {
+                return comm; } }
+        return null;
+    },
+
+
+    reciprocalActionComm = function (code, comms, index) {
+        var action, cs, i, corract, respcode, respcomm;
+        action = actionForCode(code);
+        if(action && action.theircomm && action.theircomm.next) {
+            cs = commstates[action.theircomm.next];
+            for(i = 0; i < cs.actions.length; i += 1) {
+                corract = cs.actions[i];
+                if(corract.theircomm && corract.theircomm.code) {
+                    respcode = corract.theircomm.code;
+                    respcomm = findCommByCode(respcode, comms, index);
+                    if(respcomm) {
+                        return respcomm; } } } }
+        return null;
+    },
+
+
+    nextActionComm = function (commstate, cdef, comms, index) {
+        var i, action, j, resp;
+        for(i = 0; i < commstate.actions.length; i += 1) {
+            action = commstate.actions[i];
+            for(j = index - 1; j >= 0; j -= 1) {
+                resp = commObject(comms[j]);
+                if(action.mycomm) {
+                    if(inActions(cdef.next, resp.code) ||
+                       inActions(action.mycomm.next, resp.code)) {
+                        return resp; } }
+                if(action.theircomm) {
+                    if(inActions(cdef.next, resp.code) ||
+                       inActions(action.theircomm.next, resp.code)) {
+                        return resp; } } } }
+        return null;
+    },
+
+
+    actedOn = function (cdef, commobj, comms, index, retryf) {
+        var delay, wp, commstate;
         //if this is an end state in the communication state machine
         if(cdef.end) {
+            return true; }
+        //if there are no further actions
+        commstate = commstates[cdef.next || "nostate"];
+        if(!commstate || !commstate.actions || !commstate.actions.length) {
             return true; }
         //if there is a delay that hasn't been met yet
         if(cdef.delay) {
@@ -859,29 +934,17 @@ app.contact = (function () {
             delay = new Date(delay).toISOString();
             if(delay > new Date().toISOString()) {
                 return true; } }
-        //if the work is currently ongoing
-        if(commobj.wpid) {
-            //the wp would have been loaded with the profile...
-            wp = findWorkPeriod(commobj.wpid);
-            if(wp && ongoingWork(wp)) {
-                return true; } }
-        //if there are no further actions
-        commstate = commstates[cdef.next || "nostate"];
-        if(!commstate || !commstate.actions || !commstate.actions.length) {
+        if(reciprocalActionComm(commobj.code, comms, index)) {
             return true; }
-        //if the reciprocal action was taken or a canceling action was taken
-        for(i = 0; i < commstate.actions.length; i += 1) {
-            action = commstate.actions[i];
-            for(j = index - 1; j >= 0; j -= 1) {
-                resp = commObject(comms[j]);
-                if(action.mycomm) {
-                    if(inActions(cdef.next, resp.code) ||
-                       inActions(action.mycomm.next, resp.code)) {
-                        return true; } }
-                if(action.theircomm) {
-                    if(inActions(cdef.next, resp.code) ||
-                       inActions(action.theircomm.next, resp.code)) {
-                        return true; } } } }
+        if(nextActionComm(commstate, cdef, comms, index)) {
+            return true; }
+        //if the work is currently ongoing or expired
+        if(commobj.wpid) {
+            wp = findWorkPeriod(commobj.wpid, retryf);
+            if(!wp) {  //if not loaded yet, avoid making noise
+                return true; }
+            if(overrideCSNameFromWP("", wp) || ongoingWork(wp)) {
+                return true; } }
         return false;
     };
 
@@ -1162,7 +1225,7 @@ return {
     },
 
 
-    checkForNotices: function () {
+    checkForNotices: function (retryf) {
         var book, i, eobj, comms, j, cobj, cdef, actdef;
         book = app.profile.getMyProfile().book || [];
         for(i = 0; i < book.length; i += 1) {
@@ -1172,7 +1235,7 @@ return {
                 cobj = commObject(comms[j]);
                 cdef = codeDefinition(cobj.code);
                 actdef = actionForCode(cobj.code);
-                if(cdef && !actedOn(cdef, cobj, comms, j)) {
+                if(cdef && !actedOn(cdef, cobj, comms, j, retryf)) {
                     verifyWorkPeriodLoaded(cobj.wpid);
                     app.menu.createNotice({
                         noticetype: actdef.actname,

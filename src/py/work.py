@@ -33,7 +33,8 @@ import re
 #   Inquiring (vol): Set on inquiry, 0 hrs
 #   Responded (coord): Optionally set on initial response
 #   Withdrawn (vol): Offer didn't work out, 0 hrs
-#   Canceled (coord): Opportunity didn't work out, 0 hrs
+#   Expired (sys): Inquiry never got a response, 0 hrs
+#   Dropped (sys): Got a response but never volunteered, 0 hrs
 #   Volunteering (vol): Start date set, hours filled in
 #   Done (vol): Completed but not approved yet.
 #   No Show (coord): 0 hrs

@@ -141,7 +141,7 @@ return {
     rebuildNotices: function () {
         notices = [];
         app.org.checkForNotices();
-        app.contact.checkForNotices();
+        app.contact.checkForNotices(app.menu.rebuildNotices);
         app.menu.display();
     },
 

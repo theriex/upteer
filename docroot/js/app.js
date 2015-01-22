@@ -64,7 +64,7 @@ var app = {},  //Global container for application level funcs and values
             return; }
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
-        jt.loadAppModules(app, modules, href, app.init2, "?v=150118");
+        jt.loadAppModules(app, modules, href, app.init2, "?v=150121");
     };
 
 
