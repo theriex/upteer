@@ -28,7 +28,11 @@ app.contact = (function () {
             nostate: {
                 optdescr: "There are no further actions available",
                 dlg: {
-                    exp1: "No actions available." },
+                    exp1: "No actions available.",
+                    subj2: "$OPPLINK - $THEM",
+                    hours: "ifdef",
+                    start: "ifdef",
+                    done: "ifdef" },
                 actions: [] },
             vinq: { //volunteer inquiring about volunteering
                 title: "Volunteering Inquiry",
@@ -75,7 +79,7 @@ app.contact = (function () {
                 actions: [] },
             vstart: {
                 title: "Start Work",
-                optdescr: "After asking about volunteering, you should hear back from the coordinator within a week. Use the email link to contact them directly if there are details to be worked out before starting, or if you have more questions. After you have been in touch, you can either withdraw your offer or go to work. When you know what day you are starting, fill in the Start field and click the Start button to begin tracking your hours.",
+                optdescr: "After asking about volunteering, you should hear back from the coordinator within a week. Their response will include their email address so you can contact them directly if there are details to be worked out before starting, or if you have more questions. After you have been in touch, you can either withdraw your offer or go to work. When you know what day you are starting, fill in the Start field and click the Start button to begin tracking your hours.",
                 dlg: {
                     exp1: "Withdraw offer or start work for",
                     subj2: "$OPPLINK - $THEM",
@@ -247,9 +251,10 @@ app.contact = (function () {
                       actname: "Contact Info Response",
                       mycomm: { code: "mcr", next: "" },
                       theircomm: { code: "tcr", next: ""} }] } },
-        tracksel = [{noun: "Day", adj: "Daily", max: 8, ceiling: 24},
-                    {noun: "Week", adj: "Weekly", max: 20, ceiling: 120},
-                    {noun: "Month", adj: "Monthly", max: 80, ceiling: 350}],
+        dursel = [{durval: "1 Day", max: 8, ceiling: 24},
+                  {durval: "1 Week", max: 20, ceiling: 16 * 7},
+                  {durval: "2 Weeks", max: 40, ceiling: 16 * 14},
+                  {durval: "4 Weeks", max: 80, ceiling: 12 * 28}],
         dlgstate = { profid: "", oppid: "", wpid: "" },
 
 
@@ -359,17 +364,16 @@ app.contact = (function () {
     },
 
 
-    trackselHTML = function (disptype, selval) {
+    durselHTML = function (selval) {
         var html = [], i;
-        selval = selval || "Week";
-        for(i = 0; i < tracksel.length; i += 1) {
+        selval = selval || "2 Weeks";
+        for(i = 0; i < dursel.length; i += 1) {
             html.push(
-                ["option", {id: tracksel[i].adj,
-                            selected: jt.toru((tracksel[i].noun === selval ||
-                                               tracksel[i].adj === selval),
+                ["option", {id: dursel[i].durval,
+                            selected: jt.toru(dursel[i].durval === selval,
                                               "selected")},
-                 tracksel[i].noun]); }
-        html = ["select", {id: "tracksel"},
+                 dursel[i].durval]); }
+        html = ["select", {id: "dursel"},
                 html];
         return html;
     },
@@ -488,8 +492,52 @@ app.contact = (function () {
     },
 
 
+    hoursInputOrDisplay = function (cs, wp) {
+        var html = "";
+        if(cs.dlg.hours === "ifdef" && wp.hours) {
+            html = ["div", {id: "condlghoursdiv"},
+                    String(wp.hours) + " hours over " + wp.duration]; }
+        else if(cs.dlg.hours) {
+            html = ["div", {id: "condlghoursdiv"},
+                    [(cs.dlg.hours === "Requested" ? "Requesting " : ""),
+                     ["input", {id: "hoursin", min: 1, 
+                                value: (wp && wp.hours) || "",
+                                type: "number", style: "width:3em;"}],
+                     " hours over ",
+                     durselHTML((wp && wp.duration) || null)]]; }
+        return html;
+    },
+
+
+    startDateInputOrDisplay = function (cs, wp) {
+        var html = "", dval;
+        if(cs.dlg.start === "ifdef" && wp.start) {
+            html = ["div", {id: "condlgstartdiv"},
+                    "Start " + wp.start.slice(0, 10)]; }
+        else if(cs.dlg.start) {
+            dval = (wp && wp.start) || new Date().toISOString();
+            dval = dval.slice(0, 10);
+            html = ["div", {id: "condlgstartdiv"},
+                    [["label", {fo: "startin", id: "condlgstartlabel"},
+                      "Start"],
+                     " ",
+                     ["input", {id: "startin", type: "date",
+                                value: dval}]]]; }
+        return html;
+    },
+
+
+    doneDateDisplay = function (cs, wp) {
+        var html = "";
+        if(cs.dlg.done === "ifdef" && wp.done) {
+            html = ["div", {id: "condlgdonediv"},
+                    "Done " + wp.done.slice(0, 10)]; }
+        return html;
+    },
+
+
     displayContactDialog = function (csname, entry, commobj) {
-        var html = [], cs, wp = null, dval;
+        var html = [], cs, wp = null;
         setDialogState(entry[1], commobj.oppid, commobj.wpid);
         if(commobj.wpid) {
             wp = findWorkPeriod(commobj.wpid);
@@ -514,23 +562,9 @@ app.contact = (function () {
         if(cs.dlg.txtpl) {
             html.push(["div", {id: "condlgtxtdiv", cla: "bigtxtdiv"},
                        ["textarea", {id: "condlgta", cla: "bigta"}]]); }
-        if(cs.dlg.hours) {
-            html.push(["div", {id: "condlghoursdiv"},
-                       [(cs.dlg.hours === "Requested" ? "Requesting " : ""),
-                        ["input", {id: "hoursin", min: 1, 
-                                   value: (wp && wp.hours) || "",
-                                   type: "number", style: "width:3em;"}],
-                        " hours per ",
-                        trackselHTML("noun", (wp && wp.tracking) || null)]]); }
-        if(cs.dlg.start) {
-            dval = (wp && wp.start) || new Date().toISOString();
-            dval = dval.slice(0, 10);
-            html.push(["div", {id: "condlgstartdiv"},
-                       [["label", {fo: "startin", id: "condlgstartlabel"},
-                         "Start"],
-                        " ",
-                        ["input", {id: "startin", type: "date",
-                                   value: dval}]]]); }
+        html.push(hoursInputOrDisplay(cs, wp));
+        html.push(startDateInputOrDisplay(cs, wp));
+        html.push(doneDateDisplay(cs, wp));
         html = ["div", {id: "condlgcontentdiv"},
                 [html,
                  describeActionsHTML("condlg", "Describe Options", csname),
@@ -576,6 +610,7 @@ app.contact = (function () {
                  ["span", {cla: "wpstatlab"}, " status: "],
                  ["span", {cla: "wpstatus"},
                   wpEditFieldHTML(wp, mode, "status")],
+                 " ",
                  ["span", {cla: "wphours"},
                   wpEditFieldHTML(wp, mode, "hours")],
                  ["span", {cla: "wpstatunits"}, " hrs"]]];
@@ -655,10 +690,10 @@ app.contact = (function () {
                 input.style.border = errborder;
                 retval = false; }
             data.msgtxt = input.value; }
-        input = jt.byId('tracksel');
+        input = jt.byId('dursel');
         if(input) {
-            ts = tracksel[input.selectedIndex];
-            data.tracking = ts.adj; }
+            ts = dursel[input.selectedIndex];
+            data.duration = ts.durval; }
         //hours may be zero if "No Show"
         input = jt.byId('hoursin');
         if(input) {
@@ -702,6 +737,16 @@ app.contact = (function () {
     },
 
 
+    printNameForCode = function (code) {
+        var action;
+        action = actionForCode(code)
+        if(action) {  //use description from state machine if available
+            return action.actname; }
+        if(code === "cov") {
+            return "Co-Volunteer"; }
+    },
+
+
     commEntryLink = function (profid, comms, index) {
         var html, comm;
         comm = comms[index];
@@ -709,7 +754,7 @@ app.contact = (function () {
                       onclick: jt.fs("app.contact.togglebookdet('" + 
                                      profid + "'," + index + ")")},
                 ["span", {cla: "cbentrycommlinkspan"},
-                 actionForCode(comm[1]).actname]];
+                 printNameForCode(comm[1])]];
         return html;
     },
 
@@ -839,22 +884,19 @@ app.contact = (function () {
 
 
     ongoingWork = function (wp) {
-        var monthmax = { "01": 31, "02": 28, "03": 31, "04": 30,
-                         "05": 31, "06": 30, "07": 31, "08": 31,
-                         "09": 30, "10": 31, "11": 30, "12": 31 };
+        var days;
         if(wp.start) {
-            if(wp.tracking === "Daily") {
-                wp.end = jt.ISOString2Day(wp.start).getTime();
-                wp.end += 24 * 60 * 60 * 1000;
-                wp.end = new Date(wp.end).toISOString(); }
-            else if(wp.tracking === "Monthly") {
-                wp.end = wp.start.slice(0, 8) +
-                    monthmax[wp.start.slice(5, 7)] +
-                    "T00:00:00Z"; }
-            else { //weekly or unknown value assumed to be weekly
-                wp.end = jt.ISOString2Day(wp.start).getTime();
-                wp.end += 7 * 24 * 60 * 60 * 1000;
-                wp.end = new Date(wp.end).toISOString(); }
+            switch(wp.duration) {
+            case "1 Day": days = 1; break;
+            case "1 Week": days = 7; break;
+            case "2 Weeks": days = 14; break;
+            case "4 Weeks": days = 28; break;
+            default: 
+                wp.duration = "2 Weeks";
+                wp.days = 14; }
+            wp.end = jt.ISOString2Day(wp.start).getTime();
+            wp.end += days * 24 * 60 * 60 * 1000;
+            wp.end = new Date(wp.end).toISOString();
             if(new Date().toISOString() < wp.end) {
                 return true; } }
         return false;
@@ -921,7 +963,7 @@ app.contact = (function () {
     actedOn = function (cdef, commobj, comms, index, retryf) {
         var delay, wp, commstate;
         //if this is an end state in the communication state machine
-        if(cdef.end) {
+        if(!cdef || cdef.end) {
             return true; }
         //if there are no further actions
         commstate = commstates[cdef.next || "nostate"];
@@ -1179,7 +1221,9 @@ return {
             return; }
         comm = entry[3][index];
         action = actionForCode(comm[1]);
-        if(action.mycomm && action.mycomm.code === comm[1]) {
+        if(!action) {
+            nextstate = ""; }
+        else if(action.mycomm && action.mycomm.code === comm[1]) {
             nextstate = action.mycomm.next; }
         else if(action.theircomm && action.theircomm.code === comm[1]) {
             nextstate = action.theircomm.next; }
@@ -1199,7 +1243,7 @@ return {
                       ["span", {cla: "cbdcode"}, 
                        comm[1] + " "],
                       ["span", {cla: "cbdname"}, 
-                       "(" + action.actname + ") "],
+                       "(" + printNameForCode(comm[1]) + ") "],
                       ["span", {cla: "cbdopp"},
                        commOppSpanHTML(comm)]]],
                     ["div", {cla: "cbdet2div"},

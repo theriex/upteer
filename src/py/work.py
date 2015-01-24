@@ -48,7 +48,7 @@ import re
 class WorkPeriod(db.Model):
     volunteer = db.IntegerProperty(required=True)   # ID of volunteer
     opportunity = db.IntegerProperty(required=True) # ID of opportunity
-    tracking = db.StringProperty(required=True)     # Daily, Weekly, Monthly
+    duration = db.StringProperty()        # "1 Day", "2 Weeks"...
     modified = db.StringProperty()        # ISO date
     oppname = db.StringProperty(indexed=False)      # orgname + " " + oppname
     volname = db.StringProperty(indexed=False)      # volunteer.name
@@ -70,7 +70,7 @@ def book_for_profile(prof):
 
 def write_profile_book(prof, book):
     prof.book = json.dumps(book)
-    logging.info("write_profile_book: " + prof.book)
+    # logging.info("write_profile_book: " + prof.book)
     prof.put()
 
 
@@ -81,6 +81,14 @@ def find_book_entry(book, prof):
         if item[1] == profidstr:
             entry = item
             break
+    return entry
+
+
+def find_or_create_entry(book, prof):
+    entry = find_book_entry(book, prof)
+    if not entry:
+        entry = [prof.name, str(prof.key().id()), "", [], ""]
+        book.append(entry)
     return entry
 
 
@@ -110,7 +118,11 @@ def retention_filter(comms):
     return fcs
 
 
-def forward_notice_to_email(handler, prof, comm, fromname):
+def is_devsys(handler):
+    return handler.request.url.startswith('http://localhost')
+
+
+def forward_notice_to_email(devsys, prof, comm, fromname):
     mcs = { 'tvi': "Volunteering Inquiry", 
             'twd': "Work Done", 
             # 'tvf': nothing to do next so no sense in sending email
@@ -127,7 +139,7 @@ def forward_notice_to_email(handler, prof, comm, fromname):
     if prof.settings and re.search(r'emailNotify..false', prof.settings):
         return
     logging.info("email_notice " + code + " sent to " + prof.email)
-    if handler.request.url.startswith('http://localhost'):
+    if devsys: # no mail on localhost
         return
     maintxt = urllib.unquote(comm[2]).rstrip()
     if len(comm) > 3 and comm[3]:
@@ -140,12 +152,9 @@ def forward_notice_to_email(handler, prof, comm, fromname):
         body=maintxt + closetxt)
 
 
-def prepend_comm(handler, owner, prof, comm):
+def prepend_comm(devsys, owner, prof, comm):
     book = book_for_profile(owner)
-    entry = find_book_entry(book, prof)
-    if not entry:
-        entry = [prof.name, str(prof.key().id()), "", [], ""]
-        book.append(entry)
+    entry = find_or_create_entry(book, prof)
     code = comm[1]
     # Release email address of sender if required
     if code in ['tvi', 'tvy', 'tsh', 'tci', 'tcr']:
@@ -156,11 +165,15 @@ def prepend_comm(handler, owner, prof, comm):
     comms.insert(0, comm)
     entry[3] = retention_filter(comms)
     write_profile_book(owner, book)
-    forward_notice_to_email(handler, owner, comm, prof.name)
+    forward_notice_to_email(devsys, owner, comm, prof.name)
 
 
 def most_recent_comm(entry, codestr):
+    if not entry:
+        return None
     comms = entry[3]
+    if not comms:
+        return None
     for comm in comms:
         if codestr == comm[1]:
             return comm
@@ -177,6 +190,31 @@ def is_friend(myprof, prof):
                   most_recent_comm(entry, "cov")):
         return True
     return False
+
+
+def note_covolunteers(devsys, srcwp):
+    if not srcwp or srcwp.status != "Completed":
+        return
+    srcprof = profile.Profile.get_by_id(srcwp.volunteer)
+    if not srcprof:
+        return
+    where = "WHERE opportunity = :1 and status = :2 and done >= :3"
+    gql = WorkPeriod.gql(where, srcwp.opportunity, "Completed", srcwp.start)
+    for wp in gql.run(read_policy=db.EVENTUAL_CONSISTENCY):
+        if wp.volunteer == srcwp.volunteer:
+            continue  # not covolunteering with self
+        prof = profile.Profile.get_by_id(wp.volunteer)
+        book = book_for_profile(prof)
+        entry = find_or_create_entry(book, srcprof)
+        covcomm = most_recent_comm(entry, "cov")
+        if covcomm and str(covcomm[4]) == str(srcwp.opportunity):
+            continue  # already have a cov comm for this opp, don't dupe
+        prepend_comm(devsys, srcprof, prof, 
+                     [srcwp.modified, 'cov', "", srcwp.oppname, 
+                      str(srcwp.opportunity), str(srcwp.key().id())])
+        prepend_comm(devsys, prof, srcprof,
+                     [srcwp.modified, 'cov', "", wp.oppname,
+                      str(wp.opportunity), str(wp.key().id())])
 
 
 def is_opp_contact(prof, opp):
@@ -251,7 +289,7 @@ def verify_work_period(handler, prof, opp, wpid):
 
 
 def read_general_wp_values(handler, wp):
-    wp.tracking = handler.request.get("tracking")
+    wp.duration = handler.request.get("duration")
     wp.start = handler.request.get('start')
     if handler.request.get('hours'):
         wp.hours = intz(handler.request.get('hours'))
@@ -285,7 +323,7 @@ def contact_volunteer_inquiry(handler, myprof):
     tstamp = nowISO()
     msgtxt = handler.request.get('msgtxt')
     wp = WorkPeriod(volunteer=myprof.key().id(), opportunity=oppid,
-                    tracking="Weekly")
+                    duration="2 Weeks")
     read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.status = "Inquiring"
@@ -294,9 +332,9 @@ def contact_volunteer_inquiry(handler, myprof):
     wp.volname = myprof.name
     wp.put()
     wpid = wp.key().id()
-    prepend_comm(handler, myprof, prof, 
+    prepend_comm(is_devsys(handler), myprof, prof, 
                  [tstamp, 'mvi', msgtxt, wp.oppname, str(oppid), str(wpid)])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tvi', msgtxt, wp.oppname, str(oppid), str(wpid)])
     stat.bump_comm_count(['mvi', 'tvi'])
     returnJSON(handler.response, [ myprof, wp ])
@@ -319,9 +357,9 @@ def contact_inquiry_withdrawal(handler, myprof):
     wp.status = "Withdrawn"
     wp.visibility = 1
     wp.put()
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mvw', "", wp.oppname, str(oppid), str(wpid)])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tvw', "", wp.oppname, str(oppid), str(wpid)])
     stat.bump_comm_count(['mvw', 'tvw'])
     returnJSON(handler.response, [ myprof, wp ])
@@ -351,11 +389,24 @@ def contact_work_update(handler, myprof):
     wp.status = "Volunteering"
     wp.visibility = 2
     wp.put()
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mwu', "", wp.oppname, str(oppid), str(wpid)])
     stat.bump_comm_count(['mvu'])
     returnJSON(handler.response, [ myprof, wp ])
     
+
+def write_done_work(devsys, wp, tstamp, vprof, cprof, msgtxt, oppidstr):
+    wp.done = tstamp
+    wp.status = "Done"
+    wp.visibility = 3
+    wp.put()
+    wpidstr = str(wp.key().id())
+    prepend_comm(devsys, vprof, cprof,
+                 [tstamp, 'mwd', msgtxt, wp.oppname, oppidstr, wpidstr])
+    prepend_comm(devsys, cprof, vprof,
+                 [tstamp, 'twd', msgtxt, wp.oppname, oppidstr, wpidstr])
+    stat.bump_comm_count(['mwd', 'twd'])
+
 
 def contact_work_done(handler, myprof):
     prof = get_contact_receiver(handler)
@@ -371,17 +422,11 @@ def contact_work_done(handler, myprof):
         return
     tstamp = nowISO()
     read_general_wp_values(handler, wp)
-    wp.modified = tstamp
-    wp.done = tstamp
-    wp.status = "Done"
-    wp.visibility = 3
-    wp.put()
     msgtxt = handler.request.get('msgtxt') or ""
-    prepend_comm(handler, myprof, prof,
-                 [tstamp, 'mwd', msgtxt, wp.oppname, str(oppid), str(wpid)])
-    prepend_comm(handler, prof, myprof,
-                 [tstamp, 'twd', msgtxt, wp.oppname, str(oppid), str(wpid)])
-    stat.bump_comm_count(['mwd', 'twd'])
+    wp.modified = tstamp
+    devsys = is_devsys(handler)
+    oppidstr = str(oppid)
+    write_done_work(devsys, wp, tstamp, myprof, prof, msgtxt, oppidstr)
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -403,9 +448,9 @@ def contact_inquiry_refusal(handler, myprof):
     # leave wp.status as it was. They can withdraw, or auto-withdraw does it
     wp.put()
     msgtxt = handler.request.get('msgtxt') or ""
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mvf', msgtxt, wp.oppname, str(oppid), str(wpid)])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tvf', msgtxt, wp.oppname, str(oppid), str(wpid)])
     stat.bump_comm_count(['mvf', 'tvf'])
     returnJSON(handler.response, [ myprof, wp ])
@@ -430,9 +475,9 @@ def contact_inquiry_response(handler, myprof):
     wp.visibility = 2
     wp.put()
     msgtxt = handler.request.get('msgtxt') or ""
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mvy', msgtxt, wp.oppname, str(oppid), str(wpid)])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tvy', msgtxt, wp.oppname, str(oppid), str(wpid)])
     stat.bump_comm_count(['mvy', 'tvy'])
     returnJSON(handler.response, [ myprof, wp ])
@@ -443,8 +488,8 @@ def contact_add_to_book(handler, myprof):
     if not prof:
         return
     tstamp = nowISO()
-    prepend_comm(handler, myprof, prof, [tstamp, 'mab', ""])
-    prepend_comm(handler, prof, myprof, [tstamp, 'tab', ""])
+    prepend_comm(is_devsys(handler), myprof, prof, [tstamp, 'mab', ""])
+    prepend_comm(is_devsys(handler), prof, myprof, [tstamp, 'tab', ""])
     stat.bump_comm_count(['mab', 'tab'])
     returnJSON(handler.response, [ myprof ])
 
@@ -465,16 +510,19 @@ def contact_work_complete(handler, myprof):
     read_general_wp_values(handler, wp)
     wp.modified = tstamp
     wp.status = "Completed"
+    wp.visibility = 3
     if not wp.hours:
         wp.status = "No Show"
-    wp.visibility = 3
+        wp.visibility = 2
     wp.put()
     msgtxt = handler.request.get('msgtxt') or ""
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mwc', msgtxt, wp.oppname, str(oppid), str(wpid)])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'twc', msgtxt, wp.oppname, str(oppid), str(wpid)])
     stat.bump_comm_count(['mwc', 'twc'])
+    if wp.visibility == "Completed":
+        note_covolunteers(is_devsys(handler), wp)
     returnJSON(handler.response, [ myprof, wp ])
 
 
@@ -495,9 +543,9 @@ def contact_opportunity_review(handler, myprof):
     msgtxt = handler.request.get('msgtxt') or ""
     wp.coordshout = msgtxt
     wp.put()
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mor', msgtxt, wp.oppname, str(oppid), str(wpid)])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tor', msgtxt, wp.oppname, str(oppid), str(wpid)])
     stat.bump_comm_count(['mor', 'tor'])
     returnJSON(handler.response, [ myprof, wp ])
@@ -520,9 +568,9 @@ def contact_volunteer_review(handler, myprof):
     msgtxt = handler.request.get('msgtxt') or ""
     wp.volshout = msgtxt
     wp.put()
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mvr', msgtxt, wp.oppname, str(oppid), str(wpid)])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tvr', msgtxt, wp.oppname, str(oppid), str(wpid)])
     stat.bump_comm_count(['mvr', 'tvr'])
     returnJSON(handler.response, [ myprof, wp ])
@@ -546,9 +594,9 @@ def contact_share_opportunity(handler, myprof):
     oppname = org.name + " " + opp.name
     tstamp = nowISO()
     msgtxt = handler.request.get('msgtxt') or ""
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'msh', msgtxt, oppname, str(oppid)])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tsh', msgtxt, oppname, str(oppid)])
     stat.bump_comm_count(['msh', 'tsh'])
     returnJSON(handler.response, [ myprof ])
@@ -559,7 +607,7 @@ def contact_dismiss_share(handler, myprof):
     if not prof:
         return
     tstamp = nowISO()
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'msd', ""])
     stat.bump_comm_count(['msd'])
     returnJSON(handler.response, [ myprof ])
@@ -575,9 +623,9 @@ def contact_request_email(handler, myprof):
         return
     tstamp = nowISO()
     msgtxt = handler.request.get('msgtxt') or ""
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mci', msgtxt])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tci', msgtxt])
     stat.bump_comm_count(['mci', 'tci'])
     returnJSON(handler.response, [ myprof ])
@@ -588,7 +636,7 @@ def contact_ignore_email(handler, myprof):
     if not prof:
         return
     tstamp = nowISO()
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mcg', ""])
     stat.bump_comm_count(['mcg'])
     returnJSON(handler.response, [ myprof ])
@@ -600,9 +648,9 @@ def contact_respond_email(handler, myprof):
         return
     tstamp = nowISO()
     msgtxt = handler.request.get('msgtxt') or ""
-    prepend_comm(handler, myprof, prof,
+    prepend_comm(is_devsys(handler), myprof, prof,
                  [tstamp, 'mcr', msgtxt])
-    prepend_comm(handler, prof, myprof,
+    prepend_comm(is_devsys(handler), prof, myprof,
                  [tstamp, 'tcr', msgtxt])
     stat.bump_comm_count(['mcr', 'tcr'])
     returnJSON(handler.response, [ myprof ])

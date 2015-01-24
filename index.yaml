@@ -25,6 +25,12 @@ indexes:
 - kind: WorkPeriod
   properties:
   - name: opportunity
+  - name: status
+  - name: done
+
+- kind: WorkPeriod
+  properties:
+  - name: opportunity
   - name: visibility
 
 - kind: WorkPeriod

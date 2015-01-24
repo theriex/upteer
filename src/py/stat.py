@@ -106,7 +106,6 @@ def expire_opportunities(devsys, daysback):
     for opp in gql.run(read_policy=db.EVENTUAL_CONSISTENCY):
         msg = ""
         modified = opp.modified[0:10] + "T00:00:00Z"
-        # logging.info(opp.name + " modified: " + modified)
         if modified <= daysback['28days']:
             opp.status = "Closed"
             # not updating modified, leaving for the record
@@ -179,7 +178,6 @@ def drop_responses(devsys, daysback):
     for wp in gql.run(read_policy=db.EVENTUAL_CONSISTENCY):
         vmsg = ""
         modified = wp.modified[0:10] + "T00:00:00Z"
-        logging.info("Inquiry response " + str(wp.oppname) + " by " + str(wp.volname) +  " modified: " + modified)
         if modified <= daysback['12days']:
             wp.status = "Dropped"
             # not updating modified, leaving for the record
@@ -190,10 +188,6 @@ def drop_responses(devsys, daysback):
         elif modified == daysback['7days']:
             vmsg = "It has been a week since you received a response about volunteering for $OPPNAME. If you are volunteering, please fill in a start date when you will begin work, you can change the date later if needed.  If you are not volunteering, please withdraw your offer so things are tracked properly: $SITEURL"
         if vmsg:
-            opp = opportunity.Opportunity.get_by_id(wp.opportunity)
-            if not opp:
-                logging.error("drop_responses bad oppid " + wp.opportunity)
-                continue
             siteurl = "https://www.upteer.com"
             dolldict = { '$OPPNAME': wp.oppname,
                          '$SITEURL': siteurl }
@@ -203,24 +197,82 @@ def drop_responses(devsys, daysback):
     logging.info("stat.py drop_responses completed")
 
 
-def auto_done_work():
-    logging.info("stat.py auto_done_work not implemented yet")
+def auto_done_work(devsys, daysback):
+    gql = work.WorkPeriod.gql("WHERE status = 'Volunteering'")
+    for wp in gql.run(read_policy=db.EVENTUAL_CONSISTENCY):
+        vmsg = ""
+        days = 14  # default is "2 Weeks" duration
+        if wp.duration == "1 Day":
+            days = 1
+        elif wp.duration == "1 Week":
+            days = 7
+        elif wp.duration == "4 Weeks":
+            days = 28
+        else: # default is "2 Weeks", verify duration value is set
+            wp.duration = "2 Weeks"
+        done = dt2ISO(ISO2dt(wp.start[0:10] + "T00:00:00Z") + 
+                      datetime.timedelta(days))
+        if done <= daysback['5days']:
+            logging.info("Ongoing work " + str(wp.oppname) + " by " + str(wp.volname) +  " done: " + done)
+            wp.modified = nowISO()  # auto-complete works off modified time
+            vprof = profile.Profile.get_by_id(wp.volunteer)
+            opp = opportunity.Opportunity.get_by_id(wp.opportunity)
+            cprof = profile.Profile.get_by_id(int(csv_list(opp.contact)[0]))
+            oppidstr = str(opp.key().id())
+            work.write_done_work(devsys, wp, done, vprof, cprof, "", oppidstr)
+            vmsg = "Your volunteering work for $OPPNAME has been marked as done. To continue tracking your contributions, ask to volunteer again."
+        elif done == daysback['3days']:
+            vmsg = "After tomorrow, your volunteering work for $OPPNAME will be automatically marked as done and the coordinator will have an opportunity to verify your hours. Please check that your hours, start date and duration are correct: $SITEURL"
+        elif done == daysback['1day']:
+            vmsg = "Your volunteering work for $OPPNAME has completed. Please verify the hours, start, and duration values are correct so your work is properly reflected in your profile: $SITEURL"
+        if vmsg:
+            siteurl = "https://www.upteer.com"
+            dolldict = { '$OPPNAME': wp.oppname,
+                         '$SITEURL': siteurl }
+            subj = "Completed volunteer work"
+            replace_text_and_email_recipients(devsys, subj, vmsg, dolldict,
+                                              wp.volunteer)
+    logging.info("stat.py auto_done_work completed")
 
 
-def auto_complete_work():
-    logging.info("stat.py auto_complete_work not implemented yet")
-
-
-def note_covolunteers():
-    logging.info("stat.py note_covolunteers not implemented yet")
+def auto_complete_work(devsys, daysback):
+    gql = work.WorkPeriod.gql("WHERE status = 'Done'")
+    for wp in gql.run(read_policy=db.EVENTUAL_CONSISTENCY):
+        cmsg = ""
+        modified = wp.modified[0:10] + "T00:00:00Z"
+        if modified <= daysback['5days']:
+            logging.info("Ongoing work " + str(wp.oppname) + " by " + str(wp.volname) +  " completed: " + modified)
+            wp.status = "Completed"
+            # not updating modified, leaving for the record
+            wp.put()
+            # no message. No unexpected changes
+            work.note_covolunteers(devsys, wp)
+        elif modified == daysback['1day']:
+            cmsg = "$VOLNAME has volunteered $HOURS hours for $OPPNAME in the past $DURATION. This work period will automatically be marked as completed after 5 days. If the hours are incorrect, please adjust as needed: $VOLURL"
+        if cmsg:
+            opp = opportunity.Opportunity.get_by_id(wp.opportunity)
+            if not opp:
+                logging.error("expire_inquiries bad oppid " + wp.opportunity)
+                continue
+            siteurl = "https://www.upteer.com"
+            volurl = siteurl + "?view=profile&profid=" + str(wp.volunteer)
+            dolldict = { '$VOLNAME': wp.volname,
+                         '$HOURS': str(wp.hours),
+                         '$OPPNAME': wp.oppname,
+                         '$DURATION': wp.duration,
+                         '$VOLURL': volurl }
+            subj = "Completed volunteer hours"
+            replace_text_and_email_recipients(devsys, subj, cmsg, dolldict,
+                                              opp.contact)
+    logging.info("stat.py auto_complete_work completed")
 
 
 def expirations_and_monitoring(devsys):
     # logic here assumes this function is being called at most once daily.
     today = ISO2dt(nowISO()[0:10] + "T00:00:00Z")
     daysback = { '1day': dt2ISO(today - datetime.timedelta(1)),
-                 '2days': dt2ISO(today - datetime.timedelta(2)),
                  '3days': dt2ISO(today - datetime.timedelta(3)),
+                 '5days': dt2ISO(today - datetime.timedelta(5)),
                  '7days': dt2ISO(today - datetime.timedelta(7)),
                  '11days': dt2ISO(today - datetime.timedelta(11)),
                  '12days': dt2ISO(today - datetime.timedelta(12)),
@@ -234,9 +286,8 @@ def expirations_and_monitoring(devsys):
     expire_opportunities(devsys, daysback)
     expire_inquiries(devsys, daysback)
     drop_responses(devsys, daysback)
-    auto_done_work()
-    auto_complete_work()
-    note_covolunteers()
+    auto_done_work(devsys, daysback)
+    auto_complete_work(devsys, daysback)
 
 
 class ComputeDailyStats(webapp2.RequestHandler):
