@@ -11,6 +11,8 @@ import opportunity
 import stat
 from google.appengine.api import mail
 import re
+from google.appengine.ext.webapp.mail_handlers import BounceNotification
+from google.appengine.ext.webapp.mail_handlers import BounceNotificationHandler
 
 # The intent of a WorkPeriod is to facilitate the contact process,
 # track hours being volunteered, and make it cool to see all the work
@@ -772,12 +774,14 @@ class BounceHandler(BounceNotificationHandler):
         profile.Profile.gql("WHERE email = :1 LIMIT 1", emaddr)
         found = profs.count()
         if found:
-            profs[0].status = "Pending"  # Reset account verification
+            prof = profs[0]
+            prof.status = "Pending"  # Reset account verification
+            prof.put()
             mail.send_mail(  # let ourselves know we reset their account
                 sender="Upteer Administrator <admin@upteer.com>",
                 to="admin@upteer.com",
-                subject="Mail bounced to " + emaddr
-                body="Account " + str(prof[0].key().id()) +\
+                subject="Mail bounced to " + emaddr,
+                body="Account " + str(prof.key().id()) +\
                     " bounced an email and has been reset to Pending.")
 
 
