@@ -205,6 +205,8 @@ return {
             app.login.readAuthCookie(); }
         if(app.login.isLoggedIn()) {
             displayAccountNameMenu();
+            if(initparams.view === "profile" && initparams.profid) {
+                return app.profile.display(initparams.profid); }
             return app.profile.display(); }
         if(!jt.byId('logindiv')) {
             jt.out('contentdiv', loginhtml); }

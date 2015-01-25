@@ -739,7 +739,7 @@ app.contact = (function () {
 
     printNameForCode = function (code) {
         var action;
-        action = actionForCode(code)
+        action = actionForCode(code);
         if(action) {  //use description from state machine if available
             return action.actname; }
         if(code === "cov") {

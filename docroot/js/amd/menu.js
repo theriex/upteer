@@ -46,10 +46,11 @@ app.menu = (function () {
 
 
     displayMainMenu = function () {
-        var html;
-        html = ["a", {href: "#mainmenu",
+        var prof, html;
+        prof = app.profile.getMyProfile();
+        html = ["a", {href: "?view=profile&profid=" + jt.instId(prof),
                       onclick: jt.fs("app.menu.mainmenu()")},
-                app.profile.getMyProfile().name];
+                prof.name];
         jt.out('mainmenudiv', jt.tac2html(html));
     };
 

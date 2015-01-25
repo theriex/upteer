@@ -469,7 +469,7 @@ return {
 
     //The profile display gets called after login, and that triggers
     //the server call.  Afterwards myprof is cached and available.
-    display: function () {
+    display: function (otherprofid) {
         var url;
         app.history.checkpoint({view: "profile", profid: jt.instId(myprof)});
         if(myprof) {
@@ -483,7 +483,10 @@ return {
                         //cache this copy with the private info included so
                         //the cache doesn't fetch a generic copy
                         app.lcs.put("prof", myprof);
-                        readProfile(myprof); }
+                        if(otherprofid) {
+                            app.profile.byprofid(otherprofid); }
+                        else {
+                            readProfile(myprof); } }
                     else {
                         myprof = { email: app.login.getAuthName };
                         editProfile(); } },
