@@ -10,6 +10,13 @@ libraries:
 - name: pycrypto
   version: "2.3"
 
+inbound_services:
+- mail_bounce
+
+error_handlers:
+- error_code: over_quota
+  file: overquota.html
+
 handlers:
 ######################################################################
 ##                  API
@@ -162,10 +169,10 @@ handlers:
 - url: /wpbyid.*
   script: src.py.work.app
 
-## Mail send test
-## GET params: none
-- url: /mailtest.*
-  script: src.py.work.app
+## React to bounced email
+- url: /_ah/bounce
+  script: src.py.mailsum.app
+  login: admin
 
 
 ######################################################################

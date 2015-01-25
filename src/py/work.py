@@ -764,19 +764,25 @@ class WorkPeriodById(webapp2.RequestHandler):
         returnJSON(self.response, [ wp ])
 
 
-class MailTest(webapp2.RequestHandler):
-    def get(self):
-        tstamp = nowISO()
-        mail.send_mail(
-            sender="Upteer Administrator <admin@upteer.com>",
-            to="theriex@gmail.com",
-            subject="mailtest call",
-            body="Server time is " + tstamp)
-        self.response.out.write("Mail sent " + tstamp)
+class BounceHandler(BounceNotificationHandler):
+    def receive(self, notification):  # BounceNotification class instance
+        emaddr = notification.original['to']
+        logging.info("BounceHandler to: " + emaddr)
+        # find profile using equivalent query indexing to profile.authprof
+        profile.Profile.gql("WHERE email = :1 LIMIT 1", emaddr)
+        found = profs.count()
+        if found:
+            profs[0].status = "Pending"  # Reset account verification
+            mail.send_mail(  # let ourselves know we reset their account
+                sender="Upteer Administrator <admin@upteer.com>",
+                to="admin@upteer.com",
+                subject="Mail bounced to " + emaddr
+                body="Account " + str(prof[0].key().id()) +\
+                    " bounced an email and has been reset to Pending.")
 
 
 app = webapp2.WSGIApplication([('/contact', ContactHandler),
                                ('/fetchwork', FetchWork),
-                               ('/mailtest', MailTest),
-                               ('/wpbyid', WorkPeriodById)
+                               ('/wpbyid', WorkPeriodById),
+                               ('/_ah/bounce', BounceHandler)
                                ], debug=True)
