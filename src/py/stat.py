@@ -160,7 +160,7 @@ def expire_inquiries(devsys, daysback):
                          '$OPPNAME': wp.oppname,
                          '$VOLURL': volurl,
                          '$SITEURL': siteurl }
-            subj = "Outstanding volunteer inquiry"
+            subj = "Waiting volunteer inquiry"
             if cmsg:
                 replace_text_and_email_recipients(devsys, subj, cmsg, dolldict,
                                                   opp.contact)
@@ -191,7 +191,7 @@ def drop_responses(devsys, daysback):
             siteurl = "https://www.upteer.com"
             dolldict = { '$OPPNAME': wp.oppname,
                          '$SITEURL': siteurl }
-            subj = "Outstanding inquiry response"
+            subj = "Waiting inquiry response"
             replace_text_and_email_recipients(devsys, subj, vmsg, dolldict,
                                               wp.volunteer)
     logging.info("stat.py drop_responses completed")
