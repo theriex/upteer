@@ -54,6 +54,8 @@ var app = {},  //Global container for application level funcs and values
                         "js/amd/lcs", "js/amd/menu", "js/amd/opp",
                         "js/amd/match", "js/amd/contact" ];
         jtminjsDecorateWithUtilities(jt);
+        if(href.indexOf("embed=true") > 0) {
+            jt.byId('logodiv').style.display = "none"; }
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {

@@ -49,7 +49,7 @@ var upteerembed = (function () {
 return {
 
     createUpteerDisplay: function (obj) {
-        var html, pos, contentHeight, width, height;
+        var html, pos, contentHeight, width, height, src;
         if(obj && obj.siteroot) {
             siteroot = obj.siteroot; }
         if(loadScripts(["jtmin.js"], upteerembed.createUpteerDisplay)) {
@@ -59,7 +59,11 @@ return {
             contentHeight += 50;  //extra padding to help things work out
             height = window.innerHeight - contentHeight;
             width = document.body.offsetWidth;
-            html = ["iframe", {src: siteroot, width: width, height: height}];
+            //min phone display is 320x533
+            height = Math.max(height, 500);
+            width = Math.max(width, 320);
+            src = siteroot + "?embed=true";
+            html = ["iframe", {src: src, width: width, height: height}];
             jt.out('upteerdisplaydiv', jt.tac2html(html)); }
     }
 
