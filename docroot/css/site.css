@@ -114,6 +114,9 @@ button, .loginbutton { cursor:pointer;
 
 /* opp view settings */
 #accdesctxt { height:40px; }
+.oppdispdiv { padding:0px 0px 20px 0px; }
+.oppnamediv { padding:0px 0px 5px 0px; }
+.oppdetailsdiv { padding:0px 0px 0px 20px; }
 
 
 /* match view settings */
@@ -144,6 +147,7 @@ button, .loginbutton { cursor:pointer;
 #dlgerrmsgdiv { max-height:100px; overflow:scroll; }
 .buttonwithsubtext { display:inline-block; }
 .buttonsubtext { font-size:small; }
+.ziplinkspan { font-size:x-small; }
 
 
 /* kwentry widget settings */

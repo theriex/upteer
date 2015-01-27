@@ -200,8 +200,8 @@ app.opp = (function () {
                            "x"]); }
             line.push(["span", {id: "oppname" + i, cla: "oppnamespan"},
                        ["a", {href: "#",
-                              onclick: jt.fs("app.opp.display(" +
-                                             jt.instId(oppref.opp) + ")")},
+                              onclick: jt.fs("app.opp.display('" +
+                                             jt.instId(oppref.opp) + "')")},
                         oppref.opp.name]]);
             line.push(["span", {id: "oppstat" + i, cla: "oppstatus"},
                        " (" + oppref.opp.status + ")"]);
@@ -222,8 +222,67 @@ app.opp = (function () {
         jt.out(dispdivid, jt.tac2html(html));
         app.lcs.resolveCSV("opp", org.opportunities, function (opprefs) {
             displayOpps(org, opprefs, mode); });
-    };
+    },
 
+
+    ziplink = function (zip) {
+        var url="https://maps.google.com?q=" + zip;
+        return ["span", {cla: "ziplinkspan"},
+                ["a", {href: "#" + zip,
+                       onclick: jt.fs("window.open('" + url + "')")},
+                 zip]];
+    },
+
+
+    oppListFull = function (org, opprefs) {
+        var html = [], i, opp, oppid, kw = null;
+        app.org.setCurrentOrganization(org);
+        opprefs.sort(function (a, b) {
+            if(a.status === "Open" && b.status !== "Open") { return -1; }
+            if(a.status !== "Open" && b.status === "Open") { return 1; }
+            if(a.modified < b.modified) { return 1; }
+            if(a.modified > b.modified) { return -1; }
+            return 0; });
+        for(i = 0; i < opprefs.length; i += 1) {
+            opp = opprefs[i].opp;
+            if(opp.status !== "Open") {
+                break; }
+            oppid = jt.instId(opp);
+            html.push(
+                ["div", {cla: "oppdispdiv"},
+                 [["div", {cla: "oppnamediv"},
+                   ["span", {id: "oppname" + i, cla: "oppnamespan"},
+                    ["a", {href: "#view=opp&oppid=" + oppid,
+                           onclick: jt.fs("app.opp.flcto('" + oppid + "')")},
+                     opp.name]]],
+                  ["div", {id: "oppdescdiv" + i, cla: "bigtxtdiv"},
+                   jt.linkify(opp.description || "")],
+                  ["div", {cla: "oppdetailsdiv"},
+                   ["table", {cla: "formtable"},
+                    [["tr",
+                      ["td", {colspan: 2},
+                       ["div", {id: "oppskillsdiv" + i}]]],
+                     ["tr",
+                      [["td", {cla: "tdnarrow"},
+                        [ziplink(opp.zipcode),
+                         ["label", {fo: "schedsel", cla: "formlabel"},
+                         "Schedule:"]]],
+                       ["td", {align: "left"},
+                        scheduleDescription(opp)]]],
+                     ["tr",
+                      ["td", {colspan: 2},
+                       ["div", {id: "oppaccessdiv" + i}]]]]]]]]); }
+        jt.out('contentdiv', jt.tac2html(html));
+        for(i = 0; i < opprefs.length; i += 1) {
+            opp = opprefs[i].opp;
+            if(kw) {
+                kw.destroy(); }
+            kw = app.kwentry("oppskillsdiv" + i, "", null, opp.skills);
+            kw.displayList();
+            kw.destroy();
+            kw = app.kwentry("oppaccessdiv" + i, "", null, opp.accessibility);
+            kw.displayList(); }
+    };
 
 
     ////////////////////////////////////////
@@ -257,7 +316,7 @@ return {
     edit: function () {
         var html;
         verifyOpportunityFieldValues(curropp);
-        html = ["div", {id: "oppdispdiv"},
+        html = ["div", {id: "oppdispdiv", cla: "oppdispdiv"},
                 [["div", {id: "oppstatdiv"}],
                  ["table", {cla: "formtable"},
                   [app.lvtr("namein", "Name", curropp.name, 
@@ -371,7 +430,7 @@ return {
         app.history.checkpoint({view: "opp", oppid: jt.instId(curropp)});
         profid = jt.instId(app.profile.getMyProfile());
         imgsrc = org.details.logourl || "img/blank.png";
-        html = ["div", {id: "oppdispdiv"},
+        html = ["div", {id: "oppdispdiv", cla: "oppdispdiv"},
                 ["table", {cla: "formtable"},
                  [["tr",
                    [["td", {id: "orgpictd", cla: "tdnarrow",
@@ -468,6 +527,22 @@ return {
 
     listOpportunities: function (dispdivid, org, mode, addfstr) {
         rebuildOpportunityDisplay(dispdivid, org, mode, addfstr);
+    },
+
+
+    extListOpps: function (orgid) {
+        jt.out('contentdiv', "Finding volunteer opportunities...");
+        app.lcs.getFull("org", orgid, function (orgref) {
+            var org = orgref.org;
+            app.lcs.resolveCSV("opp", org.opportunities, function (opprefs) {
+                oppListFull(org, opprefs); }); });
+    },
+
+
+    flcto: function (oppid) {
+        jt.err("Full Listing Clickthrough to opp not implemented yet");
+        //verify login and take care of that first if needed
+        //switch the display over
     },
 
 

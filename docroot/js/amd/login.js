@@ -203,6 +203,8 @@ return {
         clearParams();
         if(!app.login.isLoggedIn()) {
             app.login.readAuthCookie(); }
+        if(app.embed) {
+            return app.opp.extListOpps(app.embed); }
         if(app.login.isLoggedIn()) {
             displayAccountNameMenu();
             if(initparams.view === "profile" && initparams.profid) {

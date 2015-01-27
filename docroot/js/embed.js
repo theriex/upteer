@@ -49,12 +49,14 @@ var upteerembed = (function () {
 return {
 
     createUpteerDisplay: function (obj) {
-        var html, pos, contentHeight, width, height, src;
+        var html, udiv, pos, contentHeight, width, height, src;
         if(obj && obj.siteroot) {
             siteroot = obj.siteroot; }
         if(loadScripts(["jtmin.js"], upteerembed.createUpteerDisplay)) {
             jtminjsDecorateWithUtilities(jt);
-            pos = jt.geoPos(jt.byId('upteerdisplaydiv'));
+            //figure out embedded content dimensions
+            udiv = jt.byId('upteerdisplaydiv');
+            pos = jt.geoPos(udiv);
             contentHeight = document.body.scrollHeight + pos.x;
             contentHeight += 50;  //extra padding to help things work out
             height = window.innerHeight - contentHeight;
@@ -62,7 +64,7 @@ return {
             //min phone display is 320x533
             height = Math.max(height, 500);
             width = Math.max(width, 320);
-            src = siteroot + "?embed=true";
+            src = siteroot + "?embed=" + udiv.innerHTML;
             html = ["iframe", {src: src, width: width, height: height}];
             jt.out('upteerdisplaydiv', jt.tac2html(html)); }
     }

@@ -26,8 +26,8 @@ display opportunities on your own site simply by adding the following
 HTML to one of your web pages: </p>
 
 <div class="codediv"><pre>
-&lt;div id="upteerdisplaydiv"&gt;&lt;/div&gt;
-&lt;script src="https://www.upteer.com/js/embed.js?orgid=12345"&gt;&lt;/script&gt;
+&lt;div id="upteerdisplaydiv"&gt;12345&lt;/div&gt;
+&lt;script src="https://www.upteer.com/js/embed.js"&gt;&lt;/script&gt;
 </pre></div>
 
 <p>Replace the <code>12345</code> in the example with the ID of your
@@ -36,10 +36,6 @@ the link to your organization from your profile.
 The <code>upteerdisplay</code> div can be anywhere you want the
 opportunities to be displayed, as long as it comes before the embed
 script. </p>
-
-<p>For security, the page embedding your Upteer opportunities must be
-on the same site as the home page for your organization as listed on
-Upteer. </p>
 
 <p>That's it.  With those two lines, all opportunities you have listed
 on Upteer will be displayed on your site.  The rest of this document
@@ -67,6 +63,10 @@ available.  The divs can be anywhere on the page before the embed
 script.  If you don't want this information to show on the page, you
 can set the style of the divs to <code>display:none</code>.  Either
 way, only the person logged in will see their own information. </p>
+
+<p>For security, the page embedding your Upteer opportunities must be
+on the same site as the home page for your organization as listed on
+Upteer. </p>
 
 <p>When the user interacts with Upteer through your site, Upteer first
 checks to see if they have an Upteer account using their email

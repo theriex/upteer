@@ -18,8 +18,8 @@ var app = {},  //Global container for application level funcs and values
     app.winw = 0;  //adjusted in app.layout
     app.winh = 0;
     app.authcookname = "upteerauth";
-    app.secsvr = "https://upteer.appspot.com";
-    app.mainsvr = "http://upteer.appspot.com";
+    app.secsvr = "https://www.upteer.com";
+    app.mainsvr = "https://www.upteer.com";
     app.onescapefunc = null;  //app global escape key handler
     app.escapefuncstack = [];  //for levels of escaping
 
@@ -54,8 +54,9 @@ var app = {},  //Global container for application level funcs and values
                         "js/amd/lcs", "js/amd/menu", "js/amd/opp",
                         "js/amd/match", "js/amd/contact" ];
         jtminjsDecorateWithUtilities(jt);
-        if(href.indexOf("embed=true") > 0) {
-            jt.byId('logodiv').style.display = "none"; }
+        if(href.indexOf("embed=") > 0) {
+            jt.byId('logodiv').style.display = "none";
+            app.embed = jt.parseParams().embed; }
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {

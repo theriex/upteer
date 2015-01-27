@@ -61,7 +61,7 @@ app.layout = (function () {
 
 
     localDocLinks = function () {
-        var i, nodes, node, href;
+        var i, nodes, node, href, url;
         nodes = document.getElementsByTagName('a');
         for(i = 0; nodes && i < nodes.length; i += 1) {
             node = nodes[i];
@@ -69,6 +69,12 @@ app.layout = (function () {
             //href may have been resolved from relative to absolute...
             if(href && href.indexOf("docs/") >= 0) {
                 attachDocLinkClick(node, href); } }
+        if(app.embed) {
+            jt.byId('footerdiv').style.wordSpacing = "5px";
+            jt.out('footerdiv', jt.tac2html(
+                ["a", {href: app.mainsvr,
+                       onclick: jt.fs("window.open('" + app.mainsvr + "')")},
+                 "Opportunities from Upteer"])); }
     },
 
 
