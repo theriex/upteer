@@ -61,7 +61,7 @@ app.layout = (function () {
 
 
     localDocLinks = function () {
-        var i, nodes, node, href, url;
+        var i, nodes, node, href;
         nodes = document.getElementsByTagName('a');
         for(i = 0; nodes && i < nodes.length; i += 1) {
             node = nodes[i];

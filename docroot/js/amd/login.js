@@ -136,18 +136,6 @@ app.login = (function () {
     },
 
 
-    displayAccountNameMenu = function () {
-        //The account name they logged in with needs to be displayed
-        //as a link in the upper right.  Clicking brings up a menu
-        //with the option to sign out.  While it might seem nicer to
-        //display the profile name, the email address is better since
-        //it provides another check to make sure it is valid.
-        jt.out('mainmenudiv', authname);
-        jt.out('logodiv', jt.tac2html(
-            ["img", {src: "img/logo.png", width:"155", height:"48"}]));
-    },
-
-
     displayEmailSent = function () {
         var html;
         html = [["p",
@@ -183,7 +171,7 @@ app.login = (function () {
     ////////////////////////////////////////
 return {
 
-    init: function () {
+    init: function (verb) {
         var url;
         logLoadTimes();
         url = window.location.href;
@@ -191,6 +179,10 @@ return {
             //not over https and not local development. Redirect.
             window.location.href = "https" + url.slice(4); }
         if(!loginhtml) {  //save html form in case needed later
+            if(app.embed) {
+                jt.out('loginparaminputs', jt.tac2html(
+                    ["input", {type: "hidden", name: "returnto",
+                               value: url}])); }
             loginhtml = jt.byId('logindiv').innerHTML; }
         initparams = jt.parseParams();
         if(initparams.authname && jt.byId('emailin')) {
@@ -203,12 +195,13 @@ return {
         clearParams();
         if(!app.login.isLoggedIn()) {
             app.login.readAuthCookie(); }
-        if(app.embed) {
+        if(app.embed && verb !== "normal") {
             return app.opp.extListOpps(app.embed); }
         if(app.login.isLoggedIn()) {
-            displayAccountNameMenu();
+            app.login.displayAccountNameMenu();
             if(initparams.view === "profile" && initparams.profid) {
-                return app.profile.display(initparams.profid); }
+                return app.profile.display(function () {
+                    app.profile.byprofid(initparams.profid); }); }
             return app.profile.display(); }
         if(!jt.byId('logindiv')) {
             jt.out('contentdiv', loginhtml); }
@@ -271,7 +264,7 @@ return {
         jt.call('POST', "newacct", data,
                 function (objs) {
                     setAuthentication("utid", objs[0].token, emaddr);
-                    displayAccountNameMenu();
+                    app.login.displayAccountNameMenu();
                     jt.out('contentdiv', "<p>Welcome to the Upteer volunteer community! Your account has been created. </p><p>Signing you in for the first time now...</p>");
                     //database eventual consistency... give it a few seconds
                     setTimeout(app.profile.display, 3000); },
@@ -300,6 +293,18 @@ return {
                 app.failf(function (code, errtxt) {
                     jt.out('loginstatdiv', errtxt); }),
                 jt.semaphore("forgotPassword"));
+    },
+
+
+    displayAccountNameMenu: function () {
+        //The account name they logged in with needs to be displayed
+        //as a link in the upper right.  Clicking brings up a menu
+        //with the option to sign out.  While it might seem nicer to
+        //display the profile name, the email address is better since
+        //it provides another check to make sure it is valid.
+        jt.out('mainmenudiv', authname);
+        jt.out('logodiv', jt.tac2html(
+            ["img", {src: "img/logo.png", width:"155", height:"48"}]));
     }
 
 };  //end of returned functions

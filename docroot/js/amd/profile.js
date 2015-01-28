@@ -332,9 +332,18 @@ app.profile = (function () {
             buttons.push(["button", {type: "button", id: "editprofb",
                                      onclick: jt.fs("app.profile.edit()")},
                           "Edit"]);
-            buttons.push(["button", {type: "button", id: "searchoppsb",
-                                     onclick: jt.fs("app.profile.match()")},
-                          "Find Volunteer Opportunities"]); }
+            if(app.embed) {
+                buttons.push(
+                    ["button", {type: "button", id: "embopplistb",
+                                onclick: jt.fs("app.opp.extListOpps('" +
+                                               app.embed + "')")},
+                     app.org.getCurrentOrganization().name + 
+                     " Opportunities"]); }
+            else {
+                buttons.push(
+                    ["button", {type: "button", id: "searchoppsb",
+                                onclick: jt.fs("app.profile.match()")},
+                     "Find Volunteer Opportunities"]); } }
         else {
             buttons = app.contact.getActionButtons(myprof, prof); }
         return buttons;
@@ -469,10 +478,12 @@ return {
 
     //The profile display gets called after login, and that triggers
     //the server call.  Afterwards myprof is cached and available.
-    display: function (otherprofid) {
+    display: function (contf) {
         var url;
         app.history.checkpoint({view: "profile", profid: jt.instId(myprof)});
         if(myprof) {
+            if(contf) {
+                return contf(); }
             return readProfile(myprof); }
         jt.out('contentdiv', "Fetching your profile...");
         url = "myprofile?" + app.login.authparams();
@@ -483,8 +494,8 @@ return {
                         //cache this copy with the private info included so
                         //the cache doesn't fetch a generic copy
                         app.lcs.put("prof", myprof);
-                        if(otherprofid) {
-                            app.profile.byprofid(otherprofid); }
+                        if(contf) {
+                            contf(); }
                         else {
                             readProfile(myprof); } }
                     else {

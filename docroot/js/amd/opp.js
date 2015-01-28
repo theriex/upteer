@@ -445,7 +445,7 @@ return {
                   ["tr",
                    [//pic html extends into here
                     ["td", {align: "left", cla: "valpadtd"},
-                      curropp.zipcode]]],
+                     ziplink(curropp.zipcode)]]],
                   ["tr",
                    [//pic html extends into here
                     ["td", {align: "left", cla: "valpadtd"},
@@ -540,9 +540,13 @@ return {
 
 
     flcto: function (oppid) {
-        jt.err("Full Listing Clickthrough to opp not implemented yet");
-        //verify login and take care of that first if needed
-        //switch the display over
+        if(app.login.isLoggedIn()) {
+            app.profile.display(function () {
+                app.login.displayAccountNameMenu();
+                app.menu.display();
+                app.opp.display(oppid); }); }
+        else {
+            app.login.init("normal"); }
     },
 
 
