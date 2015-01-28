@@ -112,14 +112,15 @@ return {
         //handle an ID value in the server side Python JSON serialization.
         //This utility method encapsulates the access, and provides a
         //single point of adjustment if the server side logic changes.
+        //A GAE int can easily be larger than a javascript int.
         jt.instId = function (obj) {
             var idfield = "_id";
             if(obj && obj.hasOwnProperty(idfield)) {
-                return obj[idfield]; }
+                return String(obj[idfield]); }
         };
         jt.setInstId = function (obj, idval) {
             var idfield = "_id";
-            obj[idfield] = idval;
+            obj[idfield] = String(idval);
         };
         jt.isId = function (idval) {
             if(idval && typeof idval === 'string' && idval !== "0") {

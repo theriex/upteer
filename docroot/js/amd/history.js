@@ -74,6 +74,7 @@ return {
 
     pop: function (event) {
         var state;
+        state = window.history;
         if(event) {
             state = event.state; }
         jt.log("historyPop: " + JSON.stringify(state));
@@ -95,6 +96,9 @@ return {
                 break;
             case "match":
                 app.match.init(state.oppid);
+                break;
+            case "embopps":
+                app.opp.extListOpps(state.orgid);
                 break;
             //other history state handling cases go here...
             } }

@@ -238,7 +238,7 @@ return {
                     ["td", {colspan: 3},
                      ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"},
                       [["button", {type: "button", id: "orgbackb",
-                                   onclick: jt.fs("app.history.pop()")},
+                                   onclick: jt.fs("window.history.back()")},
                         "&#x21B0; Back"],
                        ["button", {type: "button", id: "orgsaveb",
                                    onclick: jt.fs("app.org.save()")},
@@ -435,7 +435,7 @@ return {
                    ]]]];
         jt.out('contentdiv', jt.tac2html(html));
         html = [["button", {type: "button", id: "orgbackb",
-                            onclick: jt.fs("app.history.pop()")},
+                            onclick: jt.fs("window.history.back()")},
                  "&#x21B0; Back"]];
         if(assoc === "Administrator") {
             html.push(["button", {type: "button", id: "orgeditb",

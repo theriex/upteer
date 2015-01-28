@@ -399,8 +399,9 @@ app.profile = (function () {
         app.contact.wpsProfileDisplay("wpsprofdiv", prof);
         app.menu.display();
         if(prof.status === "Pending" && !requiredFieldError(prof)) {
-            jt.out('profstatdiv', "Profile activation link sent to " + 
-                   prof.email); }
+            if(prof.email && prof.email !== "removed") {
+                jt.out('profstatdiv', "Profile activation link sent to " + 
+                       prof.email); } }
     },
 
 
@@ -480,10 +481,11 @@ return {
     //the server call.  Afterwards myprof is cached and available.
     display: function (contf) {
         var url;
-        app.history.checkpoint({view: "profile", profid: jt.instId(myprof)});
         if(myprof) {
             if(contf) {
                 return contf(); }
+            app.history.checkpoint({view: "profile", 
+                                    profid: jt.instId(myprof)});
             return readProfile(myprof); }
         jt.out('contentdiv', "Fetching your profile...");
         url = "myprofile?" + app.login.authparams();
@@ -509,6 +511,7 @@ return {
 
 
     byprofid: function (profid) {
+        profid = String(profid);   //just in case it was passed numeric
         app.history.checkpoint({view: "profile", profid: profid});
         if(profid === jt.instId(myprof)) {
             readProfile(myprof); }

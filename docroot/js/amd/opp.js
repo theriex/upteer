@@ -481,7 +481,7 @@ return {
                     ["div", {id: "formbuttonsdiv", cla: "formbuttonsdiv"}]]]]]];
         jt.out('contentdiv', jt.tac2html(html));
         html = [["button", {type: "button", id: "orgbackb",
-                            onclick: jt.fs("app.history.pop()")},
+                            onclick: jt.fs("window.history.back()")},
                  "&#x21B0; Back"]];
         if(org.administrators.csvcontains(profid) || 
            curropp.contact.csvcontains(profid)) {
@@ -531,6 +531,7 @@ return {
 
 
     extListOpps: function (orgid) {
+        app.history.checkpoint({view: "embopps", orgid: orgid});
         jt.out('contentdiv', "Finding volunteer opportunities...");
         app.lcs.getFull("org", orgid, function (orgref) {
             var org = orgref.org;
