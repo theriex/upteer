@@ -37,9 +37,28 @@ The <code>upteerdisplay</code> div can be anywhere you want the
 opportunities to be displayed, as long as it comes before the embed
 script. </p>
 
-<p>That's it.  With those two lines, all opportunities you have listed
-on Upteer will be displayed on your site.  The rest of this document
-is additional options if you want them. </p>
+<p>Those two lines are all you need to display your current
+opportunities and allow volunteers to interact with them.  The rest of
+this document is additional options if you want them. </p>
+
+
+<h4>Making the opportunities display match your site</h4>
+
+<p>By default, the opportunities displayed on your site look just like
+they do on Upteer.  If you want the opportunities to match the look
+and feel of your own site, you can override the default style for
+everything in the display by providing your own css file: </p>
+
+<div class="codediv"><pre>
+&lt;div id="upteercssoverride"&gt;https://yoursite.org/css/upteerlookandfeel.css&lt;/div&gt;
+</pre></div>
+
+<p>Replace the CSS file URL with the complete link to the CSS file on
+your site.  Upteer will include your CSS file last when it generates
+the content display, so you can override anything you want.  If you
+run into any difficulty customizing any display elements, let us know.
+Our goal is to make this as easy as possible. </p>
+
 
 
 <h4>Automatic login for your users</h4>
@@ -52,9 +71,9 @@ opportunities there, add the following HTML above the embed script on
 your web page: </p>
 
 <div class="codediv"><pre>
-&lt;div class="upteerUserEmail"&gt;name@example.com&lt;/div&gt;
-&lt;div class="upteerUserName"&gt;Profile Name&lt;/div&gt;
-&lt;div class="upteerUserPic"&gt;http://yoursite.org/pics/profpic.png&lt;/div&gt;
+&lt;div class="upteeruseremail"&gt;name@example.com&lt;/div&gt;
+&lt;div class="upteerusername"&gt;Profile Name&lt;/div&gt;
+&lt;div class="upteeruserpic"&gt;https://yoursite.org/pics/profpic.png&lt;/div&gt;
 </pre></div>
 
 <p>The first div is required.  The second two are optional, but Upteer
@@ -78,23 +97,6 @@ the same way as if they had logged into Upteer directly.  No need to
 log in a second time.  If the user already has a profile, but it is
 not yet accessible from your site, then they are prompted to add
 access permission for your site before continuing. </p>
-
-
-<h4>Making the opportunities display match your site</h4>
-
-<p>By default, the opportunities displayed on your site look just like
-they do on Upteer.  If you want the opportunities to match the look
-and feel of your own site, you can override the default style for
-everything in the display by providing your own css file: </p>
-
-<div class="codediv"><pre>
-&lt;div class="upteerCSSOverride"&gt;http://yoursite.org/css/upteeroverrides.css&lt;/div&gt;
-</pre></div>
-
-<p>Upteer will include your css file last when it generates your
-content display, so you can override anything your users see.  If you
-run into any difficulty customizing any display elements, let us
-know.  Our goal is to make this as easy as possible. </p>
 
 
 

@@ -60,6 +60,18 @@ app.layout = (function () {
     },
 
 
+    applyCSSOverride = function () {
+        var cssurl, csselem;
+        cssurl = app.embparams && app.embparams.css;
+        if(cssurl) {
+            csselem = document.createElement('link');
+            csselem.rel = "stylesheet";
+            csselem.type = "text/css";
+            csselem.href = jt.dec(cssurl);
+            document.head.appendChild(csselem); }
+    },
+
+
     localDocLinks = function () {
         var i, nodes, node, href;
         nodes = document.getElementsByTagName('a');
@@ -69,7 +81,7 @@ app.layout = (function () {
             //href may have been resolved from relative to absolute...
             if(href && href.indexOf("docs/") >= 0) {
                 attachDocLinkClick(node, href); } }
-        if(app.embed) {
+        if(app.embed) {  //replace local doc links with site link
             jt.byId('footerdiv').style.wordSpacing = "5px";
             jt.out('footerdiv', jt.tac2html(
                 ["a", {href: app.mainsvr,
@@ -102,6 +114,7 @@ return {
     init: function () {
         app.layout.commonUtilExtensions();
         findDisplayHeightAndWidth();
+        applyCSSOverride();
         localDocLinks();
     },
 

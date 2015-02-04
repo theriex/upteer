@@ -177,7 +177,7 @@ button, .loginbutton { cursor:pointer;
 .kwkeywordsdiv { }
 
 /* supporting document content */
-.dcdiv { padding:0px 10px 10px 10px; }
+.dcdiv { padding:0px 20px 10px 10px; }
 .dcdiv h2 { text-align: center; }
 .codediv { background: #fff; font-family: monospace; 
   margin:0% 12% 0% 5%; padding:0px 10px; overflow:scroll; }

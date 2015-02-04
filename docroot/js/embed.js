@@ -49,7 +49,7 @@ var upteerembed = (function () {
 return {
 
     createUpteerDisplay: function (obj) {
-        var html, udiv, pos, contentHeight, width, height, src;
+        var html, udiv, pos, contentHeight, width, height, src, cssdiv;
         if(obj && obj.siteroot) {
             siteroot = obj.siteroot; }
         if(loadScripts(["jtmin.js"], upteerembed.createUpteerDisplay)) {
@@ -65,6 +65,10 @@ return {
             height = Math.max(height, 500);
             width = Math.max(width, 320);
             src = siteroot + "?embed=" + udiv.innerHTML;
+            cssdiv = jt.byId('upteercssoverride');
+            if(cssdiv && cssdiv.innerHTML) {
+                src += "&css=" + jt.enc(cssdiv.innerHTML);
+                cssdiv.innerHTML = ""; }
             html = ["iframe", {src: src, width: width, height: height}];
             jt.out('upteerdisplaydiv', jt.tac2html(html)); }
     }

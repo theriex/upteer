@@ -56,7 +56,8 @@ var app = {},  //Global container for application level funcs and values
         jtminjsDecorateWithUtilities(jt);
         if(href.indexOf("embed=") > 0) {
             jt.byId('logodiv').style.display = "none";
-            app.embed = jt.parseParams("String").embed; }
+            app.embparams = jt.parseParams("String");
+            app.embed = app.embparams.embed; }
         if(href.indexOf("#") > 0) {
             href = href.slice(0, href.indexOf("#")); }
         if(href.indexOf("?") > 0) {
