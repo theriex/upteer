@@ -436,7 +436,7 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
 
 
     //convert a "a=1&b=2" type string into an object form
-    uo.paramsToObj = function (paramstr, obj) {
+    uo.paramsToObj = function (paramstr, obj, mode) {
         var comps, i, attval, idx = paramstr.indexOf("?");
         if (idx >= 0) {
             paramstr = paramstr.slice(idx + 1);
@@ -449,7 +449,11 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
             for (i = 0; i < comps.length; i += 1) {
                 attval = comps[i].split("=");
                 if (attval.length > 1) {
-                    obj[attval[0]] = attval[1];
+                    if (mode === "String") {
+                        obj[attval[0]] = String(attval[1]);
+                    } else {
+                        obj[attval[0]] = attval[1];
+                    }
                 } else {
                     obj.anchor = attval[0];
                 }
@@ -460,15 +464,15 @@ var jtminjsDecorateWithUtilities = function (utilityObject) {
 
 
     //parse the url hash and query parts into an object
-    uo.parseParams = function () {
+    uo.parseParams = function (mode) {
         var pstr, obj = {};
         pstr = window.location.hash;
         if (pstr.indexOf("#") === 0) {
             pstr = pstr.slice(1);
         }
-        uo.paramsToObj(pstr, obj);
+        uo.paramsToObj(pstr, obj, mode);
         pstr = window.location.search;
-        uo.paramsToObj(pstr, obj);
+        uo.paramsToObj(pstr, obj, mode);
         return obj;
     };
 
