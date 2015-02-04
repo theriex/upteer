@@ -184,7 +184,7 @@ return {
                     ["input", {type: "hidden", name: "returnto",
                                value: url}])); }
             loginhtml = jt.byId('logindiv').innerHTML; }
-        initparams = jt.parseParams();
+        initparams = jt.parseParams("String");
         if(initparams.authname && jt.byId('emailin')) {
             jt.byId('emailin').value = fixEmailAddress(initparams.authname); }
         if(initparams.loginerr) {
