@@ -613,7 +613,8 @@ return {
                                                     clickfnamestr); }
             if(profref.prof) {
                 refs[i] = jt.tac2html(
-                    ["a", {href: "#" + jt.instId(profref.prof),
+                    ["a", {href: "#view=profile&profid=" + 
+                                     jt.instId(profref.prof),
                            onclick: jt.fs(clickfnamestr + "(" + 
                                           jt.instId(profref.prof) + ")")},
                      profref.prof.name]); } }

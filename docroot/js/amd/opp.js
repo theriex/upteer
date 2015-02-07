@@ -199,7 +199,7 @@ app.opp = (function () {
                                         oppref.opp.status + "')")},
                            "x"]); }
             line.push(["span", {id: "oppname" + i, cla: "oppnamespan"},
-                       ["a", {href: "#",
+                       ["a", {href: "#view=opp&oppid=" + jt.instId(oppref.opp),
                               onclick: jt.fs("app.opp.display('" +
                                              jt.instId(oppref.opp) + "')")},
                         oppref.opp.name]]);
@@ -234,8 +234,19 @@ app.opp = (function () {
     },
 
 
+    opplink = function (opp) {
+        var refp, fstr, oppid = jt.instId(opp);
+        refp = "#view=opp&oppid=" + oppid;
+        fstr = jt.fs("app.opp.flcto('" + oppid + "')");
+        if(app.embed && !(app.embparams.logret && app.login.isLoggedIn())) {
+            fstr = jt.fs("window.open('" + app.secsvr + refp + "')"); }
+        return ["a", {href: refp, onclick: fstr},
+                opp.name];
+    },
+
+
     oppListFull = function (org, opprefs) {
-        var html = [], i, opp, oppid, kw = null;
+        var html = [], i, opp, kw = null;
         app.org.setCurrentOrganization(org);
         opprefs.sort(function (a, b) {
             if(a.status === "Open" && b.status !== "Open") { return -1; }
@@ -247,14 +258,11 @@ app.opp = (function () {
             opp = opprefs[i].opp;
             if(opp.status !== "Open") {
                 break; }
-            oppid = jt.instId(opp);
             html.push(
                 ["div", {cla: "oppdispdiv"},
                  [["div", {cla: "oppnamediv"},
                    ["span", {id: "oppname" + i, cla: "oppnamespan"},
-                    ["a", {href: "#view=opp&oppid=" + oppid,
-                           onclick: jt.fs("app.opp.flcto('" + oppid + "')")},
-                     opp.name]]],
+                    opplink(opp)]],
                   ["div", {id: "oppdescdiv" + i, cla: "bigtxtdiv"},
                    jt.linkify(opp.description || "")],
                   ["div", {cla: "oppdetailsdiv"},

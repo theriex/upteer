@@ -159,6 +159,38 @@ app.login = (function () {
     },
 
 
+    noteReturnToParameter = function (url) {
+        if(initparams.returnto) {
+            //we are returning to another site, probably with an
+            //embedded upteer display.
+            jt.out('loginparaminputs', jt.tac2html(
+                ["input", {type: "hidden", name: "returnto",
+                           value: initparams.returnto}])); }
+        else {
+            //we are on our local site, but return to it again with
+            //all current command line parameters so that the the app
+            //retries processing them after login is complete.
+            jt.out('loginparaminputs', jt.tac2html(
+                ["input", {type: "hidden", name: "returnto",
+                           value: url}])); }
+    },
+
+
+    checkLoginAndCallBack = function () {
+        var url = jt.dec(initparams.clacb);
+        if(url.indexOf("#") < 0) {
+            url += "#"; }
+        if(!url.endsWith("#")) {
+            url += "&"; }
+        if(app.login.isLoggedIn()) {
+            url += authparams(); }
+        else {
+            url += "at=notloggedin"; }
+        jt.out('contentdiv', "Returning to " + url);
+        window.location.href = url;
+    },
+
+
     logLoadTimes = function () {
         var millis, timer = app.amdtimer;
         millis = timer.load.end.getTime() - timer.load.start.getTime();
@@ -179,12 +211,9 @@ return {
             //not over https and not local development. Redirect.
             window.location.href = "https" + url.slice(4); }
         if(!loginhtml) {  //save html form in case needed later
-            if(app.embed) {
-                jt.out('loginparaminputs', jt.tac2html(
-                    ["input", {type: "hidden", name: "returnto",
-                               value: url}])); }
             loginhtml = jt.byId('logindiv').innerHTML; }
         initparams = jt.parseParams("String");
+        noteReturnToParameter(url);
         if(initparams.authname && jt.byId('emailin')) {
             jt.byId('emailin').value = fixEmailAddress(initparams.authname); }
         if(initparams.loginerr) {
@@ -195,13 +224,19 @@ return {
         clearParams();
         if(!app.login.isLoggedIn()) {
             app.login.readAuthCookie(); }
+        if(initparams.clacb) {
+            return checkLoginAndCallBack(); }
         if(app.embed && verb !== "normal") {
             return app.opp.extListOpps(app.embed); }
         if(app.login.isLoggedIn()) {
-            app.login.displayAccountNameMenu();
+            app.login.displayAccountNameMenu();  //base menu html
             if(initparams.view === "profile" && initparams.profid) {
                 return app.profile.display(function () {
                     app.profile.byprofid(initparams.profid); }); }
+            if(initparams.view === "opp" && initparams.oppid) {
+                return app.profile.display(function () {
+                    app.menu.display();
+                    app.opp.byoppid(initparams.oppid); }); }
             return app.profile.display(); }
         if(!jt.byId('logindiv')) {
             jt.out('contentdiv', loginhtml); }

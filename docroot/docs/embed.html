@@ -15,14 +15,13 @@
 
 <p>This is a technical document that assumes you are familiar with
 HTML and CSS.  If that's not you, the short story is that any
-opportunities you list on Upteer can be easily displayed on your own
-website. </p>
+opportunities you list on Upteer can also easily be displayed on your
+own website. </p>
 
 
 <h4>Displaying your opportunities</h4>
 
-<p>After you have set up your organization on Upteer, you can also
-display opportunities on your own site simply by adding the following
+<p>To display opportunities on your own site, just add the following
 HTML to one of your web pages: </p>
 
 <div class="codediv"><pre>
@@ -37,66 +36,80 @@ The <code>upteerdisplay</code> div can be anywhere you want the
 opportunities to be displayed, as long as it comes before the embed
 script. </p>
 
-<p>Those two lines are all you need to display your current
-opportunities and allow volunteers to interact with them.  The rest of
-this document is additional options if you want them. </p>
+<p>Those two lines are all it takes.  The rest of this document
+describes additional options if you want them. </p>
 
 
-<h4>Making the opportunities display match your site</h4>
+
+<h4>Making the embedded display match your site</h4>
 
 <p>By default, the opportunities displayed on your site look just like
-they do on Upteer.  If you want the opportunities to match the look
-and feel of your own site, you can override the default style for
-everything in the display by providing your own css file: </p>
+they do on Upteer.  If you want the display to match the look and feel
+of your own site, you can specify your own css override by adding the
+following div to your html: </p>
 
 <div class="codediv"><pre>
 &lt;div id="upteercssoverride"&gt;https://yoursite.org/css/upteerlookandfeel.css&lt;/div&gt;
 </pre></div>
 
-<p>Replace the CSS file URL with the complete link to the CSS file on
-your site.  Upteer will include your CSS file last when it generates
-the content display, so you can override anything you want.  If you
-run into any difficulty customizing any display elements, let us know.
-Our goal is to make this as easy as possible. </p>
+<p>Replace the div contents with the full URL for your CSS file.
+Note that because Upteer is a secure site, your css file must also be
+served over https.  Upteer will include your CSS file last when it
+generates the content display, so you can override anything you want.
+Here's some sample override css files you can use or model: </p>
+<ul>
+<li><a href="https://www.upteer.com/css/embed/sand.css"
+       onclick="window.open('https://www.upteer.com/css/embed/sand.css');return false;">sand.css</a></li>
+<li><a href="https://www.upteer.com/css/embed/blue.css"
+       onclick="window.open('https://www.upteer.com/css/embed/blue.css');return false;">blue.css</a></li>
+</ul>
+
+<p>If you run into any difficulties customizing display elements,
+let us know and we'll work with you to make things look good.</p>
 
 
 
-<h4>Automatic login for your users</h4>
+<h4>Interacting with opportunities in the embedded display</h4>
 
-<p>If volunteers do not already sign in to your website, Upteer will
-handle sign in as needed and you can just skip this section.  If you
-have volunteers who sign in to your site, and you would like to
-automatically log them in to Upteer to interact with your
-opportunities there, add the following HTML above the embed script on
-your web page: </p>
+<p>By default, clicking opportunity links opens them in a new Upteer
+window.  If you would prefer users to interact from within your site,
+then your embedding page must redirect to Upteer to verify login.
+Upteer will then redirect back, passing along authentication details.
+To trigger the login redirect add the following div to your html: </p>
 
 <div class="codediv"><pre>
-&lt;div class="upteeruseremail"&gt;name@example.com&lt;/div&gt;
-&lt;div class="upteerusername"&gt;Profile Name&lt;/div&gt;
-&lt;div class="upteeruserpic"&gt;https://yoursite.org/pics/profpic.png&lt;/div&gt;
+&lt;div id="upteerloginreturn"&gt;https://yoursite.org/upteerembed.html&lt;/div&gt;
 </pre></div>
 
-<p>The first div is required.  The second two are optional, but Upteer
-may prompt the user to complete their profile if they are not
-available.  The divs can be anywhere on the page before the embed
-script.  If you don't want this information to show on the page, you
-can set the style of the divs to <code>display:none</code>.  Either
-way, only the person logged in will see their own information. </p>
+<p>Replace the div contents with the full external URL of your
+embedding page.  Users landing on your page will see the same embedded
+Upteer display, but if they are logged in they can interact with
+opportunities directly within your page.  If they are not logged in,
+then a "Sign In To Upteer" button is provided so they can do that and
+return to your embed page. </p>
 
-<p>For security, the page embedding your Upteer opportunities must be
-on the same site as the home page for your organization as listed on
-Upteer. </p>
 
-<p>When the user interacts with Upteer through your site, Upteer first
-checks to see if they have an Upteer account using their email
-address.  If no account is found, then Upteer creates a profile using
-the information provided and sets it to be accessible via your web
-site.  If the user has a profile accessible from your site, then they
-are automatically logged in and interact with the listed opportunities
-the same way as if they had logged into Upteer directly.  No need to
-log in a second time.  If the user already has a profile, but it is
-not yet accessible from your site, then they are prompted to add
-access permission for your site before continuing. </p>
+
+<h4>Using the Upteer API directly</h4>
+
+<p>If your site requires more advanced functionality, you can access
+the same REST server API that Upteer itself uses.  The API is open and
+may be used to read or update any information that a user is
+authorized for.  See the <code>app.yaml</code> file in the
+<a href="https://github.com/theriex/upteer"
+   onclick="window.open('https://github.com/theriex/upteer');return false;">Upteer GitHub project</a>
+for endpoint descriptions. </p>
+
+<p>If creating accounts, be aware that Upteer requires email address
+validation, an uploaded picture, a real name, and a zipcode before a
+profile may be active.  It is also normal for a profile to include
+life status (student, professional, retired etc), a comment describing
+interests, and primary skills for matching opportunities.  These
+secondary descriptive fields change over time and are influenced by
+the Upteer volunteer community. </p>
+
+<p>Prompting for Upteer login credentials from your own site requires
+permission from Upteer. </p>
 
 
 

@@ -81,12 +81,8 @@ app.layout = (function () {
             //href may have been resolved from relative to absolute...
             if(href && href.indexOf("docs/") >= 0) {
                 attachDocLinkClick(node, href); } }
-        if(app.embed) {  //replace local doc links with site link
-            jt.byId('footerdiv').style.wordSpacing = "5px";
-            jt.out('footerdiv', jt.tac2html(
-                ["a", {href: app.mainsvr,
-                       onclick: jt.fs("window.open('" + app.mainsvr + "')")},
-                 "Opportunities from Upteer"])); }
+        if(app.embed) {  //minimal display, all links lead back to site..
+            jt.out('footerdiv', ""); }
     },
 
 

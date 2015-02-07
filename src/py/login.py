@@ -330,7 +330,10 @@ class TokenAndRedirect(webapp2.RequestHandler):
                 redurl = redurl[0:redurl.rfind("/")]
         if "%3A" in redurl:
             redurl = urllib.unquote(redurl)
-        redurl += "#"
+        if '#' not in redurl:
+            redurl += "#"
+        if not redurl.endswith('#'):
+            redurl += "&"
         email = self.request.get('emailin')
         if not email or len(email) < 1:
             redurl += "loginerr=" + "Please enter an email address"
