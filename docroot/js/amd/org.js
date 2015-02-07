@@ -60,7 +60,6 @@ app.org = (function () {
         org.details.city = org.details.city || "";
         org.details.state = org.details.state || "";
         org.details.zip = org.details.zip || "";
-        org.details.applyurl = org.details.applyurl || "";
     },
 
 
@@ -81,7 +80,6 @@ app.org = (function () {
         currorg.details.city = jt.safeget('cityin', 'value') || "";
         currorg.details.state = jt.safeget('statein', 'value') || "";
         currorg.details.zip = jt.safeget('zipin', 'value') || "";
-        currorg.details.applyurl = jt.safeget('appurlin', 'value') || "";
         if(!currorg.name) {
             jt.out('orgstatdiv', "Your organization must have a name");
             return false; }
@@ -320,12 +318,6 @@ return {
                              "Logo URL"], 
                             currorg.details.logourl,
                             "https://yoursite.org/logo.png", "url"),
-                   app.lvtr("appurlin", 
-                            ["a", {href: "#ApplicationURL",
-                                   onclick: jt.fs("app.org.appexpl()")},
-                             "Application URL"],
-                            currorg.details.applyurl,
-                            "https://yoursite.org/optionalforms.html", "url"),
                    app.lvtr("phonein", "Phone", currorg.details.phone,
                             "808 111 2222", "tel"),
                    app.lvtr("emailin", "Email", currorg.details.email,
@@ -399,22 +391,15 @@ return {
                    ["tr",
                     [//pic html extends into here
                      ["td", {align: "left", cla: "valpadtd"},
-                      ["a", {href: currorg.details.applyurl,
-                             onclick: jt.fs("window.open('" +
-                                            currorg.details.applyurl + "')")},
-                       ["span", {cla: "subtext"},
-                        (currorg.details.applyurl? 
-                         "Volunteer Application Form(s)" : "")]]]]],
-                   ["tr",
-                    [["td", {align: "left", cla: "valpadtd"},
-                      ["a", {href: "mailto:" + currorg.details.email},
-                       currorg.details.email]],
-                     ["td", {align: "left", cla: "valpadtd"},
                       ["a", {href: "tel:" + currorg.details.phone},
                        currorg.details.phone]]]],
                    ["tr",
-                    ["td", {align: "left", cla: "valpadtd", colspan: 2},
+                    ["td", {colspan: 2, align: "left", cla: "valpadtd"},
                      addressLink(currorg)]],
+                   ["tr",
+                    ["td", {colspan: 2, align: "left", cla: "valpadtd"},
+                     ["a", {href: "mailto:" + currorg.details.email},
+                      currorg.details.email]]],
                    ["tr",
                     [["td", {align: "right", cla: "listlabel"},
                       "Administrators: "],
@@ -661,22 +646,6 @@ return {
         var html;
         html = [["div", {id: "expldiv", cla: "paradiv"},
                  "Upteer uses a link to your logo rather than uploading a copy, so you won't have an old version here if you make changes. To get the url of your logo, simply \"right click\" the image on your web site and copy the image location. Then paste that URL into the form field."],
-                ["div", {cla: "dlgbuttonsdiv"},
-                 ["button", {type: "button", id: "okbutton",
-                             onclick: jt.fs("app.layout.closeDialog()")},
-                  "OK"]]];
-        html = app.layout.dlgwrapHTML("Your Logo", html);
-        app.layout.openDialog({y:90}, jt.tac2html(html), null,
-                              function () {
-                                  jt.byId('okbutton').focus(); });
-    },
-
-
-    appexpl: function () {
-        var html;
-        html = [["div", {id: "expldiv", cla: "paradiv"},
-                 "If you require volunteers to fill out one or more forms before volunteering, please provide a link to where they can access what they need.  The forms will be integrated into the standard Upteer volunteering process."],
-                ["p", "It is NOT required to have application forms. The standard Upteer volunteering process already provides contact information, sign up commitments, completion status and time tracking."],
                 ["div", {cla: "dlgbuttonsdiv"},
                  ["button", {type: "button", id: "okbutton",
                              onclick: jt.fs("app.layout.closeDialog()")},

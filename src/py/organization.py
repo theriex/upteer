@@ -18,8 +18,7 @@ class Organization(db.Model):
     coordinators = db.TextProperty()    # CSV of profIDs that create opps
     unassociated = db.TextProperty()    # CSV of profIDs to be dealt with
     # The details field includes a link to their logo, a link to their
-    # website, phone, email, physical address, supporting links to
-    # things like volunteer application forms etc.  Fields and values
+    # website, phone, email, physical address etc.  Fields and values
     # are flexible and not worth indexing.
     details = db.TextProperty()         # JSON
     opportunities = db.TextProperty()   # CSV of Opportunity IDs
