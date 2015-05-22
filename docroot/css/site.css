@@ -54,7 +54,7 @@ button, .loginbutton { cursor:pointer;
   visibility:hidden; 
   max-width:85%;
   padding:1px;
-  background-color: #f2fbff;
+  background-color: #fdf7e7;
   font-size: medium;
   padding:10px;
   border-radius:5px;
@@ -83,7 +83,7 @@ button, .loginbutton { cursor:pointer;
 
 /* menu settings */
 #noticemenudiv { display:inline-block; padding:0px 10px 0px 0px; }
-.noticediv { background-color: #fdfeff; padding:3px; 
+.noticediv { background-color: #fdf7e7; padding:3px; 
   border:1px solid #ccc; border-radius:3px;}
 #mainmenudiv { display:inline-block; padding:0px 30px 0px 0px; }
 
