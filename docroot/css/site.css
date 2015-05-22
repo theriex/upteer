@@ -33,6 +33,7 @@ img { border:0px; }
 
 button, .loginbutton { cursor:pointer; 
   margin:5px 10px 0px 10px; padding:5px; font-size: medium; color:#000033;
+  border-radius:8px;
   background: linear-gradient(#e3bb95 20%, #bc9063); }
 .disabledbutton { color:#cccccc; border:2px solid #a1c3c2; 
   background:transparent; }
@@ -153,14 +154,15 @@ button, .loginbutton { cursor:pointer;
 .selkwdelspan { display:inline-block; font-size:medium; 
   padding:0px 4px 0px 0px; cursor:pointer;
   }
-.selkwdivlist, .selkwdivedit { display:inline-block; padding:0px 0px 4px 4px;
-  border-radius:8px; border:1px solid #bd9265;
-  margin:3px 10px 0px 0px;
-  background: radial-gradient(#f1e6c8 60%, #cfb775);
+.selkwdivlist, .selkwdivedit { display:inline-block; 
+  padding:0px 0px 4px 18px; margin:3px 10px 0px 0px;
+  background: url('../img/skillmarker.png') no-repeat top left, url('../img/highlight.png') repeat-x;
+  border-radius:12px;
   }
 .selkwdivedit { margin:3px 0px 0px 10px; }
 .kwselectdiv { cursor:pointer; white-space:nowrap; 
   }
+.kwprefixdiv { width:20px; height:20px; background:red; }
 .kwcontainerdiv {}
 .kwtitlediv, .sectiontitle { padding:0px 0px 0px 5px; font-size:medium; }
 .kwworkdiv {}
