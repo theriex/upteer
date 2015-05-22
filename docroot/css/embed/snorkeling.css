@@ -1,0 +1,24 @@
+/* using the "up" background for the link color */
+A:link {text-decoration:none; color:#007bb6; }
+A:visited {text-decoration:none; color:#007bb6; }
+A:active {text-decoration:none; color:#007bb6; }
+A:hover {text-decoration:underline; color:#7dd6ff; }
+
+body {
+  background-color: #feffdd;
+  background: linear-gradient(#d9edf8 60%, #0096ec);
+}
+
+button, .loginbutton { cursor:pointer; 
+  margin:5px 10px 0px 10px; padding:5px; font-size: medium; color:#000033;
+  background: linear-gradient(#d2fbf5 20%, #a6e3da); }
+
+#pagecontentdiv { margin:0px; padding:0px; 
+  background-image: url("../img/honu.png"); 
+  background-repeat: no-repeat; background-position: 80% 0%; }
+
+.selkwdivlist, .selkwdivedit { display:inline-block; padding:0px 0px 4px 4px;
+  border-radius:8px; border:1px solid #007bb6;
+  margin:3px 10px 0px 0px;
+  background: radial-gradient(#d9edf8 60%, #aadefb);
+}

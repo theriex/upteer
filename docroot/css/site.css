@@ -4,11 +4,10 @@
  ************************************************************
  */
 
-/* using the "up" background for the link color */
-A:link {text-decoration:none; color:#007bb6; }
-A:visited {text-decoration:none; color:#007bb6; }
-A:active {text-decoration:none; color:#007bb6; }
-A:hover {text-decoration:underline; color:#7dd6ff; }
+A:link {text-decoration:none; color:#aa7b51; }
+A:visited {text-decoration:none; color:#aa7b51; }
+A:active {text-decoration:none; color:#aa7b51; }
+A:hover {text-decoration:underline; color:#eab581; }
 
 html {
   min-height: 100%; margin:0; padding:0;
@@ -26,16 +25,15 @@ body {
   height: 100%;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  background-color: #feffdd;  /* plumeria yellow */
-  /* background: linear-gradient(#fff690, #d9edf8);  plumeria */
-  background: linear-gradient(#d9edf8 60%, #0096ec);  /* snorkeling */
+  background-color: #f1e6c8;
+  background: linear-gradient(#fbf0dc 60%, #f1e6c8);
 }
 
 img { border:0px; }
 
 button, .loginbutton { cursor:pointer; 
   margin:5px 10px 0px 10px; padding:5px; font-size: medium; color:#000033;
-  background: linear-gradient(#d2fbf5 20%, #a6e3da); }
+  background: linear-gradient(#e3bb95 20%, #bc9063); }
 .disabledbutton { color:#cccccc; border:2px solid #a1c3c2; 
   background:transparent; }
 
@@ -44,9 +42,7 @@ button, .loginbutton { cursor:pointer;
  * general class and id formatting
  ************************************************************
  */
-#pagecontentdiv { margin:0px; padding:0px; 
-  background-image: url("../img/honu.png"); 
-  background-repeat: no-repeat; background-position: 80% 0%; }
+#pagecontentdiv { margin:0px; padding:0px; }
 #headerdiv { font-size:small; padding:0px 10px; }
 #logodiv { float:left; }
 #acctstatdiv { float:right; }
@@ -71,7 +67,7 @@ button, .loginbutton { cursor:pointer;
 .dlgconfmsgdiv { text-align:center; }
 .floatclear { clear:both; }
 #tagcontainerdiv { padding:0; }
-#taglinediv { position: relative; top: -20px; margin:0px 0px 0px 120px; 
+#taglinediv { position: relative; top: -40px; margin:0px 0px 0px 120px; 
   font-size:medium; font-weight:normal; }
 #bottomspacerdiv { height:300px; }
 #footerdiv { font-size:x-small; font-style:italic; text-align:center; 
@@ -158,9 +154,9 @@ button, .loginbutton { cursor:pointer;
   padding:0px 4px 0px 0px; cursor:pointer;
   }
 .selkwdivlist, .selkwdivedit { display:inline-block; padding:0px 0px 4px 4px;
-  border-radius:8px; border:1px solid #007bb6;
+  border-radius:8px; border:1px solid #bd9265;
   margin:3px 10px 0px 0px;
-  background: radial-gradient(#d9edf8 60%, #aadefb);
+  background: radial-gradient(#f1e6c8 60%, #cfb775);
   }
 .selkwdivedit { margin:3px 0px 0px 10px; }
 .kwselectdiv { cursor:pointer; white-space:nowrap; 
