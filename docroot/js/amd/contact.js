@@ -896,7 +896,7 @@ app.contact = (function () {
                 wp.days = 14; }
             wp.end = jt.ISOString2Day(wp.start).getTime();
             wp.end += days * 24 * 60 * 60 * 1000;
-            wp.end = new Date(wp.end).toISOString();
+            wp.end = (new Date(wp.end)).toISOString();
             if(new Date().toISOString() < wp.end) {
                 return true; } }
         return false;
