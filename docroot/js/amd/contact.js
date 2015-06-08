@@ -884,7 +884,7 @@ app.contact = (function () {
 
 
     ongoingWork = function (wp) {
-        var days;
+        var days, end;
         if(wp.start) {
             switch(wp.duration) {
             case "1 Day": days = 1; break;
@@ -893,11 +893,12 @@ app.contact = (function () {
             case "4 Weeks": days = 28; break;
             default: 
                 wp.duration = "2 Weeks";
-                wp.days = 14; }
-            wp.end = jt.ISOString2Day(wp.start).getTime();
-            wp.end += days * 24 * 60 * 60 * 1000;
-            wp.end = (new Date(wp.end)).toISOString();
-            if(new Date().toISOString() < wp.end) {
+                days = 14; }
+            end = jt.ISOString2Day(wp.start).getTime();
+            end += days * 24 * 60 * 60 * 1000;
+            end = new Date(end);
+            end = end.toISOString();
+            if(new Date().toISOString() < end) {
                 return true; } }
         return false;
     },

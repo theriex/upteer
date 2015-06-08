@@ -140,21 +140,24 @@ app.org = (function () {
             return; }
         for(i = 0; i < orgrefs.length; i += 1) {
             orgref = orgrefs[i];
-            line = [];
-            if(mode === "edit") {
-                line.push(["span", {id: "remorg" + i, cla: "orgx",
-                                    onclick: jt.fs("app.org.removeOrg('" + 
-                                        jt.instId(orgref.org) + "','" + 
-                                        orgref.org.name + "')")},
-                           "x"]); }
-            line.push(["span", {id: "orgname" + i, cla: "orgnamespan"},
-                       ["a", {href: "#view=org&orgid=" + jt.instId(orgref.org),
-                              onclick: jt.fs("app.org.display(" + 
-                                             jt.instId(orgref.org) + ")")},
-                        orgref.org.name]]);
-            line.push(["span", {id: "stat" + i, cla: "orgstatus"},
-                       " (" + assocStatus(prof, orgref.org) + ")"]);
-            html.push(["div", {cla: "orgsummaryline"}, line]); }
+            if(orgref.org) {  //tolerate bad references
+                line = [];
+                if(mode === "edit") {
+                    line.push(["span", {id: "remorg" + i, cla: "orgx",
+                                        onclick: jt.fs("app.org.removeOrg('" + 
+                                                       jt.instId(orgref.org) + 
+                                                       "','" + 
+                                                       orgref.org.name + "')")},
+                               "x"]); }
+                line.push(["span", {id: "orgname" + i, cla: "orgnamespan"},
+                           ["a", {href: "#view=org&orgid=" + 
+                                  jt.instId(orgref.org),
+                                  onclick: jt.fs("app.org.display(" + 
+                                                 jt.instId(orgref.org) + ")")},
+                            orgref.org.name]]);
+                line.push(["span", {id: "stat" + i, cla: "orgstatus"},
+                           " (" + assocStatus(prof, orgref.org) + ")"]);
+                html.push(["div", {cla: "orgsummaryline"}, line]); } }
         jt.out('orglistdiv', jt.tac2html(html));
     },
 
