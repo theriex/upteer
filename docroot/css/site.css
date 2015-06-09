@@ -158,7 +158,8 @@ button, .loginbutton { cursor:pointer;
 .selkwdelspan { display:inline-block; font-size:medium; 
   padding:0px 4px 0px 0px; cursor:pointer;
   }
-.selkwdivlist, .selkwdivedit { display:inline-block; margin:3px 10px 0px 0px; }
+.selkwdivlist, .selkwdivedit { display:inline-block; margin:3px 10px 0px 0px; 
+  border-radius:12px; background:#fffefb; padding-bottom:3px; }
 .selkwdivedit { margin:3px 0px 0px 10px; }
 .kwselectdiv { cursor:pointer; white-space:nowrap; 
   }
@@ -175,9 +176,8 @@ button, .loginbutton { cursor:pointer;
 .kwkeywordsdiv { }
 
 /* specific keyword type overrides */
-.lifestatdivkwd, .accessdivkwd { color:#999; border-radius:12px; background:url('../img/highlight.png') repeat-x; }
-.skillsdivkwd { padding:0px 0px 4px 18px; border-radius:12px;
-  font-weight:bold;
+.lifestatdivkwd, .accessdivkwd { color:#999; background:url('../img/highlight.png') repeat-x; }
+.skillsdivkwd { padding:0px 0px 4px 18px; font-weight:bold;
   background: url('../img/skillmarker.png') no-repeat top left, url('../img/highlight.png') repeat-x; }
 
 /* supporting document content */

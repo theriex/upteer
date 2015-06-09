@@ -5,20 +5,14 @@ A:hover {text-decoration:underline; color:#7dd6ff; }
 
 body {
   color: #111111;
-  background: linear-gradient(#d9edf8 60%, #0096ec);
-  background: #d9edf8;
+  background: #fff;
 }
 
-#pagecontentdiv { background: #d9edf8; }
+#pagecontentdiv { background: #fff; }
 
 #dlgdiv { background-color: #f2fbff; }
 
-.selkwdivlist, .selkwdivedit {
-  border-radius:8px; border:1px solid #007bb6;
-}
-
 button, .loginbutton {
   cursor:pointer; margin:5px 10px 0px 10px; padding:5px; font-size:medium;
-  color:#000033;
-  background: linear-gradient(#d2fbf5 20%, #a6e3da);
+  color:#000033; background:#7dd6ff;
 }

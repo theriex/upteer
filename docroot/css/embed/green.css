@@ -1,0 +1,18 @@
+A:link {text-decoration:none; color:#137033; }
+A:visited {text-decoration:none; color:#137033; }
+A:active {text-decoration:none; color:#137033; }
+A:hover {text-decoration:underline; color:#8decae; }
+
+body {
+  color: #111111;
+  background: #fff;
+}
+
+#pagecontentdiv { background: #fff; }
+
+#dlgdiv { background-color: #f2fbff; }
+
+button, .loginbutton {
+  cursor:pointer; margin:5px 10px 0px 10px; padding:5px; font-size:medium;
+  color:#003300; background:#8decae;
+}

@@ -607,8 +607,8 @@ return {
             site = site.slice(0, -1); }
         stylesel = jt.byId("embedstylesel");
         if(stylesel && stylesel.value !== "standard") {
-            stylesel = "<div id=\"upteercssoverride\">" + site + "/css/" +
-                stylesel.value + ".css</div>\n"; }
+            stylesel = "<div id=\"upteercssoverride\">" + site + 
+                "/css/embed/" + stylesel.value + ".css</div>\n"; }
         else {
             stylesel = ""; }
         ta = jt.byId("oppsembedta");
