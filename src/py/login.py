@@ -51,6 +51,8 @@ def intz(val):
         return 0
     if isinstance(val, basestring) and val.startswith("\""):
         val = val[1:len(val) - 1]
+    if val == "undefined":
+        return 0
     return int(val)
 
 

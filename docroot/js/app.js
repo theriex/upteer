@@ -66,6 +66,8 @@ var app = {},  //Global container for application level funcs and values
             jt.out('logindiv', "Redirecting to secure server...");
             window.location.href = "https:" + href.slice(5);
             return; }
+        if(href.search(/:\d\d?080/) >= 0) {  //support for local testing
+            app.secsvr = app.mainsvr = href; }
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
         jt.loadAppModules(app, modules, href, app.init2, "?v=150608");

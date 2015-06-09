@@ -218,6 +218,14 @@ app.opp = (function () {
             html.push(["button", {id: "addoppb", cla: "kwplus",
                                   onclick: jt.fs(addfstr)},
                        "+"]); }
+        else {
+            html.push(["a", {href: "#embed",
+                             onclick: jt.fs("app.opp.togembed('" + 
+                                            jt.instId(org) + "','" + 
+                                            org.name + "')")},
+                       ["span", {cla: "embedlinkspan", id: "embedlinkspan"}, 
+                        "embed"]]); }
+        html.push(["div", {id: "embedlinkdiv"}]);
         html.push(["div", {id: "opplistdiv", cla: "orglistdiv"}]);
         jt.out(dispdivid, jt.tac2html(html));
         app.lcs.resolveCSV("opp", org.opportunities, function (opprefs) {
@@ -236,7 +244,7 @@ app.opp = (function () {
 
     opplink = function (opp) {
         var refp, fstr, oppid = jt.instId(opp);
-        refp = "#view=opp&oppid=" + oppid;
+        refp = "?view=opp&oppid=" + oppid;
         fstr = jt.fs("app.opp.flcto('" + oppid + "')");
         if(app.embed && !(app.embparams.logret && app.login.isLoggedIn())) {
             fstr = jt.fs("window.open('" + app.secsvr + refp + "')"); }
@@ -249,6 +257,10 @@ app.opp = (function () {
         var html = [], i, opp, kw = null;
         app.org.setCurrentOrganization(org);
         opprefs.sort(function (a, b) {
+            if(a.opp && !b.opp) { return -1; }
+            if(!a.opp && b.opp) { return 1; }
+            a = a.opp;
+            b = b.opp;
             if(a.status === "Open" && b.status !== "Open") { return -1; }
             if(a.status !== "Open" && b.status === "Open") { return 1; }
             if(a.modified < b.modified) { return 1; }
@@ -256,7 +268,9 @@ app.opp = (function () {
             return 0; });
         for(i = 0; i < opprefs.length; i += 1) {
             opp = opprefs[i].opp;
-            if(opp.status !== "Open") {
+            if(!opp || opp.status !== "Open") {
+                if(i === 0) {
+                    html = "No Opportunities Found."; }
                 break; }
             html.push(
                 ["div", {cla: "oppdispdiv"},
@@ -556,6 +570,54 @@ return {
                 app.opp.display(oppid); }); }
         else {
             app.login.init("normal"); }
+    },
+
+
+    togembed: function (orgid, orgname) {
+        var html;
+        html = jt.byId("embedlinkdiv").innerHTML;
+        if(html) {
+            jt.out("embedlinkspan", "embed");
+            jt.out("embedlinkdiv", "");
+            return; }
+        jt.out("embedlinkspan", "close embed");
+        html = ["div", {cla: "embedinstructdiv"},
+                [["To embed available opportunities at " + orgname + 
+                  ", paste this html into your web page where you want the opportunities to be displayed:"],
+                 ["div", {cla: "embedhtmldiv"},
+                  ["textarea", {id: "oppsembedta", cla: "codeta"}]],
+                 ["div", {cla: "embedstyleseldiv"},
+                  [["span", {cla: "embedlinkspan"},
+                    "Look and feel "],
+                   ["select", {cla: "stylesel", id: "embedstylesel",
+                               onchange: jt.fs("app.opp.embedstyle('" + 
+                                               orgid + "')")},
+                    [["option", {value: "standard"}, "standard"],
+                     ["option", {value: "blue"}, "blue"],
+                     ["option", {value: "green"}, "green"]]]]]]];
+        jt.out("embedlinkdiv", jt.tac2html(html));
+        app.opp.embedstyle(orgid);
+    },
+
+
+    embedstyle: function (orgid) {
+        var site, stylesel, ta;
+        site = window.location.href;
+        if(site.endsWith("/")) {
+            site = site.slice(0, -1); }
+        stylesel = jt.byId("embedstylesel");
+        if(stylesel && stylesel.value !== "standard") {
+            stylesel = "<div id=\"upteercssoverride\">" + site + "/css/" +
+                stylesel.value + ".css</div>\n"; }
+        else {
+            stylesel = ""; }
+        ta = jt.byId("oppsembedta");
+        if(ta) {
+            ta.readOnly = true;
+            ta.value = stylesel +
+                "<div id=\"upteerdisplaydiv\"><a href=\"" + site +
+                "?view=org&orgid=" + orgid + "\">upteer</a></div>\n" +
+                "<script src=\"" + site + "/js/embed.js\"></script>\n"; }
     },
 
 

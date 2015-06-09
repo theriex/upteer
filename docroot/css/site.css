@@ -114,6 +114,10 @@ button, .loginbutton { cursor:pointer;
 .oppdispdiv { padding:0px 0px 20px 0px; }
 .oppnamediv { padding:0px 0px 5px 0px; }
 .oppdetailsdiv { padding:0px 0px 0px 20px; }
+.embedlinkspan { margin-left:5px; font-size:x-small; font-style:italic; }
+.embedinstructdiv { width:280px; background:#eab581; padding:10px; }
+.codeta { width:260px; height:120px; padding:5px 2px; overflow:auto; 
+  margin:5px 0px; }
 
 
 /* match view settings */

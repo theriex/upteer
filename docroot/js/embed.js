@@ -116,10 +116,10 @@ var upteerembed = (function () {
 
 
     writeEmbeddedContent = function () {
-        var udiv, src, html = [];
-        udiv = jt.byId('upteerdisplaydiv');
-        computeFrameDimensions(udiv);
-        src = siteroot + "?embed=" + udiv.innerHTML;
+        var framediv, src, html = [];
+        framediv = jt.byId('upteerdisplaydiv');
+        computeFrameDimensions(framediv);
+        src = siteroot + "?embed=" + urlparams.orgid;
         src += loginparams();
         src += "&site=" + jt.enc(window.location.href);
         if(udivs.css) {
@@ -129,7 +129,7 @@ var upteerembed = (function () {
         if(urlparams.at === "notloggedin") {
             insertLookAndFeelCSS();
             html.push(upteerLoginButtonHTML()); }
-        html.push(["iframe", {id: "upteeriframe", src: src, 
+        html.push(["iframe", {id: "upteeriframe", src: src,
                               width: framedim.width, 
                               height: framedim.height}]);
         jt.out('upteerdisplaydiv', jt.tac2html(html));
@@ -142,12 +142,16 @@ var upteerembed = (function () {
     ////////////////////////////////////////
 return {
 
-    createUpteerDisplay: function (obj) {
-        if(obj && obj.siteroot) {
-            siteroot = obj.siteroot; }
+    createUpteerDisplay: function () {
+        var href = document.getElementById('upteerdisplaydiv').innerHTML;
+        href = href.slice(href.indexOf("href=") + 6);
+        href = href.slice(0, href.indexOf('"'));
+        siteroot = href.slice(0, href.indexOf("?"));
         if(loadScripts(["jtmin.js"], upteerembed.createUpteerDisplay)) {
             jtminjsDecorateWithUtilities(jt);
-            urlparams = jt.parseParams("String");
+            href = href.slice(href.indexOf("?") + 1);
+            href = href.replace("&amp;", "&");
+            urlparams = jt.paramsToObj(href, urlparams, "String");
             readUpteerDivs();
             if(udivs.logret && !(urlparams.at || urlparams.authtoken)) {
                 return callUpteerLogin(); }
