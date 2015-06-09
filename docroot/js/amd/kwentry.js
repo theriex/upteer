@@ -46,7 +46,7 @@ return (function () {
         var i, keys, html = [];
         keys = valcsv.csvarray();
         for(i = 0; i < keys.length; i += 1) {
-            html.push(["div", {cla: "selkwdiv" + mode},
+            html.push(["div", {cla: "selkwdiv" + mode + " " + divid + "kwd"},
                        selectedKeywordHTML(keys[i], mode, i)]); }
         jt.out(divid + "kwk", jt.tac2html(html));
         app.limitwidth(divid + "kwk");

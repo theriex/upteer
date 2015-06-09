@@ -154,11 +154,7 @@ button, .loginbutton { cursor:pointer;
 .selkwdelspan { display:inline-block; font-size:medium; 
   padding:0px 4px 0px 0px; cursor:pointer;
   }
-.selkwdivlist, .selkwdivedit { display:inline-block; 
-  padding:0px 0px 4px 18px; margin:3px 10px 0px 0px;
-  background: url('../img/skillmarker.png') no-repeat top left, url('../img/highlight.png') repeat-x;
-  border-radius:12px;
-  }
+.selkwdivlist, .selkwdivedit { display:inline-block; margin:3px 10px 0px 0px; }
 .selkwdivedit { margin:3px 0px 0px 10px; }
 .kwselectdiv { cursor:pointer; white-space:nowrap; 
   }
@@ -173,6 +169,12 @@ button, .loginbutton { cursor:pointer;
 .kwplus { padding:0px; }
 .kwentrydiv { padding:0px 0px 0px 10px; width:160px; overflow:hidden; white-space:nowrap; }
 .kwkeywordsdiv { }
+
+/* specific keyword type overrides */
+.lifestatdivkwd, .accessdivkwd { color:#999; border-radius:12px; background:url('../img/highlight.png') repeat-x; }
+.skillsdivkwd { padding:0px 0px 4px 18px; border-radius:12px;
+  font-weight:bold;
+  background: url('../img/skillmarker.png') no-repeat top left, url('../img/highlight.png') repeat-x; }
 
 /* supporting document content */
 .dcdiv { padding:0px 20px 10px 10px; }
