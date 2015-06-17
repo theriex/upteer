@@ -222,7 +222,7 @@ app.opp = (function () {
             html.push(["a", {href: "#embed",
                              onclick: jt.fs("app.opp.togembed('" + 
                                             jt.instId(org) + "','" + 
-                                            org.name + "')")},
+                                            jt.embenc(org.name) + "')")},
                        ["span", {cla: "embedlinkspan", id: "embedlinkspan"}, 
                         "embed"]]); }
         html.push(["div", {id: "embedlinkdiv"}]);
@@ -582,7 +582,7 @@ return {
             return; }
         jt.out("embedlinkspan", "close embed");
         html = ["div", {cla: "embedinstructdiv"},
-                [["To embed available opportunities at " + orgname + 
+                [["To embed available opportunities at " + jt.dec(orgname) + 
                   ", paste this html into your web page where you want the opportunities to be displayed:"],
                  ["div", {cla: "embedhtmldiv"},
                   ["textarea", {id: "oppsembedta", cla: "codeta"}]],
