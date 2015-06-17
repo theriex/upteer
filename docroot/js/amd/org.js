@@ -371,7 +371,8 @@ return {
         app.history.checkpoint({view: "org", orgid: jt.instId(currorg)});
         verifyOrganizationFieldValues(currorg);  //fill defaults if needed
         assoc = assocStatus(app.profile.getMyProfile(), currorg);
-        imgsrc = currorg.details.logourl || "img/blank.png";
+        imgsrc = app.sslSafeRef(jt.instId(currorg), 
+                                currorg.details.logourl || "img/blank.png");
         namelink = ["span", {cla: "namespan"}, currorg.name];
         if(currorg.details.siteurl) {
             namelink = ["a", {href: currorg.details.siteurl,

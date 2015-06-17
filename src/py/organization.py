@@ -4,6 +4,10 @@ from google.appengine.ext import db
 import logging
 from login import *
 import profile
+from google.appengine.api import urlfetch
+from google.appengine.api import images
+from google.appengine.api import memcache
+import pickle
 
 # Some organizations might want to store application forms with their
 # profile, but this is better served by having the organization upload
@@ -79,6 +83,48 @@ def note_requested_association(prof, org):
         org.unassociated += profid
         org.put()
     return [ prof, org ]
+
+
+def simple_fetchurl(handler, geturl):
+    if not geturl:
+        handler.error(400)
+        handler.response.out.write("No URL specified")
+        return None
+    headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
+    try: 
+        result = urlfetch.fetch(geturl, payload=None, method="GET",
+                                headers=headers,
+                                allow_truncated=False, 
+                                follow_redirects=True, 
+                                deadline=10, 
+                                validate_certificate=False)
+    except Exception as e:
+        handler.error(400)
+        handler.response.out.write("simple_fetchurl " + str(e) + 
+                                   " fetching " + geturl)
+        return None
+    if not result or result.status_code != 200:
+        handler.error(result.status_code)
+        handler.response.out.write(result.content)
+        return None
+    return result
+
+
+# Returning an image directly to a browser doesn't work unless it is
+# transformed first, and if transforming anyway, may as well dump it
+# out in PNG format.  If the image is being cached, then it is subject
+# to the 1mb max cacheable string length, and in general it doesn't
+# make any sense to be passing large images around so restricting to
+# 125px wide.
+def prepare_image(img):
+    maxwidth = 125
+    if img.width > maxwidth:
+        img.resize(width=maxwidth)  # height adjusted automatically to match
+    else:
+        # at least one transform required so do a dummy crop
+        img.crop(0.0, 0.0, 1.0, 1.0)
+    img = img.execute_transforms(output_encoding=images.PNG)
+    return img
 
 
 class OrgById(webapp2.RequestHandler):
@@ -171,9 +217,39 @@ class NameMatch(webapp2.RequestHandler):
         returnJSON(self.response, orgs)
 
 
+class ImageRelay(webapp2.RequestHandler):
+    def get(self):
+        orgid = self.request.get('orgid')
+        url = self.request.get('url')
+        if not orgid or not url:
+            self.error(400)
+            self.response.out.write("Both orgid and url are required")
+            return
+        logging.info("ImageRelay orgid: " + str(orgid) + ", url: " + url)
+        img = memcache.get(url)
+        if img:
+            img = pickle.loads(img)
+            logging.info("ImageRelay retrieved from cache")
+        else:
+            result = simple_fetchurl(self, url)
+            if result:
+                try:
+                    logging.info("ImageRelay urlfetch successful")
+                    img = images.Image(result.content)
+                    logging.info("ImageRelay image constructed")
+                    img = prepare_image(img)
+                    memcache.set(url, pickle.dumps(img))
+                except Exception as e:
+                    logging.info("ImageRelay " + str(e))
+        if img:
+            self.response.headers['Content-Type'] = "image/png"
+            self.response.out.write(img)
+
+
 app = webapp2.WSGIApplication([('/orgbyid', OrgById),
                                ('/orgsave', SaveOrganization),
                                ('/orgassoc', AssociationRequest),
-                               ('/orgnames', NameMatch)
+                               ('/orgnames', NameMatch),
+                               ('/imagerelay', ImageRelay)
                                ], debug = True)
 

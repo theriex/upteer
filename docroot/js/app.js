@@ -164,5 +164,15 @@ var app = {},  //Global container for application level funcs and values
             app.limitwidth(divid); }
     };
 
+
+    app.sslSafeRef = function (orgid, url) {
+        if(url.indexOf("https://") === 0) {
+            return url; }
+        if(window.location.href.indexOf("https://") === 0) {
+            url = "imagerelay?orgid=" + orgid + "&url=" + jt.enc(url); }
+        return url;
+    };
+
+
 } () );
 

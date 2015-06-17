@@ -122,6 +122,11 @@ handlers:
 - url: /orgnames.*
   script: src.py.organization.app
 
+## Fetch the given image url data and return it.
+## GET params: orgid, url
+- url: /imagerelay.*
+  script: src.py.organization.app
+
 
 ######################################################################
 ##        Opportunity access

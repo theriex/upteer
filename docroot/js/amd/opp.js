@@ -451,7 +451,8 @@ return {
         org = org.org;
         app.history.checkpoint({view: "opp", oppid: jt.instId(curropp)});
         profid = jt.instId(app.profile.getMyProfile());
-        imgsrc = org.details.logourl || "img/blank.png";
+        imgsrc = app.sslSafeRef(jt.instId(org), 
+                                org.details.logourl || "img/blank.png");
         html = ["div", {id: "oppdispdiv", cla: "oppdispdiv"},
                 ["table", {cla: "formtable"},
                  [["tr",

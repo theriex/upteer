@@ -82,7 +82,8 @@ app.match = (function () {
                                 app.match.redisplayMatchImages);
                 return "img/blank.png"; }
             if(orgref.org && orgref.org.details.logourl) {
-                return orgref.org.details.logourl; } }
+                return app.sslSafeRef(jt.instId(orgref.org),
+                                      orgref.org.details.logourl); } }
         return "img/blank.png";
     },
 
