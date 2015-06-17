@@ -266,8 +266,9 @@ app.profile = (function () {
 
     //ATTENTION: allow for changing email after initial profile setup.
     editProfile = function () {
-        var html, prof = myprof;
+        var emaddr, html, prof = myprof;
         verifyProfileFieldValues(prof);
+        emaddr = jt.dec(app.login.getAuthName());
         html = ["div", {id: "profdiv"},
                 [["div", {id: "profstatdiv", cla: "formstatdiv"}, 
                   "&nbsp;"],
@@ -290,8 +291,7 @@ app.profile = (function () {
                        "Email"]],
                      ["td", {align: "left"},
                       ["input", {type: "email", id: "emailin", name: "emailin",
-                                 size: 20, value: app.login.getAuthName(),
-                                 placeholder: app.login.getAuthName(),
+                                 size: 20, value: emaddr, placeholder: emaddr,
                                  disabled: "disabled"}]]]],
                    ["tr", //pic html extends into here
                     [["td", {align: "right"},

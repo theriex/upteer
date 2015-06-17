@@ -70,7 +70,7 @@ var app = {},  //Global container for application level funcs and values
             app.secsvr = app.mainsvr = href; }
         app.amdtimer = {};
         app.amdtimer.load = { start: new Date() };
-        jt.loadAppModules(app, modules, href, app.init2, "?v=150608");
+        jt.loadAppModules(app, modules, href, app.init2, "?v=150616");
     };
 
 
