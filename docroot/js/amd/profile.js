@@ -290,9 +290,12 @@ app.profile = (function () {
                       ["label", {fo: "emailin", cla: "formlabel"},
                        "Email"]],
                      ["td", {align: "left"},
-                      ["input", {type: "email", id: "emailin", name: "emailin",
-                                 size: 20, value: emaddr, placeholder: emaddr,
-                                 disabled: "disabled"}]]]],
+                      [["input", {type: "email", id: "emailin", name: "emailin",
+                                  size: 20, value: emaddr, placeholder: emaddr,
+                                  disabled: "disabled"}],
+                       ["a", {href: "#emailchangedisabled",
+                              onclick: jt.fs("app.profile.noemchg()")}, 
+                        "*"]]]]],
                    ["tr", //pic html extends into here
                     [["td", {align: "right"},
                       ["label", {fo: "zipin", cla: "formlabel"},
@@ -657,6 +660,11 @@ return {
         if(myprof.status === "Inactive") {
             errtxt = "Activate your profile to find volunteer opportunities"; }
         jt.out('profstatdiv', errtxt);
+    },
+
+
+    noemchg: function () {
+        jt.err("Your email needs to stay the same for your contacts to be maintained. If you have a new email address, switch this account to inactive and create a new profile. If there are extenuating circumstances, send email to admin@upteer.com and we'll see what we can do.");
     },
 
 
