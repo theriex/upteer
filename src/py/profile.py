@@ -251,6 +251,11 @@ class VerifyProfile(webapp2.RequestHandler):
             self.response.out.write("Profile " + str(profid) + " not found.")
             return
         reqcode = self.request.get('code')
+        authelems = csv_list(prof.status)
+        # status, send count, send timestamp, verification code
+        if not authelems or len(authelems) < 4:
+            self.redirect("/?view=profile&profid=" + str(profid))
+            return
         authcode = csv_list(prof.status)[3]
         if reqcode != authcode:
             self.error(403)  # Forbidden
