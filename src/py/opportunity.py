@@ -43,7 +43,7 @@ def owning_organization(handler, myprof, orgid):
     profid = str(myprof.key().id())
     if not profid in org.administrators and not profid in org.coordinators:
         handler.error(403)  # Forbidden
-        self.response.out.write("Not an administrator or coordinator")
+        handler.response.out.write("Not an administrator or coordinator")
         return
     return org
 
